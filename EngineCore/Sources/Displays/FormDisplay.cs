@@ -31,13 +31,14 @@ namespace EngineCore.Displays
                 BufferCount = 1,
                 ModeDescription = new ModeDescription(
                     Width, Height,
-                    new Rational(60, 1), Format.R8G8B8A8_UNorm
+                    new Rational(60, 1), 
+                    Format.R8G8B8A8_UNorm
                 ),
                 IsWindowed = true,
                 OutputHandle = Surface.Handle,
                 SampleDescription = new SampleDescription(1, 0),
                 SwapEffect = SwapEffect.Discard,
-                Usage = Usage.RenderTargetOutput
+                Usage = Usage.RenderTargetOutput,
             };
 
             Device device;
@@ -51,20 +52,24 @@ namespace EngineCore.Displays
                  out swapChain
              );
             DeviceRef = device;
+            CheckFeatures();
+
             SwapChainRef = swapChain;
 
             ZBufferTextureDescription = new Texture2DDescription {
-                Format = Format.R32G8X24_Typeless,
+                //Format = Format.R32G8X24_Typeless,
+                Format = Format.R32_Typeless,
                 ArraySize = 1,
                 MipLevels = 1,
                 Width = Width,
                 Height = Height,
                 SampleDescription = new SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil,
+                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
                 CpuAccessFlags = CpuAccessFlags.None,
                 OptionFlags = ResourceOptionFlags.None
             };
+
 
             Factory2D = new Factory(FactoryType.SingleThreaded, DebugLevel.Information);
             FactoryDWrite = new SharpDX.DirectWrite.Factory();
@@ -75,7 +80,7 @@ namespace EngineCore.Displays
         public override void InitRenderTarget() {
             BackBuffer?.Dispose();
             RenderTargetViewRef?.Dispose();
-            ZBuffer?.Dispose();
+            DepthStencilSRVRef?.Dispose(); ZBuffer?.Dispose();
             DepthStencilViewRef?.Dispose();
             RenderTarget2D?.Dispose();
 
@@ -96,9 +101,21 @@ namespace EngineCore.Displays
             ZBuffer = new Texture2D(DeviceRef, ZBufferTextureDescription);
 
             DepthStencilViewRef = new DepthStencilView(DeviceRef, ZBuffer, new DepthStencilViewDescription {
-                Format = Format.D32_Float_S8X24_UInt,
+                //Format = Format.D32_Float_S8X24_UInt,
+                Format = Format.D32_Float,
                 Dimension = DepthStencilViewDimension.Texture2D,
                 Flags = DepthStencilViewFlags.None,
+            });
+
+            DepthStencilSRVRef = new ShaderResourceView(DeviceRef, ZBuffer, new ShaderResourceViewDescription()
+            {
+                Format = Format.R32_Float,
+                Dimension = ShaderResourceViewDimension.Texture2D,
+                Texture2D = new ShaderResourceViewDescription.Texture2DResource()
+                {
+                    MostDetailedMip = 0,
+                    MipLevels = 1,
+                },
             });
 
             SetUpViewport();

@@ -15,6 +15,10 @@ namespace AssetsManager.AssetsMeta
 
         public BaseAsset() { }
         public BaseAsset(BaseAsset source) {
+            CopyValues(source);
+        }
+
+        public virtual void CopyValues(BaseAsset source) { 
             this.Name = source.Name;
             this.Type = source.Type;
         }
@@ -36,6 +40,13 @@ namespace AssetsManager.AssetsMeta
                 return false;
             }
             return true;
+        }
+
+        public virtual bool IsSame(BaseAsset other) {
+            bool same = true;
+            same &= this.Name == other.Name;
+            same &= this.Type == other.Type;
+            return same;
         }
 
         public override string ToString() {

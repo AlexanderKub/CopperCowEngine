@@ -32,16 +32,16 @@ namespace EngineCore
 
             Vector3 dir = m_Target.TransformMatrix.Backward + m_Target.TransformMatrix.Up * 1.25f;
             dir.Normalize();
-            gameObject.transform.Position = m_Target.Position + dir * Distance;
+            gameObject.transform.WorldPosition = m_Target.WorldPosition + dir * Distance;
             /*targetPos = m_Target.Position + dir * Distance;
             gameObject.transform.Position = Vector3.SmoothStep(
                 gameObject.transform.Position, targetPos, 
                 Engine.Instance.Time.DeltaTime * 10f
             );*/
 
-            gameObject.transform.Rotation = Quaternion.LookAtLH(
-                gameObject.transform.Position,
-                m_Target.Position,
+            gameObject.transform.WorldRotation = Quaternion.LookAtLH(
+                gameObject.transform.WorldPosition,
+                m_Target.WorldPosition,
                 gameObject.transform.TransformMatrix.Up
             );
         }

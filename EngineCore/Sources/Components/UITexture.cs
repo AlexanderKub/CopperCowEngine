@@ -45,9 +45,9 @@ namespace EngineCore
             });
             AddComponent(new Transform() {
                 gameObject = this,
-                Position = new Vector3(position, 0),
-                Scale = new Vector3(scale, 1),
-                Rotation = Quaternion.Identity,
+                WorldPosition = new Vector3(position, 0),
+                WorldScale = new Vector3(scale, 1),
+                WorldRotation = Quaternion.Identity,
             });
         }
     }

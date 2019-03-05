@@ -11,13 +11,13 @@ namespace PongGame
         public override void Update() {
             float deltaTime = Engine.Instance.Time.DeltaTime;
             float m_Time = Engine.Instance.Time.Time;
-            gameObject.transform.Scale = 
-                Vector3.Lerp(gameObject.transform.Scale, TargetScale, deltaTime * LerpSpeed);
+            gameObject.transform.WorldScale = 
+                Vector3.Lerp(gameObject.transform.WorldScale, TargetScale, deltaTime * LerpSpeed);
         }
 
         public void Hide() {
             TargetScale = Vector3.Zero;
-            gameObject.transform.Scale = TargetScale;
+            gameObject.transform.WorldScale = TargetScale;
         }
 
         public void Show() {

@@ -35,10 +35,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\SharpDXlibs\SharpDX.dll</HintPath>
+      <HintPath>..\CommonLibs\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDXlibs\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\CommonLibs\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -57,85 +57,91 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Assets\Meshes\CowMesh.mdxaf">
+    <None Include="Assets\Meshes\CowMesh.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Meshes\HatMesh.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Meshes\RockMesh.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Meshes\SoldierMesh.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Textures\CatAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Meshes\HatMesh.mdxaf">
+    <None Include="Assets\Textures\CopperAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Meshes\RockMesh.mdxaf">
+    <None Include="Assets\Textures\CopperMetallicMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Meshes\SoldierMesh.mdxaf">
+    <None Include="Assets\Textures\CopperNormalMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CatAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\CopperRoughnessMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CopperAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\CowAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CopperMetallicMap.mdxaf">
+    <None Include="Assets\Textures\MetalAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CopperNormalMap.mdxaf">
+    <None Include="Assets\Textures\MetalMetallicMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CopperRoughnessMap.mdxaf">
+    <None Include="Assets\Textures\MetalNormalMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CowAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\MetalRoughnessMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\MetalAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\MiraSkyboxCubeMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\MetalMetallicMap.mdxaf">
+    <None Include="Assets\Textures\MiraSkyboxIrradianceCubeMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\MetalNormalMap.mdxaf">
+    <None Include="Assets\Textures\RockAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\MetalRoughnessMap.mdxaf">
+    <None Include="Assets\Textures\RockFloorAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\RockAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\RockFloorNormalMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\RockFloorAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\RockFloorOcclusionMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\RockFloorNormalMap.mdxaf">
+    <None Include="Assets\Textures\RockFloorRoughnessMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\RockFloorOcclusionMap.mdxaf">
+    <None Include="Assets\Textures\RockNormalMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\RockFloorRoughnessMap.mdxaf">
+    <None Include="Assets\Textures\RockOcclusionMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\RockNormalMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\RockOcclusionMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockMetallicMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SnowRockAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockNormalMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SnowRockMetallicMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockOcclusionMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SnowRockNormalMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockRoughnessMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SnowRockOcclusionMap.mdxaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Textures\SnowRockRoughnessMap.mdxaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Textures\SoldierAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\SoldierAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

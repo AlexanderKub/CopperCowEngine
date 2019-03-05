@@ -9,10 +9,10 @@ namespace AssetsManager.AssetsMeta
     {
         public Vector4 Position;
         public Vector4 Color;
-        public Vector4 UV;
+        public Vector4 UV0;
+        public Vector4 UV1;
         public Vector4 Normal;
         public Vector4 Tangent;
-        public Vector4 Binormal;
     };
 
     public class MeshAsset: BaseAsset

@@ -9,23 +9,6 @@ using System.Runtime.InteropServices;
 
 namespace EngineCore
 {
-    public struct ShaderBytecodePack
-    {
-        public ShaderBytecode VertexShaderByteCode;
-        public ShaderBytecode PixelShaderByteCode;
-        public ShaderBytecode GeometryShaderByteCode;
-
-        public bool HasVS() {
-            return VertexShaderByteCode != null;
-        }
-        public bool HasGS() {
-            return GeometryShaderByteCode != null;
-        }
-        public bool HasPS() {
-            return PixelShaderByteCode != null;
-        }
-    }
-
     public class AssetsLoader
     {
         #region Meshes
@@ -62,6 +45,7 @@ namespace EngineCore
                 OcclusionMapAsset = MA.OcclusionMapAsset,
                 PropetyBlock = new MaterialPropetyBlock() {
                     AlbedoColor = MA.AlbedoColor,
+                    AlphaValue = MA.AlphaValue,
                     MetallicValue = MA.MetallicValue,
                     RoughnessValue = MA.RoughnessValue,
                     Shift = MA.Shift,
@@ -77,21 +61,55 @@ namespace EngineCore
         #endregion
 
         #region Shaders
-        static private Dictionary<string, ShaderBytecodePack> ShaderBytecodePacks = new Dictionary<string, ShaderBytecodePack>();
+        private struct ShaderPlusSignature
+        {
+            public DeviceChild shader;
+            public ShaderSignature signature;
+        }
+
         static public void LoadShader(string assetName) {
             AssetsManagerInstance AM = AssetsManagerInstance.GetManager();
             ShaderAsset SA = AM.LoadAsset<ShaderAsset>(assetName);
-            Engine.Log("[AssetManager] Shader " + assetName + " loaded.");
-            ShaderBytecodePacks.Add(assetName, new ShaderBytecodePack() {
-                VertexShaderByteCode = new ShaderBytecode(SA.VertexBytecode),
-                PixelShaderByteCode = new ShaderBytecode(SA.PixelBytecode),
-                GeometryShaderByteCode = new ShaderBytecode(SA.GeometryBytecode),
-            });
+            Engine.Log("[AssetManager] " + SA.ShaderType.ToString() + " Shader " + assetName + " loaded. ");
+
+            ShaderPlusSignature pack = new ShaderPlusSignature();
+            ShaderBytecode sb = new ShaderBytecode(SA.Bytecode);
+            switch (SA.ShaderType)  
+            {
+                case ShaderTypeEnum.Vertex:
+                    pack.shader = new VertexShader(Engine.Instance.Device, sb);
+                    break;
+                case ShaderTypeEnum.Pixel:
+                    pack.shader = new PixelShader(Engine.Instance.Device, sb);
+                    break;
+                case ShaderTypeEnum.Geometry:
+                    pack.shader = new GeometryShader(Engine.Instance.Device, sb);
+                    break;
+                case ShaderTypeEnum.Compute:
+                    pack.shader = new ComputeShader(Engine.Instance.Device, sb);
+                    break;
+                default:
+                    break;
+            };
+            pack.signature = ShaderSignature.GetInputSignature(sb);
+            Shaders.Add(assetName, pack);
         }
 
-        static public ShaderBytecodePack GetShaderPack(string name) {
-            ShaderBytecodePacks.TryGetValue(name, out ShaderBytecodePack ReturnValue);
-            return ReturnValue;
+        static private Dictionary<string, ShaderPlusSignature> Shaders = new Dictionary<string, ShaderPlusSignature>();
+
+        static public T GetShader<T>(string name) where T : DeviceChild
+        {
+            return GetShader<T>(name, out ShaderSignature signature);
+        }
+
+        static public T GetShader<T>(string name, out ShaderSignature signature) where T: DeviceChild
+        {
+            if (!Shaders.ContainsKey(name)) {
+                LoadShader(name);
+            }
+            Shaders.TryGetValue(name, out ShaderPlusSignature pack);
+            signature = pack.signature;
+            return (T)(pack.shader);
         }
         #endregion
 
@@ -191,6 +209,28 @@ namespace EngineCore
 
             return cubeTexture;
         }
+
+        static private Dictionary<string, ShaderResourceView> CachedTexturesSRV = new Dictionary<string, ShaderResourceView>();
+        static public ShaderResourceView LoadTextureSRV(string assetName)
+        {
+            return LoadTextureSRV(assetName, false);
+        }
+
+        static public ShaderResourceView LoadTextureSRV(string assetName, bool IsCubeMap)
+        {
+            if (CachedTexturesSRV.ContainsKey(assetName))
+            {
+                return CachedTexturesSRV[assetName];
+            }
+            Texture2D texture = IsCubeMap ? LoadCubeTexture(assetName) : LoadTexture(assetName);
+            if (texture == null) {
+                return null;
+            }
+            ShaderResourceView result  = new ShaderResourceView(Engine.Instance.Device, texture);
+            Engine.Instance.Context.GenerateMips(result);
+            CachedTexturesSRV.Add(assetName, result);
+            return result;
+        }
         #endregion
 
         static public void CleanupAssets() {
@@ -199,12 +239,23 @@ namespace EngineCore
             }
             CachedMaterials.Clear();
 
+            foreach (string key in CachedTexturesSRV.Keys)
+            {
+                CachedTexturesSRV[key].Dispose();
+            }
+            CachedTexturesSRV.Clear();
+
             foreach (string key in CachedTextures.Keys) {
                 CachedTextures[key].Dispose();
             }
             CachedTextures.Clear();
-            
-            ShaderBytecodePacks.Clear();
+
+            foreach (string key in Shaders.Keys)
+            {
+                Shaders[key].shader.Dispose();
+            }
+            Shaders.Clear();
+
             CachedMeshes.Clear();
         }
     }

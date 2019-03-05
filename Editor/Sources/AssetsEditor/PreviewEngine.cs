@@ -31,7 +31,7 @@ namespace Editor.AssetsEditor
             CreateSkySphere();
             SetMainCamera(AddCamera<Camera>("MainCamera", new Vector3(0f, 1f, 0f), Quaternion.RotationYawPitchRoll(MathUtil.Pi * 0.5f, 0, 0)));
             Light LightObj = new Light() {
-                ambientColor = Vector4.One * 0.25f,
+                LightColor = Vector4.One * 0.25f,
                 radius = 20,
                 Type = Light.LightType.Directional,
                 EnableShadows = true,

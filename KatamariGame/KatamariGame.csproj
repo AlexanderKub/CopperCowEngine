@@ -50,10 +50,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\SharpDXlibs\SharpDX.dll</HintPath>
+      <HintPath>..\CommonLibs\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDXlibs\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\CommonLibs\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -74,40 +74,40 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Assets\Meshes\CowMesh.mdxaf">
+    <None Include="Assets\Meshes\CowMesh.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CatAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\CatAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CopperAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\CopperAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CopperMetallicMap.mdxaf">
+    <None Include="Assets\Textures\CopperMetallicMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CopperNormalMap.mdxaf">
+    <None Include="Assets\Textures\CopperNormalMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CopperRoughnessMap.mdxaf">
+    <None Include="Assets\Textures\CopperRoughnessMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\CowAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\CowAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SnowRockAlbedoMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockAlbedoMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SnowRockMetallicMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockMetallicMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SnowRockNormalMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockNormalMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SnowRockOcclusionMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockOcclusionMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SnowRockRoughnessMap.mdxaf">
+    <None Include="Assets\Textures\SnowRockRoughnessMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

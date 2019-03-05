@@ -22,9 +22,9 @@ namespace PongGame
         private Transform m_transform;
         public override void Init() {
             m_transform = gameObject.transform;
-            m_transform.Rotation = Quaternion.Identity;
-            m_transform.Scale = new Vector3(8f, 2f, 2f);
-            m_transform.Position = Team == TeamType.Red ? RedTeamStartPoint : BlueTeamStartPoint;
+            m_transform.WorldRotation = Quaternion.Identity;
+            m_transform.WorldScale = new Vector3(8f, 2f, 2f);
+            m_transform.WorldPosition = Team == TeamType.Red ? RedTeamStartPoint : BlueTeamStartPoint;
         }
 
         public override void Update() {
@@ -47,23 +47,23 @@ namespace PongGame
                 }
             }
 
-            m_transform.Position += (Matrix.RotationQuaternion(m_transform.Rotation).Right * posOffset.X +
-            Matrix.RotationQuaternion(m_transform.Rotation).Forward * posOffset.Y) *
+            m_transform.WorldPosition += (Matrix.RotationQuaternion(m_transform.WorldRotation).Right * posOffset.X +
+            Matrix.RotationQuaternion(m_transform.WorldRotation).Forward * posOffset.Y) *
             10f * Speed * Engine.Instance.Time.DeltaTime;
 
-            if (m_transform.Position.X + m_transform.Scale.X * 0.5f > RightWall.Position.X - RightWall.Scale.X * 0.5f) {
-                m_transform.Position = new Vector3(
-                    RightWall.Position.X - RightWall.Scale.X * 0.5f - m_transform.Scale.X * 0.5f,
-                    m_transform.Position.Y,
-                    m_transform.Position.Z
+            if (m_transform.WorldPosition.X + m_transform.WorldScale.X * 0.5f > RightWall.WorldPosition.X - RightWall.WorldScale.X * 0.5f) {
+                m_transform.WorldPosition = new Vector3(
+                    RightWall.WorldPosition.X - RightWall.WorldScale.X * 0.5f - m_transform.WorldScale.X * 0.5f,
+                    m_transform.WorldPosition.Y,
+                    m_transform.WorldPosition.Z
                 );
             }
 
-            if (m_transform.Position.X - m_transform.Scale.X * 0.5f < LeftWall.Position.X + LeftWall.Scale.X * 0.5f) {
-                m_transform.Position = new Vector3(
-                    LeftWall.Position.X + LeftWall.Scale.X * 0.5f + m_transform.Scale.X * 0.5f, 
-                    m_transform.Position.Y, 
-                    m_transform.Position.Z
+            if (m_transform.WorldPosition.X - m_transform.WorldScale.X * 0.5f < LeftWall.WorldPosition.X + LeftWall.WorldScale.X * 0.5f) {
+                m_transform.WorldPosition = new Vector3(
+                    LeftWall.WorldPosition.X + LeftWall.WorldScale.X * 0.5f + m_transform.WorldScale.X * 0.5f, 
+                    m_transform.WorldPosition.Y, 
+                    m_transform.WorldPosition.Z
                 );
             }
         }

@@ -11,6 +11,11 @@ namespace SandBoxProject
 
         public Game(string name):base(name) { }
 
+        public override EngineCore.RenderTechnique.RenderPath GetRenderPath()
+        {
+            return EngineCore.RenderTechnique.RenderPath.ForwardPlus;
+        }
+
         public override void LoadMaterials()
         {
             Material mat;
@@ -20,6 +25,7 @@ namespace SandBoxProject
                 AlbedoMapAsset = "CowAlbedoMap",
                 PropetyBlock = new MaterialPropetyBlock()
                 {
+                    AlphaValue = 0.49f,
                     MetallicValue = 0.0f,
                     RoughnessValue = 0.75f,
                     Tile = Vector2.One * 3.5f,
@@ -130,234 +136,109 @@ namespace SandBoxProject
         private void CreateMap()
         {
             CreateSkySphere();
-            SetMainCamera(AddCamera<FreeCamera>("MainCamera", new Vector3(0f, 5f, -10f), Quaternion.Identity));
+            AddCamera<FreeCamera>("MainCamera", new Vector3(0f, 5f, -10f), Quaternion.Identity);
 
             LightObj = new Light()
             {
-                ambientColor = Vector4.One * 0.25f,
+                LightColor = Vector4.One * 0.5f,
                 radius = 20,
                 Type = Light.LightType.Directional,
                 EnableShadows = true,
             };
-            AddLight("Light", LightObj, new Vector3(0f, 5.5f, 0.1f), 
-                Quaternion.RotationYawPitchRoll(-(float)Math.PI * 0.5f, -(float)Math.PI * 0.5f, 0), true);
+            float rad = MathUtil.DegreesToRadians(-45f);
+            Vector3 lightpos = new Vector3(0f, 12f, 10f) * 10f;
+            GameObject go = AddLight("Light", LightObj, lightpos,
+                Quaternion.RotationYawPitchRoll(0, rad, 0), true);
 
-            AddGameObject(
-                "ReflectionSphere",
-                new Transform()
-                {
-                    Position = Vector3.Up * 3.5f,
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One,
-                },
-                new Renderer()
-                {
-                    Geometry = Primitives.Sphere(30),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = Material.GetSkySphereMaterial(),
-                    SpecificType = Renderer.SpecificTypeEnum.ReflectionSphere,
-                }
-            );
-
-            Vector3 TestColor = new Vector3(0.47f, 0.78f, 0.73f);
-            TestColor = Vector3.One * 0.84f;
-
-            for (int i = 0; i < 7; i++)
-            {
-                for (int j = 0; j < 7; j++)
-                {
-                    AddGameObject(
-                        "Sphere0_" + i,
-                        new Transform()
-                        {
-                            Position = Vector3.Up * 9.5f + Vector3.Left * 1.5f * (i + 1) + Vector3.ForwardLH * 1.5f * (j + 1),
-                            Rotation = Quaternion.RotationYawPitchRoll(0, MathUtil.Pi * 0.5f, 0),
-                            Scale = Vector3.One,
-                        },
-                        new Renderer()
-                        {
-                            Geometry = Primitives.Sphere(32),
-                            Topology = PrimitiveTopology.TriangleList,
-                            RendererMaterial = GetMaterial("M_Test"),
-                            CustomPropertyBlock = new MaterialPropetyBlock()
-                            {
-                                AlbedoColor = TestColor,
-                                RoughnessValue = 0.0f + 0.1666f * i,
-                                MetallicValue = 0.0f + 0.1666f * j,
-                            },
-                        }
-                    );
-                }
+            Random random = new Random();
+            float range = 120f;
+            for (int i = 0; i < 100; i++){
+                AddLight("PointLight", new Light() {
+                    Type = Light.LightType.Point,
+                    radius = RandomUtil.NextFloat(random, 5f, 10f),
+                    LightColor = RandomUtil.NextVector4(random, Vector4.One * 0.2f, Vector4.One),
+                    LightIntensity = 1f,
+                }, new Vector3(RandomUtil.NextFloat(random, -range * 0.5f, range * 0.5f),
+                    RandomUtil.NextFloat(random, 0, 5.0f), RandomUtil.NextFloat(random, -range * 0.5f, range * 0.5f)), Quaternion.Identity);
             }
-
-            AddGameObject(
-                "Sphere1",
-                new Transform()
-                {
-                    Position = Vector3.Up * 8f,
-                    Rotation = Quaternion.RotationYawPitchRoll(0, MathUtil.Pi * 0.5f, 0),
-                    Scale = Vector3.One,
-                },
-                new Renderer()
-                {
-                    Geometry = Primitives.Sphere(30),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = GetMaterial("M_Copper"),
-                }
-            );
-
-            AddGameObject(
-                "Sphere2",
-                new Transform()
-                {
-                    Position = Vector3.Up * 6.5f,
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One,
-                },
-                new Renderer()
-                {
-                    Geometry = Primitives.Sphere(30),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = GetMaterial("M_Metal"),
-                }
-            );
-
+            
+            var GO = AddGameObject("455");
+            GO.transform.WorldPosition = Vector3.ForwardLH + Vector3.Up * 4f;
+            GO.transform.LocalScale = Vector3.One * 5f;
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Sphere(16), GetMaterial("M_Copper"));
         }
 
         public override void Update() {
-            //LightObj.gameObject.transform.Position = new Vector3((float)Math.Cos(Time.Time * 0.5f) * 5.5f, 5f, (float)Math.Sin(Time.Time * 0.5f) * 5.5f);
-            //LightObj.gameObject.transform.Rotation = Quaternion.RotationYawPitchRoll(0, Time.Time * 1f, 0f);
+            LightObj.gameObject.transform.WorldPosition = new Vector3((float)Math.Cos(Time.Time * 0.5f) * 5.5f, 5f, (float)Math.Sin(Time.Time * 0.5f) * 5.5f);
+            LightObj.gameObject.transform.WorldRotation = Quaternion.RotationYawPitchRoll(0, Time.Time * 1f, 0f);
             if (Input.IsKeyDown(System.Windows.Forms.Keys.Escape)) {
                 Quit();
             }
         }
 
         private void AddTestScene() {
-            AddGameObject(
-                "Cow",
-                new Transform()
-                {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 0.0025f,
-                    Position = new Vector3(0, 0, 2.5f),
-                },
-                new Renderer()
-                {
-                    Geometry = AssetsLoader.LoadMesh("CowMesh"),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = GetMaterial("M_Cow"),
-                }
-            );
+            var GO = AddGameObject("Cow");
+            GO.transform.WorldPosition = new Vector3(0, 0, 2.5f);
+            GO.transform.WorldRotation = Quaternion.Identity;
+            GO.transform.WorldScale = Vector3.One * 0.0025f;
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(AssetsLoader.LoadMesh("CowMesh"), GetMaterial("M_Cow"));
 
-            /*GameObject Hat = AddGameObject(
-                "Hat",
-                new Transform()
-                {
-                    Rotation = Quaternion.RotationYawPitchRoll(0, -MathUtil.Pi * 0.5f, 0),
-                    Scale = Vector3.One * 0.1f,
-                    Position = new Vector3(0, 5f, 30.6f),
-                }
-            );
+            float floorLength = 120f;
+            GameObject Floor = AddGameObject("Floor");
+            Floor.transform.WorldRotation = Quaternion.Identity;
+            Floor.transform.WorldScale = new Vector3(floorLength, 0.25f, floorLength);
+            Floor.transform.WorldPosition = Vector3.Down * 0.15f;
+            Floor.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_RockFloor"));
 
-            Hat.AddComponent(new Renderer()
+            GO = AddGameObject("FloorT");
+            GO.transform.WorldRotation = Quaternion.Identity;
+            GO.transform.WorldScale = new Vector3(floorLength, 5f, 0.25f);
+            GO.transform.WorldPosition = Vector3.ForwardLH * floorLength * 0.5f + Vector3.Up * 2.45f;
+            GO.GetComponent<Renderer>().CustomPropertyBlock = new MaterialPropetyBlock() {
+                Tile = new Vector2(16, 0.75f),
+            };
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_RockFloor"));
+
+            GO = AddGameObject("FloorTT");
+            GO.transform.WorldRotation = Quaternion.Identity;
+            GO.transform.WorldScale = new Vector3(floorLength, 5f, 0.25f);
+            GO.transform.WorldPosition = -Vector3.ForwardLH * floorLength * 0.5f + Vector3.Up * 2.45f;
+            GO.GetComponent<Renderer>().CustomPropertyBlock = new MaterialPropetyBlock() {
+                Tile = new Vector2(16, 0.75f),
+            };
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_RockFloor"));
+
+            GO = AddGameObject("FloorTTT");
+            GO.transform.WorldRotation = Quaternion.RotationYawPitchRoll(MathUtil.Pi, 0, 0);
+            GO.transform.WorldScale = new Vector3(0.25f, 5f, floorLength);
+            GO.transform.WorldPosition = Vector3.Right * floorLength * 0.5f + Vector3.Up * 2.45f;
+            GO.GetComponent<Renderer>().CustomPropertyBlock = new MaterialPropetyBlock() {
+                Tile = new Vector2(16, 0.75f),
+            };
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_RockFloor"));
+
+            GO = AddGameObject("FloorTTTT");
+            GO.transform.WorldRotation = Quaternion.Identity;
+            GO.transform.WorldScale = new Vector3(0.25f, 5f, floorLength);
+            GO.transform.WorldPosition = -Vector3.Right * floorLength * 0.5f + Vector3.Up * 2.45f;
+            GO.GetComponent<Renderer>().CustomPropertyBlock = new MaterialPropetyBlock() {
+                Tile = new Vector2(16, 0.75f),
+            };
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_RockFloor"));
+
+            Random random = new Random();
+            float domH = 10f;
+            for (int i = 0; i < 10; i++)
             {
-                Geometry = AssetsLoader.LoadMesh("HatMesh"),
-                Topology = PrimitiveTopology.TriangleList,
-                RendererMaterial = GetMaterial("M_Cat"),
-            });*/
-
-            AddGameObject(
-                "SmallCube",
-                new Transform()
-                {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One,
-                    Position = new Vector3(0, 2f, 6f),
-                },
-                new Renderer()
-                {
-                    Geometry = Primitives.Cube(new Vector4(1f, 0, 0, 1f)),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = GetMaterial("M_Metal"),
-                }
-            );
-
-            Material StoneMaterial = GetMaterial("M_Stone");
-            AddGameObject(
-                "Rock",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 1f,
-                    Position = new Vector3(3f, 0.2f, -10f),
-                }, new Renderer() {
-                    Geometry = AssetsLoader.LoadMesh("RockMesh"),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = StoneMaterial,
-                }
-            );
-            AddGameObject(
-                "Rock",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 1f,
-                    Position = new Vector3(-3f, 0.2f, -10f),
-                }, new Renderer() {
-                    Geometry = AssetsLoader.LoadMesh("RockMesh"),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = StoneMaterial,
-                }
-            );
-            AddGameObject(
-                "Cube1m",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One,
-                    Position = Vector3.Left * 4f + Vector3.Up * 0.5f,
-                }, new Renderer() {
-                    Geometry = AssetsLoader.LoadMesh("Cube1mMesh"),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = GetMaterial("M_SnowRock"),
-                }
-            );
-            AddGameObject(
-                "Cube1m",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One,
-                    Position = Vector3.Left * 4f + Vector3.Up * 1.5f,
-                }, new Renderer() {
-                    Geometry = AssetsLoader.LoadMesh("Cube1mMesh"),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = GetMaterial("M_SnowRock"),
-                }
-            );
-            AddGameObject(
-                "Soldier",
-                new Transform() {
-                    Position = Vector3.Left * 4f + Vector3.BackwardLH,
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 0.6f,
-                },
-                new Renderer() {
-                    Geometry = AssetsLoader.LoadMesh("SoldierMesh"),
-                    RendererMaterial = GetMaterial("M_Soldier"),
-                }
-            );
-
-            GameObject Floor = AddGameObject(
-                "Floor",
-                new Transform()
-                {
-                    Rotation = Quaternion.Identity,
-                    Scale = new Vector3(25f, 0.25f, 25f),
-                    Position = Vector3.Down * 0.15f,
-                },
-                new Renderer()
-                {
-                    Geometry = Primitives.Cube(),
-                    RendererMaterial = GetMaterial("M_RockFloor"),
-                }
-            );
+                Vector3 pos = RandomUtil.NextVector3(random, 
+                    new Vector3(-floorLength * 0.5f + 10f, domH * 0.5f, -floorLength * 0.5f + 10f), 
+                    new Vector3(floorLength * 0.5f - 10f, domH * 0.5f, floorLength * 0.5f - 10f));
+                GO = AddGameObject("House" + i);
+                GO.transform.WorldRotation = Quaternion.Identity;
+                GO.transform.WorldScale = new Vector3(10f, domH, 10f);
+                GO.transform.WorldPosition = pos;
+                GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Metal"));
+            }
         }
     }
 }

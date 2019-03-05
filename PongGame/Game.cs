@@ -1,6 +1,7 @@
 ﻿using SharpDX;
 using SharpDX.Direct3D;
 using EngineCore;
+using EngineCore.RenderTechnique;
 
 namespace PongGame
 {
@@ -11,6 +12,10 @@ namespace PongGame
         private int MaxScore = 7;
         private bool isGameStarted;
         public Game(string name) : base(name) { }
+        public override RenderPath GetRenderPath()
+        {
+            return RenderPath.Forward;
+        }
 
         public override void LoadMaterials() {
             MaterialTable.Add("M_Red", new Material() {
@@ -38,30 +43,17 @@ namespace PongGame
         public override void OnStart() {
             ClearColor = Color.Black;
 
-            SetMainCamera(
-                AddCamera(
-                    "MainCamera",
-                    new Camera(),
-                    new Transform() {
-                        Position = new Vector3(0f, 40f, 0f),
-                        Rotation = Quaternion.Identity,
-                    }
-                )
-            );
+            AddCamera<Camera>("MainCamera", new Vector3(0f, 40f, 0f), Quaternion.RotationYawPitchRoll(
+                MathUtil.DegreesToRadians(0f), MathUtil.DegreesToRadians(89.99f), 0
+            ));
 
             Light LightObj = new Light() {
-                ambientColor = new Vector4(0.1f, 0.1f, 0.1f, 1f),
-                diffuseColor = new Vector4(0.74f, 0.74f, 0.74f, 1f),
-                specularColor = new Vector4(0.76f, 0.76f, 0.76f, 1f),
+                LightColor = new Vector4(0.1f, 0.1f, 0.1f, 1f),
                 radius = 10,
                 Type = Light.LightType.Directional,
                 EnableShadows = true,
             };
             AddLight("Light", LightObj, new Vector3(0f, 10f, 10f), Quaternion.RotationYawPitchRoll(30f, 30f, 30f), true);
-
-            MainCamera.gameObject.transform.Rotation = Quaternion.RotationYawPitchRoll(
-                MathUtil.DegreesToRadians(0f), MathUtil.DegreesToRadians(89.99f), 0
-            );
 
             CreateCeils();
             CreateWalls();
@@ -104,21 +96,12 @@ namespace PongGame
         }
         
         private ScorePoint CreateScorePoint(int i, bool isRed) {
-            GameObject GO = AddGameObject(
-                (isRed ? "RedScores" : "BlueScores") + i,
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 0.01f,
-                    Position = new Vector3(-25f, 1f, isRed ? (i * 4f - 28f) : (28f - i * 4f)),
-                },
-                new Renderer() {
-                    Geometry = Primitives.Cube(isRed ? Primitives.Red : Primitives.Blue),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = isRed ? GetMaterial("M_Red") : GetMaterial("M_Blue"),
-                    SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                }
-            );
-
+            GameObject GO = AddGameObject((isRed ? "RedScores" : "BlueScores") + i);
+            GO.transform.WorldRotation = Quaternion.Identity;
+            GO.transform.WorldScale = Vector3.One * 0.01f;
+            GO.transform.WorldPosition = new Vector3(-25f, 1f, isRed ? (i * 4f - 28f) : (28f - i * 4f));
+            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), isRed ? GetMaterial("M_Red") : GetMaterial("M_Blue"));
             return (ScorePoint)GO.AddComponent(new ScorePoint());
         }
 
@@ -157,18 +140,10 @@ namespace PongGame
 
         private Ball m_Ball;
         private void CreateBall() {
-            GameObject GO = AddGameObject(
-                "Ball",
-                new Transform() {
-                    Position = Vector3.Up,
-                }, 
-                new Renderer() {
-                    Geometry = Primitives.Cube(),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = GetMaterial("M_Ball"),
-                    SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                }
-            );
+            GameObject GO = AddGameObject("Ball");
+            GO.transform.WorldPosition = Vector3.Up;
+            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Ball"));
 
             m_Ball = (Ball)GO.AddComponent(new Ball() {
                 Speed = 60f,
@@ -182,36 +157,20 @@ namespace PongGame
         private Player RedPlayer;
         private Player BluePlayer;
         private void CreatePlayers() {
-            GameObject GO = AddGameObject(
-                "RedPlayer",
-                new Transform() {
-                    Position = Vector3.Up,
-                },
-                new Renderer() {
-                    Geometry = Primitives.Cube(Primitives.Red),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = GetMaterial("M_Red"),
-                    SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                }
-            );
+            GameObject GO = AddGameObject("RedPlayer");
+            GO.transform.WorldPosition = Vector3.Up;
+            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Red"));
             RedPlayer = (Player)GO.AddComponent(new Player() {
                 Team = Player.TeamType.Red,
                 LeftWall = LeftWall,
                 RightWall = RightWall
             });
 
-            GO = AddGameObject(
-                "BluePlayer",
-                new Transform() {
-                    Position = Vector3.Up,
-                },
-                new Renderer() {
-                    Geometry = Primitives.Cube(Primitives.Blue),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = GetMaterial("M_Blue"),
-                    SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                }
-            );
+            GO = AddGameObject("BluePlayer");
+            GO.transform.WorldPosition = Vector3.Up;
+            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Blue"));
             BluePlayer = (Player)GO.AddComponent(new Player() {
                 Team = Player.TeamType.Blue,
                 LeftWall = LeftWall,
@@ -222,53 +181,33 @@ namespace PongGame
         private Transform LeftWall;
         private Transform RightWall;
         private void CreateWalls() {
-            LeftWall = AddGameObject(
-                "LeftWall",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = new Vector3(2f, 2f, 58f),
-                    Position = new Vector3(-20f, 1f, 0),
-                }, new Renderer() {
-                    Topology = PrimitiveTopology.TriangleList,
-                    Geometry = Primitives.Cube(),
-                    RendererMaterial = GetMaterial("M_Green"),
-                    SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                }
-            ).transform;
+            GameObject GO = AddGameObject("LeftWall");
+            GO.transform.WorldRotation = Quaternion.Identity;
+            GO.transform.WorldScale = new Vector3(2f, 2f, 58f);
+            GO.transform.WorldPosition = new Vector3(-20f, 1f, 0);
+            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Green"));
+            LeftWall = GO.transform;
 
-            RightWall = AddGameObject(
-                "LeftWall",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = new Vector3(2f, 2f, 58f),
-                    Position = new Vector3(20f, 1f, 0),
-                },
-                new Renderer() {
-                    Topology = PrimitiveTopology.TriangleList,
-                    Geometry = Primitives.Cube(),
-                    RendererMaterial = GetMaterial("M_Green"),
-                    SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                }
-            ).transform;
+            GO = AddGameObject("RightWall");
+            GO.transform.WorldRotation = Quaternion.Identity;
+            GO.transform.WorldScale = new Vector3(2f, 2f, 58f);
+            GO.transform.WorldPosition = new Vector3(20f, 1f, 0);
+            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Green"));
+            RightWall = GO.transform;
         }
 
         private void CreateCeils() {
             Primitives.CeilSizeX = 20;
             Primitives.CeilSizeY = 29;
-            GameObject Ceil = AddGameObject(
-                "Ceil",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 4f,
-                    Position = Vector3.Zero,
-                }, 
-                new Renderer() {
-                    Topology = PrimitiveTopology.LineList,
-                    Geometry = Primitives.Ceil,
-                    RendererMaterial = GetMaterial("M_Green"),
-                    SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                }
-            );
+            GameObject Ceil = AddGameObject("Ceil");
+            Ceil.transform.WorldRotation = Quaternion.Identity;
+            Ceil.transform.WorldScale = Vector3.One * 4f;
+            Ceil.transform.WorldPosition = Vector3.Zero;
+            Ceil.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+            Ceil.GetComponent<Renderer>().Topology = PrimitiveTopology.LineList;
+            Ceil.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Ceil, GetMaterial("M_Green"));
         }
 
     }

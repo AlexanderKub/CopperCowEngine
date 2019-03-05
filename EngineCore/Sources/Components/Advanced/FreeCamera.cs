@@ -33,7 +33,7 @@ namespace EngineCore
         }
 
         public override void Update() {
-            gameObject.transform.Rotation = 
+            gameObject.transform.WorldRotation = 
                 Quaternion.RotationYawPitchRoll(MathUtil.DegreesToRadians(Yaw), MathUtil.DegreesToRadians(Pitch), 0f);
 
             Vector3 posOffset = Vector3.Zero;
@@ -59,9 +59,9 @@ namespace EngineCore
             }
 
             //Backward cause LeftHanded space
-            gameObject.transform.Position += (Matrix.RotationQuaternion(gameObject.transform.Rotation).Right * posOffset.X +
-                Matrix.RotationQuaternion(gameObject.transform.Rotation).Backward * posOffset.Z +
-                Matrix.RotationQuaternion(gameObject.transform.Rotation).Up * posOffset.Y) *
+            gameObject.transform.WorldPosition += (Matrix.RotationQuaternion(gameObject.transform.WorldRotation).Right * posOffset.X +
+                Matrix.RotationQuaternion(gameObject.transform.WorldRotation).Backward * posOffset.Z +
+                Matrix.RotationQuaternion(gameObject.transform.WorldRotation).Up * posOffset.Y) *
                 10f * Speed * Engine.Instance.Time.DeltaTime;
         }
     }

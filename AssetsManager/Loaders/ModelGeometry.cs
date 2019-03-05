@@ -73,6 +73,10 @@ namespace AssetsManager.Loaders
             Normals = normals;
 
             int n = vrtxs.Length;
+            if (n > 10000)
+            {
+                n = vrtxs.Length;
+            }
             m_Points = new VertexStruct[n];
             m_SV_Points = new PositionsColorsStruct[n];
             for (int i = 0; i < n; i++) {
@@ -81,10 +85,10 @@ namespace AssetsManager.Loaders
                 m_Points[i] = new VertexStruct() {
                     Position = new Vector4(vrtxs[i], 1),
                     Color = (colors == null ? Vector4.One : colors[i]),
-                    UV = (uvs == null ? Vector4.Zero : new Vector4(uvs[i], 0, 0)),
-                    Normal = new Vector4(normal, 1),
-                    Tangent = new Vector4(tangent, 1),
-                    Binormal = new Vector4(binormal, 1),
+                    UV0 = new Vector4(uvs == null ? Vector2.Zero : uvs[i], 0, 0),
+                    UV1 = Vector4.Zero,
+                    Normal = new Vector4(normal, 0),
+                    Tangent = new Vector4(tangent, 0),
                 };
                 m_SV_Points[i] = new PositionsColorsStruct() {
                     Pos = m_Points[i].Position,

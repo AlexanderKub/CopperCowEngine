@@ -16,8 +16,8 @@ namespace Editor.AssetsEditor.Components
         }
 
         public override void Update() {
-            gameObject.transform.Rotation = Target.Rotation;
-            gameObject.transform.Scale = Target.Scale;
+            gameObject.transform.LocalRotation = Target.LocalRotation;
+            gameObject.transform.LocalScale = Target.LocalScale;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace EngineCore
         public bool SelfActive = true;
         private bool IsActive {
             get {
-                if (transform.Parent != null) {
+                if (transform.Parent) {
                     return transform.Parent.gameObject.IsActive && SelfActive;
                 }
                 return SelfActive;
@@ -21,19 +21,31 @@ namespace EngineCore
         public List<Component> Components;
         public Transform transform;
 
-        public GameObject(string name) {
+        internal GameObject(string name) {
             Name = name;
             Components = new List<Component>();
         }
-        
+
         public Component AddComponent(Component add) {
+            bool existFlag = false;
+            foreach (var item in Components) {
+                if (item.GetType() == add.GetType())
+                {
+                    existFlag = true;
+                    break;
+                }
+            }
+            if (existFlag) {
+                Engine.Log("This GameObject already has component: " + add.GetType().ToString());
+                return null;
+            }
             //TODO: Check if component already exist on gameObject.
             add.gameObject = this;
             add.Init();
             Components.Add(add);
 
             if(add.GetType() == typeof(Transform)) {
-                if (transform != null) {
+                if (transform) {
                     return transform;
                 }
                 transform = (Transform)add;
@@ -80,6 +92,12 @@ namespace EngineCore
             Components.ForEach((x) => {
                 x.Destroy();
             });
+            Components.Clear();
+        }
+
+        public static implicit operator bool(GameObject foo)
+        {
+            return !object.ReferenceEquals(foo, null);
         }
     }
 }

@@ -1,10 +1,10 @@
-#ifndef __DEPENDENCY_HLSL__
-#define __DEPENDENCY_HLSL__
-struct ConstBuffer
+#ifndef __DEPENDENCY_HLSL_STRUCTURES__
+#define __DEPENDENCY_HLSL_STRUCTURES__
+struct CBufferPerObjectStruct
 {
-    float4x4 viewProjMatrix;
-    float4x4 worldMatrix;
-    float4 cameraPosition;
+    float4x4 WorldViewProjMatrix;
+    float4x4 WorldViewMatrix;
+    float4x4 WorldMatrix;
     float2 textureTiling;
     float2 textureShift;
 
@@ -25,6 +25,28 @@ struct ConstBuffer
     float4 optionsMask1;
 };
 
+struct CBufferPerFrameStruct
+{
+    float4x4 Projection;
+    float4x4 ProjectionInv;
+    float3 CameraPos;
+    float AlphaTest;
+    uint NumLights;
+    uint WindowWidth;
+    uint WindowHeight;
+    uint MaxNumLightsPerTile;
+    uint DirLightNum;
+    float3 filler;
+};
+
+struct CBufferDirLightStruct
+{
+    float3 DirLightDirection;
+    float DirLightIntensity;
+    float4 DirLightColor;
+};
+
+
 //TODO: refactoring
 struct LightBuffer
 {
@@ -44,5 +66,4 @@ struct PixelOutputType
     float4 roughnessMetallicDepth : SV_Target3;
     float4 occlusionUnlitNonShadow : SV_Target4;
 };
-
 #endif

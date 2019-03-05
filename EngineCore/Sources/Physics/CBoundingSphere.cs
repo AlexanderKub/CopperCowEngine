@@ -20,8 +20,8 @@ namespace EngineCore
 
         public bool HasContact(CBoundingSphere other) {
             float distance = Vector3.Distance(
-                m_transfrorm.Position + Center,
-                other.gameObject.transform.Position + other.Center
+                m_transfrorm.WorldPosition + Center,
+                other.gameObject.transform.WorldPosition + other.Center
             );
             return distance <= Radius + other.Radius;
         }

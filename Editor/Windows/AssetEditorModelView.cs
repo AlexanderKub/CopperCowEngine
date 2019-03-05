@@ -1,7 +1,9 @@
-﻿using AssetsManager.AssetsMeta;
+﻿using AssetsManager;
+using AssetsManager.AssetsMeta;
 using Editor.AssetsEditor;
 using Editor.MVVM;
 using System;
+using System.IO;
 
 namespace Editor
 {
@@ -93,6 +95,16 @@ namespace Editor
             }
         }
 
+        private BaseCommand m_SaveChangingCommand;
+        public BaseCommand SaveChangingCommand {
+            get {
+                return m_SaveChangingCommand ??
+                  (m_SaveChangingCommand = new BaseCommand(obj => {
+                      m_AssetObject.SaveChanging();
+                  }));
+            }
+        }
+
         private MaterialAssetModelView m_AssetObject;
         internal MaterialAssetModelView AssetObject
         {
@@ -106,11 +118,27 @@ namespace Editor
         }
         #endregion
 
-        public AssetEditorModelView() {
+        public AssetEditorModelView(ProjectLink project) {
+            AssetsManagerInstance.GetManager().RootPath = Path.GetDirectoryName(project.Src);
+            //AssetsManagerInstance.GetManager().ImportAsset("PBR/DefferedPBRShader.hlsl", "DefferedPBRShader");
+            //AssetsManagerInstance.GetManager().ImportAsset("PBR/DefferedPBRQuadShader.hlsl", "DefferedPBRQuadShader");
             EngineRef = new PreviewEngine();
             EngineRef.OnSetViewsControlsEnabled += (bool zoom, bool yaw, bool pitch, bool viewPos, bool meshType) => {
                 ControlsVisibleFlags = new bool[] { zoom, yaw, pitch, viewPos, meshType };
             };
+        }
+
+        private BaseCommand m_ResetAssetValues;
+        public BaseCommand ResetAssetValues {
+            get {
+                return m_ResetAssetValues ??
+                  (m_ResetAssetValues = new BaseCommand(obj => {
+                      AssetObject.ResetAsset();
+                      MAMV?.Invoke(AssetObject);
+                  }, (obj) => {
+                      return AssetObject != null && AssetObject.IsEdited();
+                  }));
+            }
         }
 
         internal Action<MaterialAssetModelView> MAMV;

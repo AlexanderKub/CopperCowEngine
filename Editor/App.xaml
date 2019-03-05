@@ -4,7 +4,7 @@
              xmlns:local="clr-namespace:Editor"
              xmlns:sw="clr-namespace:Editor.StyleableWindow"  
              StartupUri="Windows/LaunchWindow.xaml">
-    <!--AssetEditorWindow-->
+    <!-- LaunchWindow-->
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

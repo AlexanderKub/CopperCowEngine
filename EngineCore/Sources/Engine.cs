@@ -13,10 +13,11 @@ using Device = SharpDX.Direct3D11.Device;
 using Vector2 = SharpDX.Vector2;
 using Vector3 = SharpDX.Vector3;
 using EngineCore.Displays;
+using System.Linq;
 
 namespace EngineCore
 {
-    public class Engine 
+    public class Engine
     {
         public static Engine Instance;
         public string Name;
@@ -28,6 +29,7 @@ namespace EngineCore
 
         public double gpuFrameTime;
         private Utils.GPUProfiler gpuProfiler;
+        internal Utils.CPUProfiler CPUProfiler;
 
         #region Engine config properties
         public static bool EnableShaderLogLevel = true;
@@ -37,28 +39,25 @@ namespace EngineCore
         private Control Surface;
         internal Display DisplayRef { get; private set; }
 
-        public Device Device
-        {
+        public Device Device {
             get {
                 return DisplayRef.DeviceRef;
             }
         }
 
-        public DeviceContext Context
-        {
+        public DeviceContext Context {
             get {
                 return DisplayRef.DeviceRef.ImmediateContext;
             }
         }
 
-        public SwapChain SwapChain
-        {
+        public SwapChain SwapChain {
             get {
                 return ((FormDisplay)DisplayRef).SwapChainRef;
             }
         }
         #endregion
-        
+
         public Engine(string name) {
             IsSingleFormMode = true;
             Control m_Form = new EngineRenderForm() {
@@ -78,6 +77,11 @@ namespace EngineCore
             Instance = this;
             DisplayRef = new InteropDisplay();
             InitViews();
+        }
+
+        public virtual RenderTechnique.RenderPath GetRenderPath()
+        {
+            return RenderTechnique.RenderPath.Forward;
         }
 
         #region Life Cycle
@@ -116,6 +120,8 @@ namespace EngineCore
             gpuFrameTime = 0.0;
             gpuProfiler = new Utils.GPUProfiler();
             gpuProfiler.Initialize(Device);
+            CPUProfiler = new Utils.CPUProfiler();
+            CPUProfiler.Initialize();
 
             using (var loop = new RenderLoop(Surface)) {
                 while (loop.NextFrame()) {
@@ -190,7 +196,7 @@ namespace EngineCore
                 x.Update();
             });
             if (SkySphereObject != null && MainCamera != null) {
-                SkySphereObject.transform.Position = MainCamera.gameObject.transform.Position;
+                SkySphereObject.transform.WorldPosition = MainCamera.gameObject.transform.WorldPosition;
             }
             UIConsoleInstance.Update();
 
@@ -199,11 +205,13 @@ namespace EngineCore
                 lastPhysicTime = Time.Time;
             }
 
-            RendererTechnique.Draw();
+            RendererTechniqueRef.Draw();
             UIConsoleInstance.Draw();
+            CPUProfiler?.Frame();
         }
 
         public void CleanupSystemResources() {
+            CPUProfiler?.Shutdown();
             IsInitialized = false;
 
             RemoveInputEventListeners();
@@ -215,11 +223,12 @@ namespace EngineCore
             AssetsLoader.CleanupAssets();
 
             UIConsoleInstance.Dispose();
+            RendererTechniqueRef.Dispose();
             DisplayRef.OnRender -= RenderOneFrame;
             DisplayRef.OnInitRenderTarget -= OnInitRenderTarget;
             DisplayRef.Cleanup();
         }
-        
+
         //Display calss mb?
         public void ResetTargets() {
             //New or Cached old?
@@ -268,7 +277,7 @@ namespace EngineCore
 
         public InputDevice Input;
         public Timer Time;
-        internal BaseRendererTechnique RendererTechnique;
+        internal RenderTechnique.BaseRendererTechnique RendererTechniqueRef;
         internal UIConsole UIConsoleInstance { get; private set; }
         public ScriptEngine ScriptEngineInstance;
 
@@ -284,9 +293,22 @@ namespace EngineCore
             physicTimestamp = 0.01f;
             lastPhysicTime = -0.01f;
 
-            //RendererTechnique = new Technique.ForwardRendererTechnique();
-            RendererTechnique = new Technique.DefferedRendererTechnique();
-            RendererTechnique.Init();
+            switch (GetRenderPath())
+            {
+                case RenderTechnique.RenderPath.Forward:
+                    RendererTechniqueRef = new RenderTechnique.ForwardRendererTechnique();
+                    break;
+                case RenderTechnique.RenderPath.ForwardPlus:
+                    RendererTechniqueRef = new RenderTechnique.ForwardPlusRendererTechnique();
+                    break;
+                case RenderTechnique.RenderPath.Deffered:
+                    RendererTechniqueRef = new RenderTechnique.DefferedRendererTechnique();
+                    break;
+                default:
+                    break;
+            }
+
+            RendererTechniqueRef.Init();
 
             UIConsoleInstance = new UIConsole();
             AddInputEventListeners();
@@ -296,23 +318,20 @@ namespace EngineCore
         #endregion
 
         #region Game Objects
-        public GameObject AddGameObject(GameObject go) {
+        public GameObject AddGameObject(string name)
+        {
+            return AddGameObject(name, false);
+        }
+
+        public GameObject AddGameObject(string name, bool withoutRenderer)
+        {
+            GameObject go = new GameObject(name);
+            go.AddComponent(new Transform());
+            if (!withoutRenderer) {
+                go.AddComponent(new Renderer());
+            }
             GameObjects.Add(go);
             return go;
-        }
-
-        public GameObject AddGameObject(string name, Transform transform) {
-            return AddGameObject(name, transform, null);
-        }
-
-        public GameObject AddGameObject(string name, Transform transform, Renderer renderer) {
-            GameObject gameObject = new GameObject(name);
-            gameObject.AddComponent(transform);
-            if (renderer != null) {
-                gameObject.AddComponent(renderer);
-            }
-            GameObjects.Add(gameObject);
-            return gameObject;
         }
         #endregion
 
@@ -327,99 +346,139 @@ namespace EngineCore
 
         public GameObject SkySphereObject;
         public void CreateSkySphere() {
-            SkySphereObject = AddGameObject(
-                "SkySphere",
-                new Transform() {
-                    Position = Vector3.Zero,
-                    Rotation = Quaternion.RotationYawPitchRoll(0, MathUtil.Pi * 0.5f, 0),
-                    Scale = Vector3.One * 0.05f,
-                },
-                new Renderer() {
-                    SpecificType = Renderer.SpecificTypeEnum.SkySphere,
-                    Geometry = AssetsLoader.LoadMesh("SkySphereMesh"),
-                    RendererMaterial = Material.GetSkySphereMaterial(),
-                }
-            );
+            SkySphereObject = AddGameObject("SkySphere");
+            SkySphereObject.transform.WorldPosition = Vector3.Zero;
+            SkySphereObject.transform.WorldRotation = Quaternion.RotationYawPitchRoll(0, MathUtil.Pi * 0.5f, 0);
+            SkySphereObject.transform.WorldScale = Vector3.One * 0.05f;
+            SkySphereObject.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.SkySphere;
+            SkySphereObject.GetComponent<Renderer>().RendererMaterial = Material.GetSkySphereMaterial();
+            SkySphereObject.GetComponent<Renderer>().UpdateMesh(AssetsLoader.LoadMesh("SkySphereMesh"));
         }
 
         private void LoadBasicShaders() {
             //TODO: Load shaders refactoring
-            AssetsLoader.LoadShader("DefferedPBRQuadShader");
-            AssetsLoader.LoadShader("DefferedPBRShader");
-            AssetsLoader.LoadShader("SkySphereShader");
-            AssetsLoader.LoadShader("ReflectionShader");
-            AssetsLoader.LoadShader("DepthShadows");
-            AssetsLoader.LoadShader("TriangleShader");
+            /*AssetsLoader.LoadShader("CommonVS");
+            AssetsLoader.LoadShader("DepthShadowsVS");
+            AssetsLoader.LoadShader("UITextureVS");
+            AssetsLoader.LoadShader("UITexturePS");
+            AssetsLoader.LoadShader("SkySpherePS");
+            AssetsLoader.LoadShader("ReflectionSpherePS");
+            AssetsLoader.LoadShader("FwdSkySpherePS");
+            AssetsLoader.LoadShader("PBRForwardPS");
+            AssetsLoader.LoadShader("PBRDefferedPS");
+            AssetsLoader.LoadShader("PBRDefferedQuadVS");
+            AssetsLoader.LoadShader("PBRDefferedQuadPS");*/
         }
         #endregion
 
         #region Cameras
         public Camera MainCamera { get; private set; }
-        public Camera AddCamera(string name, Camera camera, Transform transform) {
-            camera.Init();
-            GameObject CameraObject = new GameObject(name);
-            CameraObject.AddComponent(transform);
-            CameraObject.AddComponent(camera);
-            GameObjects.Add(CameraObject);
-            return camera;
+        internal List<Camera> m_Cameras = new List<Camera>();
+        public Camera[] Cameras {
+            get {
+                return m_Cameras.ToArray();
+            }
+        }
+
+        public Camera AddCamera<T>(string name) where T : Camera, new() {
+            return AddCamera<T>(name, Vector3.Zero, Quaternion.Identity);
         }
 
         public Camera AddCamera<T>(string name, Vector3 Position, Quaternion Rotation) where T : Camera, new() {
             Camera camera = new T();
             camera.Init();
-            GameObject CameraObject = new GameObject(name);
-            CameraObject.AddComponent(new Transform() {
-                Position = Position,
-                Rotation = Rotation,
-            });
+
+            m_Cameras.Add(camera);
+            if (!MainCamera) {
+                SetMainCamera(camera);
+            }
+
+            GameObject CameraObject = AddGameObject("CAMERA_" + name, true);
+            CameraObject.transform.WorldPosition = Position;
+            CameraObject.transform.WorldRotation = Rotation;
             CameraObject.AddComponent(camera);
-            GameObjects.Add(CameraObject);
             return camera;
         }
 
         public Camera SetMainCamera(Camera camera) {
-            camera.IsMain = true;
+            if (MainCamera) {
+                MainCamera.IsMain = false;
+            }
             MainCamera = camera;
-            return camera;
+            MainCamera.IsMain = true;
+            return MainCamera;
         }
         #endregion
 
-        #region Lights  
-        private static int MaxLightCount = 3;
-        private int m_lightSeparator = 1;
-        private Light[] m_lightsArray = new Light[MaxLightCount];
+        #region Lights 
+        private const int MaxDirLightCount = 3;
+        private List<Light> m_DirLights = new List<Light>();
+        private List<Light> m_PointLights = new List<Light>();
+        private List<Light> m_SpotLights = new List<Light>();
+
+        public Light[] Lights {
+            get {
+                return m_DirLights.Concat(m_PointLights).Concat(m_SpotLights).ToArray();
+            }
+        }
+
+        public Light[] NonDirLights {
+            get {
+                return m_PointLights.Concat(m_SpotLights).ToArray();
+            }
+        }
 
         public Light MainLight {
             get {
-                return m_lightsArray[0];
+                return m_DirLights[0];
             }
         }
 
-        public void AddLight(string name, Light lightObj, Vector3 Position, Quaternion Rotation) {
-            AddLight(name, lightObj, Position, Rotation, false);
+        public Light[] GetLightsByType(Light.LightType type) {
+            switch (type)
+            {
+                case Light.LightType.Directional:
+                    return m_DirLights.ToArray();
+                case Light.LightType.Point:
+                    return m_PointLights.ToArray();
+                case Light.LightType.Spot:
+                    return m_SpotLights.ToArray();
+            }
+            return null;
         }
 
-        public void AddLight(string name, Light lightObj, Vector3 Position, Quaternion Rotation, bool isMain) {
-            //Light is not game object for hierarchy?
-            GameObject GO = new GameObject(name) {
-                transform = new Transform() {
-                    Position = Position,
-                    Rotation = Rotation,
-                },
-            };
+        public GameObject AddLight(string name, Light lightObj, Vector3 Position, Quaternion Rotation) {
+            return AddLight(name, lightObj, Position, Rotation, false);
+        }
+
+        public GameObject AddLight(string name, Light lightObj, Vector3 Position, Quaternion Rotation, bool isMain) {
+            if (lightObj.Type == Light.LightType.Directional) {
+                if (m_DirLights.Count >= MaxDirLightCount) {
+                    Log("Maximum directional light count!");
+                    return null;
+                }
+            }
+            GameObject GO = AddGameObject(name, true);
+            GO.transform.WorldPosition = Position;
+            GO.transform.WorldRotation = Rotation;
+            GO.transform.WorldScale = Vector3.One;
             GO.AddComponent(lightObj);
             InternalAddLight(lightObj, isMain);
+            return GO;
         }
 
         private void InternalAddLight(Light light, bool isMain) {
-            if (isMain) {
-                m_lightsArray[m_lightSeparator] = m_lightsArray[0];
-                m_lightSeparator++;
-                m_lightsArray[0] = light;
-                return;
+            switch (light.Type) {
+                case Light.LightType.Directional:
+                    m_DirLights.Add(light);
+                    break;
+                case Light.LightType.Point:
+                    m_PointLights.Add(light);
+                    break;
+                case Light.LightType.Spot:
+                    m_SpotLights.Add(light);
+                    break;
             }
-            m_lightsArray[m_lightSeparator] = light;
-            m_lightSeparator++;
         }
         #endregion
 

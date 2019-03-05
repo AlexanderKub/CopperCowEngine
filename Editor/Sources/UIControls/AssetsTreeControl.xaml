@@ -8,18 +8,32 @@
              d:DesignHeight="200" d:DesignWidth="400">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="25"></RowDefinition>
+            <RowDefinition Height="30"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
-        <Border Grid.Row="0" BorderThickness="1" BorderBrush="{StaticResource AccentColorBrush}">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" 
+        <Border Grid.Row="0" BorderThickness="1" BorderBrush="{StaticResource AccentColorBrush}" 
                     Background="{StaticResource DataGridBackgroundBrush}">
-                <TextBlock VerticalAlignment="Center" Margin="5,0,0,0"
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="5,0,0,0"
                         FontSize="20" FontWeight="Bold">Assets tree</TextBlock>
-                <Button Content="..." Width="50" Margin="10,2,0,2" />
-                <Button Content="Create" Name="Create" Width="50" Margin="5,2,0,2" />
-                <Button Content="Save" Name="Save" Width="50" Margin="5,2,0,2" />
-            </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Height="22">
+                    <Button Content="Refresh" Padding="5,0" Margin="0,0,6,0" />
+                    <Button Content="Create" Padding="5,0" Margin="0,0,6,0" local:ClickOpensContextMenuBehavior.Enabled="True">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Material" Command="{Binding CreateCommand}" 
+                                          CommandParameter="Material" />
+                                <MenuItem Header="Cube map" Command="{Binding CreateCommand}" 
+                                          CommandParameter="CubeMap" />
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Border>
         <Border Grid.Row="1" BorderThickness="1 0 1 1" BorderBrush="{StaticResource AccentColorBrush}">
             <Grid>
@@ -43,7 +57,13 @@
                 </Border>
                 <ListBox Grid.Column="1" Name="Files" 
                      ItemsSource="{Binding Files}" 
-                     SelectedValue="{Binding SelectedFile}" />
+                     SelectedValue="{Binding SelectedFile}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" Margin="2"></TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </Grid>
         </Border>
     </Grid>

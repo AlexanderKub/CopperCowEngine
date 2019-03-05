@@ -24,19 +24,12 @@ namespace Editor.AssetsEditor.Views
             };
             TestMaterial.LoadMapsAndInitSampler();
 
-            PreviewGO = EngineRef.AddGameObject(
-                "TestCubeMapMesh",
-                new Transform() {
-                    Position = Vector3.Zero,
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 0.002f,
-                },
-                new Renderer() {
-                    Geometry = Primitives.Sphere(46),
-                    RendererMaterial = TestMaterial,
-                    SpecificType = Renderer.SpecificTypeEnum.ReflectionSphere,
-                }
-            );
+            PreviewGO = EngineRef.AddGameObject("TestCubeMapMesh");
+            PreviewGO.transform.WorldPosition = Vector3.Zero;
+            PreviewGO.transform.WorldRotation = Quaternion.Identity;
+            PreviewGO.transform.WorldScale = Vector3.One * 0.002f;
+            PreviewGO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.ReflectionSphere;
+            PreviewGO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Sphere(46), TestMaterial);
             PreviewGO.AddComponent(new PreviewBehaviour());
             PreviewGO.SelfActive = false;
         }
@@ -45,8 +38,8 @@ namespace Editor.AssetsEditor.Views
             base.Show(assetName);
             EngineRef.SetViewsControlsEnabled(false, false, false, true, false);
             PreviewGO.GetComponent<PreviewBehaviour>().Reset();
-            EngineRef.MainCamera.gameObject.transform.Position = new Vector3(0f, 0, 1f);
-            EngineRef.MainCamera.gameObject.transform.Rotation = Quaternion.RotationYawPitchRoll(MathUtil.Pi, 0, 0);
+            EngineRef.MainCamera.gameObject.transform.WorldPosition = new Vector3(0f, 0, 1f);
+            EngineRef.MainCamera.gameObject.transform.WorldRotation = Quaternion.RotationYawPitchRoll(MathUtil.Pi, 0, 0);
             PreviewGO.SelfActive = true;
 
             TestMaterial.AlbedoMapAsset = assetName;
@@ -104,8 +97,8 @@ namespace Editor.AssetsEditor.Views
                 default:
                     break;
             }
-            EngineRef.MainCamera.gameObject.transform.Position = pos;
-            EngineRef.MainCamera.gameObject.transform.Rotation = rot;
+            EngineRef.MainCamera.gameObject.transform.WorldPosition = pos;
+            EngineRef.MainCamera.gameObject.transform.WorldRotation = rot;
         }
     }
 }

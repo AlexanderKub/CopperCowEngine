@@ -21,8 +21,8 @@ namespace EngineCore {
             RegisterFunction("Help", this, typeof(ScriptEngine).GetMethod("Help"));
             RegisterFunction("DebugLog", Engine.Instance, typeof(Engine).GetMethod("Log"));
             RegisterFunction("Quit", Engine.Instance, typeof(Engine).GetMethod("Quit"));
-            RegisterFunction("DebugRender", Engine.Instance.RendererTechnique, typeof(BaseRendererTechnique).GetMethod("SetDebug"));
-            RegisterFunction("RenderIndex", Engine.Instance.RendererTechnique, typeof(BaseRendererTechnique).GetMethod("SetDebugIndex"));
+            RegisterFunction("DebugRender", Engine.Instance.RendererTechniqueRef, typeof(RenderTechnique.BaseRendererTechnique).GetMethod("SetDebug"));
+            RegisterFunction("RenderIndex", Engine.Instance.RendererTechniqueRef, typeof(RenderTechnique.BaseRendererTechnique).GetMethod("SetDebugIndex"));
             RegisterFunction("WireframeRender", Engine.Instance, typeof(Engine).GetMethod("SetWireframeRender"));
             RegisterFunction("SolidRender", Engine.Instance, typeof(Engine).GetMethod("SetSolidRender"));
             RegisterFunction("FPS", Engine.Instance.UIConsoleInstance, typeof(UIConsole).GetMethod("ToggleFPSCounter"));

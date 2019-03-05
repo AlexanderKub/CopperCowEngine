@@ -22,19 +22,12 @@ namespace Editor.AssetsEditor.Views
             //CubeMesh = AssetsLoader.LoadMesh("Cube1mMesh");
             CubeMesh = Primitives.Cube();
 
-            PreviewRenderer = new Renderer() {
-                Geometry = SphereMesh,
-                RendererMaterial = Material.DefaultMaterial,
-            };
-            PreviewGO = EngineRef.AddGameObject(
-                "TestMaterialMesh",
-                new Transform() {
-                    Position = Vector3.Zero,
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 0.002f,
-                },
-                PreviewRenderer
-            );
+            PreviewGO = EngineRef.AddGameObject("TestMaterialMesh");
+            PreviewGO.transform.WorldPosition = Vector3.Zero;
+            PreviewGO.transform.WorldRotation = Quaternion.Identity;
+            PreviewGO.transform.WorldScale = Vector3.One;
+            PreviewRenderer = PreviewGO.GetComponent<Renderer>();
+            PreviewRenderer.SetMeshAndMaterial(SphereMesh , Material.DefaultMaterial);
             PreviewGO.AddComponent(new PreviewBehaviour());
             PreviewGO.SelfActive = false;
         }
@@ -43,8 +36,8 @@ namespace Editor.AssetsEditor.Views
             base.Show(assetName);
             EngineRef.SetViewsControlsEnabled(true, true, true, false, true);
             PreviewGO.GetComponent<PreviewBehaviour>().Reset();
-            EngineRef.MainCamera.gameObject.transform.Position = new Vector3(0f, 0, 2f);
-            EngineRef.MainCamera.gameObject.transform.Rotation = Quaternion.RotationYawPitchRoll(MathUtil.Pi, 0, 0);
+            EngineRef.MainCamera.gameObject.transform.WorldPosition = new Vector3(0f, 0, 1.5f);
+            EngineRef.MainCamera.gameObject.transform.WorldRotation = Quaternion.RotationYawPitchRoll(MathUtil.Pi, 0, 0);
             PreviewGO.SelfActive = true;
 
             PreviewRenderer.RendererMaterial = AssetsLoader.LoadMaterial(assetName);

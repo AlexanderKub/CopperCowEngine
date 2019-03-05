@@ -1,8 +1,9 @@
 float3 GetShadowMapCoordinates(float4 lightViewPosition)
 {
     float2 ligtProjectTexCoord;
-    ligtProjectTexCoord.x = (lightViewPosition.x / lightViewPosition.w + 1.0f) * 0.5f;
-    ligtProjectTexCoord.y = 1.0f - (lightViewPosition.y / lightViewPosition.w + 1.0f) * 0.5f;
+    lightViewPosition = normalize(lightViewPosition);
+    ligtProjectTexCoord.x = lightViewPosition.x / lightViewPosition.w * 0.5f + 0.5f;
+    ligtProjectTexCoord.y = 1.0f - (lightViewPosition.y / lightViewPosition.w * 0.5f + 0.5f);
     ligtProjectTexCoord = saturate(ligtProjectTexCoord);
     float lightDepthValue = lightViewPosition.z / lightViewPosition.w;
 
@@ -14,7 +15,7 @@ float GetShadowOneSample(float3 ShadowCoord, Texture2D ShadowMap, SamplerCompari
     return ShadowMap.SampleCmpLevelZero(ShadowsSampler, ShadowCoord.xy, ShadowCoord.z);
 }
 
-float texelSize = 1.0 / 4096.0;
+float texelSize = 1.0f / 4096.0f;
 
 float2 texOffset(int u, int v)
 {

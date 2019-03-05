@@ -9,6 +9,9 @@ namespace KatamariGame
     class Game : Engine
     {
         public Game(string name):base(name) { }
+        public override EngineCore.RenderTechnique.RenderPath GetRenderPath() {
+            return EngineCore.RenderTechnique.RenderPath.Forward;
+        }
 
         GameObject Player;
         Material catMat = new Material()
@@ -42,22 +45,12 @@ namespace KatamariGame
 
             Player = CreatePlayer();
 
-            SetMainCamera(
-                AddCamera(
-                    "MainCamera",
-                    new FollowCamera() {
-                        Distance = 10f,
-                        Target = Player.transform,
-                    },
-                    new Transform() {
-                        Position = new Vector3(0, 0, 0),
-                        Rotation = Quaternion.Identity,
-                    }
-                )
-            );
+            FollowCamera camera = AddCamera<FollowCamera>("MainCamera") as FollowCamera;
+            camera.Distance = 10f;
+            camera.Target = Player.transform;
 
             Light LightObj = new Light() {
-                ambientColor = Vector4.One * 0.5f,
+                LightColor = Vector4.One * 0.5f,
                 radius = 20,
                 Type = Light.LightType.Directional,
                 EnableShadows = true,
@@ -86,11 +79,6 @@ namespace KatamariGame
             }
         }
 
-        private PickupObject AddPickupObject(PickupObject po) {
-            AddGameObject(po);
-            return po;
-        }
-
         //Bad Hat model Pivot
         private void CreateHat() {
             Vector3 pos = new Vector3();
@@ -107,7 +95,7 @@ namespace KatamariGame
         }
 
         private void AddHat(Vector3 position, Vector3 yawPitchRoll, float scale) {
-            AddPickupObject(new PickupObject(
+            new PickupObject(
                 "Hat",
                 position,
                 Quaternion.RotationYawPitchRoll(yawPitchRoll.X, yawPitchRoll.Y, yawPitchRoll.Z),
@@ -115,7 +103,7 @@ namespace KatamariGame
                 AssetsLoader.LoadMesh("HatMesh"),
                 catMat,
                 scale * 0.5f
-            ));
+            );
         }
         private void CreateCow() {
             Vector3 pos = new Vector3();
@@ -132,7 +120,7 @@ namespace KatamariGame
         }
 
         private void AddCow(Vector3 position, Vector3 yawPitchRoll, float scale) {
-            AddPickupObject(new PickupObject(
+            new PickupObject(
                 "Cow",
                 position,
                 Quaternion.RotationYawPitchRoll(yawPitchRoll.X, yawPitchRoll.Y, yawPitchRoll.Z),
@@ -140,7 +128,7 @@ namespace KatamariGame
                 AssetsLoader.LoadMesh("CowMesh"),
                 cowMat,
                 3f * scale
-            ));
+            );
         }
 
         private void CreateCube() {
@@ -164,8 +152,7 @@ namespace KatamariGame
         };
 
         private void AddCube(Vector3 position, Vector3 yawPitchRoll, float scale) {
-
-            AddPickupObject(new PickupObject(
+            new PickupObject(
                 "SmallCube",
                 position,
                 Quaternion.RotationYawPitchRoll(yawPitchRoll.X, yawPitchRoll.Y, yawPitchRoll.Z),
@@ -173,7 +160,7 @@ namespace KatamariGame
                 CubesArray[Generator.Next(CubesArray.Length)],
                 Material.DefaultMaterial,
                 scale * 0.5f
-            ));
+            );
         }
 
         private Random Generator = new Random();
@@ -190,36 +177,25 @@ namespace KatamariGame
         }
 
         private GameObject CreatePlayer() {
-            GameObject GO = AddGameObject(
-                "Player",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One,
-                    Position = new Vector3(0, 0.5f, 0),
-                }
-            );
-
-            GO.AddComponent(new CBoundingSphere() {
+            GameObject PlayerGO = AddGameObject("Player", true);
+            PlayerGO.transform.WorldRotation = Quaternion.Identity;
+            PlayerGO.transform.WorldScale = Vector3.One;
+            PlayerGO.transform.WorldPosition = new Vector3(0, 0.5f, 0);
+            PlayerGO.AddComponent(new CBoundingSphere() {
                 Radius = 1f,
             });
+            PlayerController PC = (PlayerController)(PlayerGO.AddComponent(new PlayerController()));
 
-            PlayerController PC = (PlayerController)(GO.AddComponent(new PlayerController()));
+            GameObject GO = AddGameObject("SpherePlayer");
+            GO.transform.LocalRotation = Quaternion.Identity;
+            GO.transform.LocalScale = Vector3.One * 2f;
+            GO.transform.LocalPosition = new Vector3(0, 0, 0);
+            GO.transform.Parent = PlayerGO.transform;
+            GO.GetComponent<Renderer>().RendererMaterial = playerMat;
+            GO.GetComponent<Renderer>().UpdateMesh(Primitives.Sphere(30));
+            PC.SetVisualTransform(GO.transform);
 
-            PC.SetVisualTransform(AddGameObject(
-                "SpherePlayer",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 2f,
-                    Position = new Vector3(0, 0, 0),
-                    Parent = GO.transform,
-                },
-                new Renderer() {
-                    Geometry = Primitives.Sphere(30),
-                    Topology = PrimitiveTopology.TriangleList,
-                    RendererMaterial = playerMat,
-                }
-            ).transform);
-            return GO;
+            return PlayerGO;
         }
 
         private GameObject CreateFloor()
@@ -236,18 +212,13 @@ namespace KatamariGame
             };
             mat.LoadMapsAndInitSampler();
 
-            return AddGameObject(
-                "Floor",
-                new Transform() {
-                    Position = -0.5f * Vector3.Up,
-                    Scale = new Vector3(200f, 200f, 1f),
-                    Rotation = Quaternion.RotationYawPitchRoll(0, -MathUtil.DegreesToRadians(90f), 0),
-                },
-                new Renderer() {
-                    Geometry = Primitives.PlaneWithUV,
-                    RendererMaterial = mat,
-                }
-            );
+            GameObject FloorGO = AddGameObject("Floor");
+            FloorGO.transform.WorldPosition = -0.5f * Vector3.Up;
+            FloorGO.transform.WorldScale = new Vector3(200f, 200f, 1f);
+            FloorGO.transform.WorldRotation = Quaternion.RotationYawPitchRoll(0, -MathUtil.DegreesToRadians(90f), 0);
+            FloorGO.GetComponent<Renderer>().RendererMaterial = mat;
+            FloorGO.GetComponent<Renderer>().UpdateMesh(Primitives.PlaneWithUV);
+            return FloorGO;
         }
     }
 }

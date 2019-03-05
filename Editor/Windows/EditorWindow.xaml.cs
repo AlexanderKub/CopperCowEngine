@@ -155,7 +155,7 @@ namespace Editor
             AssetsManagerInstance AM = AssetsManagerInstance.GetManager();
             string assetName = ofDialog.SafeFileName.Split('.')[0];
             BaseAsset asset;
-            if (AM.ImportAsset(ofDialog.FileName, assetName, out asset)) {
+            if (AM.ImportAsset(ofDialog.FileName, assetName, false, out asset)) {
                 RefreshAssetsTable();
                 AssetTypesList.SelectedValue = asset.Type;
                 AssetNamesList.SelectedValue = asset.Name;

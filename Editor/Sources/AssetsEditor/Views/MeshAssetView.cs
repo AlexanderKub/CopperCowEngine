@@ -16,92 +16,61 @@ namespace Editor.AssetsEditor.Views
 
         public override void Init(PreviewEngine engine) {
             base.Init(engine);
-            PreviewRenderer = new Renderer() {
-                Geometry = Primitives.Sphere(30),
-                RendererMaterial = AssetsLoader.LoadMaterial("CopperMaterial"),
-            };
-            PreviewGO = EngineRef.AddGameObject(
-                "TestMesh",
-                new Transform() {
-                    Position = Vector3.Zero,
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 0.002f,
-                },
-                PreviewRenderer
-            );
-            PreviewGO.SelfActive = false;
-            PreviewGO.AddComponent(new PreviewBehaviour());
 
-            ViewGO = EngineRef.AddGameObject(
-                "MeshView",
-                new Transform() {
-                    Position = Vector3.Zero,
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One,
-                },
-                null
-            );
+            PreviewGO = EngineRef.AddGameObject("TestMesh");
+            PreviewGO.transform.WorldPosition = Vector3.Zero;
+            PreviewGO.transform.WorldRotation = Quaternion.Identity;
+            PreviewGO.transform.WorldScale = Vector3.One * 0.002f;
+
+            PreviewRenderer = PreviewGO.GetComponent<Renderer>();
+            PreviewRenderer.SetMeshAndMaterial(Primitives.Sphere(30), AssetsLoader.LoadMaterial("CopperMaterial"));
+            PreviewGO.AddComponent(new PreviewBehaviour());
+            PreviewGO.SelfActive = false;
+
+            ViewGO = EngineRef.AddGameObject("MeshView", true);
+            ViewGO.transform.WorldPosition = Vector3.Zero;
+            ViewGO.transform.WorldRotation = Quaternion.Identity;
+            ViewGO.transform.WorldScale = Vector3.One;
             ViewGO.AddComponent(new FollowPreviewBehaviour(PreviewGO.transform));
 
             Primitives.CeilSizeX = 12;
             Primitives.CeilSizeY = 12;
-            GameObject Ceil = EngineRef.AddGameObject(
-                "Ceil",
-                new Transform() {
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 6.6666f * 0.075f,
-                    Position = Vector3.Zero,
-                    Parent = ViewGO.transform,
-                },
-                new Renderer() {
-                    Topology = PrimitiveTopology.LineList,
-                    Geometry = Primitives.Ceil,
-                    RendererMaterial = Material.DefaultMaterial,
-                    CustomPropertyBlock = new MaterialPropetyBlock() {
-                        AlbedoColor = Vector3.One * 0.2f,
-                    },
-                    SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                }
-            );
+            GameObject Ceil = EngineRef.AddGameObject("Ceil");
+            Ceil.transform.LocalRotation = Quaternion.Identity;
+            Ceil.transform.LocalScale = Vector3.One * 6.6666f * 0.075f;
+            Ceil.transform.LocalPosition = Vector3.Zero;
+            Ceil.transform.Parent = ViewGO.transform;
+            Ceil.GetComponent<Renderer>().Topology = PrimitiveTopology.LineList;
+            Ceil.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+            Ceil.GetComponent<Renderer>().CustomPropertyBlock = new MaterialPropetyBlock() {
+                AlbedoColor = Vector3.One * 0.2f,
+            };
+            Ceil.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Ceil, Material.DefaultMaterial);
 
-            EngineRef.AddGameObject(
-                "MeshView",
-                new Transform() {
-                    Position = Vector3.Zero,
-                    Rotation = Quaternion.Identity,
-                    Scale = Vector3.One * 0.075f,
-                    Parent = ViewGO.transform,
-                },
-                new Renderer() {
-                    Geometry = Primitives.Sphere(16),
-                    RendererMaterial = Material.DefaultMaterial,
-                    CustomPropertyBlock = new MaterialPropetyBlock() {
-                        AlbedoColor = Vector3.One,
-                    },
-                    SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                }
-            );
+            GameObject GO = EngineRef.AddGameObject("MeshView");
+            GO.transform.LocalPosition = Vector3.Zero;
+            GO.transform.LocalRotation = Quaternion.Identity;
+            GO.transform.LocalScale = Vector3.One * 0.075f;
+            GO.transform.Parent = ViewGO.transform;
+            GO.GetComponent<Renderer>().CustomPropertyBlock = new MaterialPropetyBlock() {
+                AlbedoColor = Vector3.One,
+            };
+            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Sphere(16), Material.DefaultMaterial);
 
             string[] axis = new string[] { "OX", "OY", "OZ" };
             Vector3[] Offsets = new Vector3[] { Vector3.Right, Vector3.Up, Vector3.ForwardLH };
             for (int i = 0; i < 3; i++) {
-                EngineRef.AddGameObject(
-                    "MeshView" + axis,
-                    new Transform() {
-                        Position = Offsets[i] * 2f * 0.075f,
-                        Rotation = Quaternion.Identity,
-                        Scale = new Vector3(i == 0 ? 4f : 0.4f, i == 1 ? 4f : 0.4f, i == 2 ? 4f : 0.4f) * 0.075f,
-                        Parent = ViewGO.transform,
-                    },
-                    new Renderer() {
-                        Geometry = Primitives.Cube(),
-                        RendererMaterial = Material.DefaultMaterial,
-                        CustomPropertyBlock = new MaterialPropetyBlock() {
-                            AlbedoColor = Offsets[i],
-                        },
-                        SpecificType = Renderer.SpecificTypeEnum.Unlit,
-                    }
-                );
+                GO = EngineRef.AddGameObject("MeshView" + axis);
+                GO.transform.LocalPosition = Offsets[i] * 2f * 0.075f;
+                GO.transform.LocalRotation = Quaternion.Identity;
+                GO.transform.LocalScale = new Vector3(i == 0 ? 4f : 0.4f, i == 1 ? 4f : 0.4f, i == 2 ? 4f : 0.4f) * 0.075f;
+                GO.transform.Parent = ViewGO.transform;
+                GO.GetComponent<Renderer>().CustomPropertyBlock = new MaterialPropetyBlock() {
+                    AlbedoColor = Offsets[i],
+                };
+                GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
+                GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), Material.DefaultMaterial);
             }
             ViewGO.SelfActive = false;
         }
@@ -110,10 +79,10 @@ namespace Editor.AssetsEditor.Views
             base.Show(assetName);
             EngineRef.SetViewsControlsEnabled(true, true, true, false, false);
             PreviewGO.GetComponent<PreviewBehaviour>().Reset();
-            EngineRef.MainCamera.gameObject.transform.Position = new Vector3(0f, 1f, 2f);
-            EngineRef.MainCamera.gameObject.transform.Rotation = Quaternion.RotationYawPitchRoll(MathUtil.Pi, MathUtil.Pi * 0.15f, 0);
+            EngineRef.MainCamera.gameObject.transform.WorldPosition = new Vector3(0f, 1.5f, 2.5f);
+            EngineRef.MainCamera.gameObject.transform.WorldRotation = Quaternion.RotationYawPitchRoll(MathUtil.Pi, MathUtil.Pi * 0.15f, 0);
 
-            PreviewGO.transform.Position = Vector3.Zero;
+            PreviewGO.transform.WorldPosition = Vector3.Zero;
             PreviewGO.GetComponent<Renderer>().UpdateMesh(AssetsLoader.LoadMesh(assetName));
 
             PreviewGO.SelfActive = true;

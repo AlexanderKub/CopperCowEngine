@@ -46,7 +46,7 @@ namespace EngineCore {
             CommandColorBrush = new SolidColorBrush(DisplayRef.RenderTarget2D, Color.Yellow);
 
             TextFormat = new TextFormat(DisplayRef.FactoryDWrite, "Roboto", 15) { TextAlignment = TextAlignment.Leading, ParagraphAlignment = ParagraphAlignment.Near };
-            FPSTextFormat = new TextFormat(DisplayRef.FactoryDWrite, "Roboto", 40) { TextAlignment = TextAlignment.Trailing, ParagraphAlignment = ParagraphAlignment.Far };
+            FPSTextFormat = new TextFormat(DisplayRef.FactoryDWrite, "Roboto", 36) { TextAlignment = TextAlignment.Trailing, ParagraphAlignment = ParagraphAlignment.Far };
 
 
             m_Lines = new List<string> {
@@ -80,9 +80,12 @@ namespace EngineCore {
                 m_FrameCount = 0;
                 m_FramesTime = 0;
                 FPSTextLayout?.Dispose();
-
-                string txt = $"CPU: {m_FT:N1}ms\nGPU: {Engine.Instance.gpuFrameTime:N1}ms\nFPS: {m_FPS}";
-                FPSTextLayout = new TextLayout(DisplayRef.FactoryDWrite, txt, FPSTextFormat, 300, 100);
+                string txt = "NO PROFILED";
+                if (Engine.Instance.CPUProfiler != null)
+                {
+                    txt = $"CPU time: {m_FT:N1}ms\nCPU load: {Engine.Instance.CPUProfiler.Value}%\nGPU: {Engine.Instance.gpuFrameTime:N1}ms\nFPS: {m_FPS}";
+                }
+                FPSTextLayout = new TextLayout(DisplayRef.FactoryDWrite, txt, FPSTextFormat, 300, 200);
             }
         }
 

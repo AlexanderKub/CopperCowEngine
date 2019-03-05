@@ -7,16 +7,21 @@ namespace AssetsManager.FSWorkers
     {
         private NativeWriter WriterRef;
         private NativeReader ReaderRef;
-        internal static string Extension = ".mdxaf";
-        internal static string ShaderExtension = ".mdxsaf";
-        
+        internal static string RootPath = "";
+        internal static string Extension = ".cceaf";
+        internal static string ShaderExtension = ".ccesf";
+
         public NativeFSWorker() {
             WriterRef = new NativeWriter();
             ReaderRef = new NativeReader();
         }
-         
+
         public bool CreateAssetFile(BaseAsset asset) {
-            return WriterRef.CreateAssetFile(asset);
+            return CreateAssetFile(asset, false);
+        }
+
+        public bool CreateAssetFile(BaseAsset asset, bool rewrite) {
+            return WriterRef.CreateAssetFile(asset, rewrite);
         }
 
         public bool LoadAssetFile(BaseAsset asset) {
@@ -24,33 +29,46 @@ namespace AssetsManager.FSWorkers
         }
 
         internal string[] DetectAssetsNamesByType(AssetTypes type) {
-            return Directory.GetFiles(GetAssetTypePath(type));
+            string path = GetAssetTypePath(type);
+            if (!Directory.Exists(path)) {
+                return new string[0];
+            }
+            return Directory.GetFiles(path);
         }
 
         internal static string GetAssetTypePath(AssetTypes type) {
-            string path = "Assets/";
+            string path = "Assets";
+            if (!string.IsNullOrEmpty(RootPath)) {
+                path = Path.Combine(RootPath, path);
+            }
+
             switch (type) {
                 case AssetTypes.Mesh:
-                    path += "Meshes/";
+                    path = Path.Combine(path, "Meshes");
                     break;
                 case AssetTypes.Texture2D:
-                    path += "Textures/";
+                    path = Path.Combine(path, "Textures");
                     break;
                 case AssetTypes.TextureCube:
-                    path += "Textures/";
+                    path = Path.Combine(path, "Textures");
                     break;
                 case AssetTypes.Material:
-                    path += "Materials/";
+                    path = Path.Combine(path, "Materials");
                     break;
                 case AssetTypes.Shader:
-                    path += "Shaders/";
+                    path = Path.Combine(path, "Shaders");
                     break;
                 default:
                     break;
             }
             return path;
         }
+
         internal static string GetAssetPath(BaseAsset asset) {
+            return GetAssetPath(asset, "");
+        }
+
+        internal static string GetAssetPath(BaseAsset asset, string posibleName) {
             string path;
             AssetTypes tType;
             if (asset.Type == AssetTypes.Meta) {
@@ -61,8 +79,12 @@ namespace AssetsManager.FSWorkers
             }
 
             path = GetAssetTypePath(tType);
-            path += asset.Name;
-            path += (tType == AssetTypes.Shader ? ShaderExtension : Extension);
+            string name = asset.Name;
+            if (!string.IsNullOrEmpty(posibleName)) {
+                name = posibleName;
+            }
+            string file = name + (tType == AssetTypes.Shader ? ShaderExtension : Extension);
+            path = Path.Combine(path, file);
             return path;
         }
     }

@@ -42,7 +42,7 @@ namespace Editor
 
         #region Cached projects list
         private List<string> CachedProjectsSrc;
-        private string CachedPListPath = "CachedPList.mdxprop";
+        private string CachedPListPath = "CachedPList.cceprop";
         private void LoadCachedProjectsList() {
             try {
                 using (FileStream stream = new FileStream(CachedPListPath, FileMode.Open))
@@ -100,7 +100,7 @@ namespace Editor
         #endregion
 
         public bool CreateNewProject(string Name, string Location, out ProjectLink project) {
-            string path = Path.Combine(Location, Name + ".mdproj");
+            string path = Path.Combine(Location, Name + ".cceproj");
             if (File.Exists(path)) {
                 project = null;
                 return false;

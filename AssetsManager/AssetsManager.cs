@@ -8,6 +8,17 @@ namespace AssetsManager
 {
     public class AssetsManagerInstance
     {
+        private string m_RootPath;
+        public string RootPath {
+            get {
+                return m_RootPath;
+            }
+            set {
+                m_RootPath = value;
+                NativeFSWorker.RootPath = m_RootPath;
+            }
+        }
+
         internal NativeFSWorker FSWorker;
         private AssetsManagerInstance() {
             FSWorker = new NativeFSWorker();
@@ -28,10 +39,15 @@ namespace AssetsManager
 
         public bool ImportAsset(string Path, string Name) {
             BaseAsset dummy;
-            return ImportAsset(Path, Name, out dummy);
+            return ImportAsset(Path, Name, false, out dummy);
         }
 
-        public bool ImportAsset(string Path, string Name, out BaseAsset assetRes) {
+        public bool ImportAsset(string Path, string Name, bool Rewrite) {
+            BaseAsset dummy;
+            return ImportAsset(Path, Name, Rewrite, out dummy);
+        }
+
+        public bool ImportAsset(string Path, string Name, bool Rewrite, out BaseAsset assetRes) {
             string[] arr = Path.Split('.');
             string ext = arr[arr.Length - 1].ToLower();
 
@@ -39,8 +55,22 @@ namespace AssetsManager
             assetRes = null;
             BaseAsset asset;
             if (shaderExts.Contains(ext)) {
+                ShaderTypeEnum ST = ShaderTypeEnum.Vertex;
+                if (Name.EndsWith("VS")) {
+                    ST = ShaderTypeEnum.Vertex;
+                } else if (Name.EndsWith("PS")) {
+                    ST = ShaderTypeEnum.Pixel;
+                } else if (Name.EndsWith("GS")) {
+                    ST = ShaderTypeEnum.Geometry;
+                } else if (Name.EndsWith("CS")) {
+                    ST = ShaderTypeEnum.Compute;
+                } else {
+                    Console.WriteLine("Unknown shader type, please add correct postfix e.g. VS");
+                    return false;
+                }
                 asset = new ShaderAsset() {
                     Name = Name,
+                    ShaderType = ST,
                 };
             } else if(meshExts.Contains(ext)) {
                 asset = new MeshAsset() {
@@ -59,7 +89,7 @@ namespace AssetsManager
                 return false;
             }
             assetRes = asset;
-            return FSWorker.CreateAssetFile(asset);
+            return FSWorker.CreateAssetFile(asset, Rewrite || asset.Type == AssetTypes.Shader);
         }
 
         public bool CreateCubeMapAsset(string Path, string Name) {
@@ -78,19 +108,15 @@ namespace AssetsManager
             return FSWorker.CreateAssetFile(asset);
         }
 
-        public bool CreateMaterialAsset(string Name) {
+        public bool CreateMaterialAsset() {
             BaseAsset asset = new MaterialAsset() {
-                Name = Name,
-                AlbedoMapAsset = "CopperAlbedoMap",
-                RoughnessMapAsset = "CopperRoughnessMap",
-                NormalMapAsset = "CopperNormalMap",
-                MetallicMapAsset = "CopperMetallicMap",
+                Name = "NewMaterial",
             };
             return FSWorker.CreateAssetFile(asset);
         }
 
         public bool SaveAssetChanging(BaseAsset asset) {
-            return FSWorker.CreateAssetFile(asset);
+            return FSWorker.CreateAssetFile(asset, true);
         }
 
         public T LoadAsset<T>(string Name) where T : BaseAsset {

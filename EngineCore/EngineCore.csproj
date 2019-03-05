@@ -107,12 +107,30 @@
     <Compile Include="Sources\Loaders\AssetsLoader.cs" />
     <Compile Include="Sources\Physics\BoundingScene.cs" />
     <Compile Include="Sources\Physics\CBoundingSphere.cs" />
-    <Compile Include="Sources\Technique\BaseRendererTechnique.cs" />
-    <Compile Include="Sources\Technique\DefferedQuadRenderer.cs" />
-    <Compile Include="Sources\Technique\DefferedRendererTechnique.cs" />
-    <Compile Include="Sources\Technique\ForwardRendererTechnique.cs" />
-    <Compile Include="Sources\Technique\GBuffer.cs" />
-    <Compile Include="Sources\Utils\DebugTextureRender.cs" />
+    <Content Include="Sources\Shaders\ForwardPlus\ForwardPlusScenePS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\ForwardPlus\ForwardPlusPosTexPS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\ForwardPlus\ForwardPlusPosTexVS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\ForwardPlus\ForwardPlusPosOnlyVS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\ForwardPlus\LightCullingCS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Sources\RenderTechnique\BaseRendererTechnique.cs" />
+    <Compile Include="Sources\RenderTechnique\CommonStructs.cs" />
+    <Compile Include="Sources\RenderTechnique\DefferedQuadRenderer.cs" />
+    <Compile Include="Sources\RenderTechnique\DefferedRendererTechnique.cs" />
+    <Compile Include="Sources\RenderTechnique\ForwardPlusRendererTechnique.cs" />
+    <Compile Include="Sources\RenderTechnique\ForwardRendererTechnique.cs" />
+    <Compile Include="Sources\RenderTechnique\GBuffer.cs" />
+    <Compile Include="Sources\RenderTechnique\SharedRenderItems.cs" />
+    <Compile Include="Sources\Utils\CPUProfiler.cs" />
     <Compile Include="Sources\Utils\GPUProfiler.cs" />
     <Compile Include="Sources\Utils\InputDevice.cs" />
     <Compile Include="Sources\Utils\Primitives.cs" />
@@ -121,76 +139,82 @@
     <Compile Include="Sources\Utils\UIConsole.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Meshes\Cube1mMesh.mdxaf">
+    <None Include="Assets\Meshes\Cube1mMesh.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Meshes\SkySphereMesh.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\CommonVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\DepthShadowsVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\FwdSkySpherePS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\PBRDefferedPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\PBRDefferedQuadPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\PBRDefferedQuadVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\PBRForwardPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\ReflectionSpherePS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\SkySpherePS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\UITexturePS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\UITextureVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Textures\DebugTextureMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Meshes\SkySphereMesh.mdxaf">
+    <None Include="Assets\Textures\MiraSkyboxCubeMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Shaders\DefferedPBRQuadShader.mdxsaf">
+    <None Include="Assets\Textures\SkyboxCubeMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Shaders\DefferedPBRShader.mdxsaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Shaders\DepthShadows.mdxsaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Shaders\ExampleGeometryShader.mdxsaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Shaders\ReflectionShader.mdxsaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Shaders\SkySphereShader.mdxsaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Shaders\TriangleShader.mdxsaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Shaders\UIShader.mdxsaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Textures\DebugTextureMap.mdxaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Textures\MiraSkyboxCubeMap.mdxaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Textures\SkyboxCubeMap.mdxaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Assets\Textures\SkyboxIrradianceCubeMap.mdxaf">
+    <None Include="Assets\Textures\SkyboxIrradianceCubeMap.cceaf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Sources\Shaders\Deprecated\CookTorranceLightModel.hlsl">
+    <Content Include="Sources\Shaders\Commons\UITexturePS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Deprecated\DefferedQuadShader.hlsl">
+    <Content Include="Sources\Shaders\Commons\DepthShadowsVS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Deprecated\DepthShadows.hlsl">
+    <Content Include="Sources\Shaders\Include\ForwardPlusCommon.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Deprecated\DirectionalPhongLight.hlsl">
+    <Content Include="Sources\Shaders\Include\Layouts.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Deprecated\ExampleGeometryShader.hlsl">
+    <Content Include="Sources\Shaders\PBR\PBRDefferedQuadVS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Deprecated\TextureShader.hlsl">
+    <Content Include="Sources\Shaders\PBR\PBRForwardPS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Deprecated\TriangleShader.hlsl">
+    <Content Include="Sources\Shaders\Commons\UITextureVS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Deprecated\UIShader.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Sources\Shaders\Deprecated\VertexColorShader.hlsl">
+    <Content Include="Sources\Shaders\Commons\CommonVS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Sources\Shaders\Include\Constants.hlsl">
@@ -202,19 +226,22 @@
     <Content Include="Sources\Shaders\Include\Structures.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\PBR\DefferedPBRQuadShader.hlsl">
+    <Content Include="Sources\Shaders\PBR\PBRDefferedQuadPS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\PBR\DefferedPBRShader.hlsl">
+    <Content Include="Sources\Shaders\PBR\PBRDefferedPS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Sources\Shaders\PBR\PBRLightSurface.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Unlit\ReflectionShader.hlsl">
+    <Content Include="Sources\Shaders\Unlit\FwdSkySpherePS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Unlit\SkySphereShader.hlsl">
+    <Content Include="Sources\Shaders\Unlit\ReflectionSpherePS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Unlit\SkySpherePS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

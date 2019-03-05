@@ -12,6 +12,10 @@ namespace EngineCore
         //TODO: Add posible to change for each camera
         private const float NearClippingPlane = 0.001f;
         private const float FarClippingPlane = 1000f;
+        
+        // Note, we are using inverted 32-bit float depth for better precision, 
+        // so reverse near and far below
+        static public bool IsInvertedDepthBuffer = false;
 
         public bool IsMain;
 
@@ -54,8 +58,8 @@ namespace EngineCore
         {
             get {
                 m_View = Matrix.LookAtLH(
-                    gameObject.transform.Position, 
-                    gameObject.transform.Position + Direction,
+                    gameObject.transform.WorldPosition, 
+                    gameObject.transform.WorldPosition + Direction,
                     Vector3.Up
                 );
                 return m_View;
@@ -66,7 +70,11 @@ namespace EngineCore
         public Matrix Projection
         {
             get {
-                m_Projection = Matrix.PerspectiveFovLH(FOV, AspectRatio, NearClippingPlane, FarClippingPlane);
+                if (IsInvertedDepthBuffer) {
+                    m_Projection = Matrix.PerspectiveFovLH(FOV, AspectRatio, FarClippingPlane, NearClippingPlane);
+                } else{
+                    m_Projection = Matrix.PerspectiveFovLH(FOV, AspectRatio, NearClippingPlane, FarClippingPlane);
+                }
                 return m_Projection;
             }
             set {
@@ -87,18 +95,22 @@ namespace EngineCore
         {
             get {
                 m_Direction = new Vector3(
-                    2 * (gameObject.transform.Rotation.X * gameObject.transform.Rotation.Z + 
-                    gameObject.transform.Rotation.W * gameObject.transform.Rotation.Y),
-                    2 * (gameObject.transform.Rotation.Y * gameObject.transform.Rotation.Z - 
-                    gameObject.transform.Rotation.W * gameObject.transform.Rotation.X),
-                    1 - 2 * (gameObject.transform.Rotation.X * gameObject.transform.Rotation.X +
-                    gameObject.transform.Rotation.Y * gameObject.transform.Rotation.Y)
+                    2 * (gameObject.transform.WorldRotation.X * gameObject.transform.WorldRotation.Z + 
+                    gameObject.transform.WorldRotation.W * gameObject.transform.WorldRotation.Y),
+                    2 * (gameObject.transform.WorldRotation.Y * gameObject.transform.WorldRotation.Z - 
+                    gameObject.transform.WorldRotation.W * gameObject.transform.WorldRotation.X),
+                    1 - 2 * (gameObject.transform.WorldRotation.X * gameObject.transform.WorldRotation.X +
+                    gameObject.transform.WorldRotation.Y * gameObject.transform.WorldRotation.Y)
                 );
                 //TODO: Solve problem this identity View Matrix
                 return m_Direction;
             }
         }
         private Vector3 m_Direction;
-        
+
+        public static implicit operator bool(Camera foo)
+        {
+            return !object.ReferenceEquals(foo, null);
+        }
     }
 }

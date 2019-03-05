@@ -1,4 +1,5 @@
-﻿using SharpDX;
+﻿using EngineCore.RenderTechnique;
+using SharpDX;
 using SharpDX.Direct3D11;
 
 namespace EngineCore
@@ -6,6 +7,7 @@ namespace EngineCore
     public class MaterialPropetyBlock
     {
         public Vector3 AlbedoColor = Vector3.One;
+        public float AlphaValue = 1.0f;
         public float RoughnessValue = 0.5f;
         public float MetallicValue = 0.0f;
         public Vector2 Tile = Vector2.One;
@@ -83,94 +85,46 @@ namespace EngineCore
 
         public void LoadMapsAndInitSampler()
         {
-            bool needSampler = false;
-
-            albedoMapView?.Dispose();
             albedoMapView = null;
-            if (!string.IsNullOrEmpty(AlbedoMapAsset))
-            {
-                Texture2D albedoMap = PropetyBlock.MetallicValue >= 0 ?
-                       AssetsLoader.LoadTexture(AlbedoMapAsset) : AssetsLoader.LoadCubeTexture(AlbedoMapAsset);
-                if (albedoMap != null) {
-                    albedoMapView = new ShaderResourceView(Engine.Instance.Device, albedoMap);
-                    Engine.Instance.Context.GenerateMips(albedoMapView);
-                    needSampler = true;
-                }
+            if (!string.IsNullOrEmpty(AlbedoMapAsset)) {
+                albedoMapView = AssetsLoader.LoadTextureSRV(AlbedoMapAsset, PropetyBlock.MetallicValue < 0);
             }
 
-            normalMapView?.Dispose();
             normalMapView = null;
             if (!string.IsNullOrEmpty(NormalMapAsset))
             {
-                Texture2D normalMap = AssetsLoader.LoadTexture(NormalMapAsset);
-                if (normalMap != null) {
-                    normalMapView = new ShaderResourceView(Engine.Instance.Device, normalMap);
-                    Engine.Instance.Context.GenerateMips(normalMapView);
-                    needSampler = true;
-                }
+                normalMapView = AssetsLoader.LoadTextureSRV(NormalMapAsset);
             }
 
-            roughnessMapView?.Dispose();
             roughnessMapView = null;
             if (!string.IsNullOrEmpty(RoughnessMapAsset))
             {
-                Texture2D roughnessMap = AssetsLoader.LoadTexture(RoughnessMapAsset);
-                if (roughnessMap != null) {
-                    roughnessMapView = new ShaderResourceView(Engine.Instance.Device, roughnessMap);
-                    Engine.Instance.Context.GenerateMips(roughnessMapView);
-                    needSampler = true;
-                }
+                roughnessMapView = AssetsLoader.LoadTextureSRV(RoughnessMapAsset);
             }
 
-            metallicMapView?.Dispose();
             metallicMapView = null;
             if (!string.IsNullOrEmpty(MetallicMapAsset))
             {
-                Texture2D metallicMap = AssetsLoader.LoadTexture(MetallicMapAsset);
-                if (metallicMap != null) {
-                    metallicMapView = new ShaderResourceView(Engine.Instance.Device, metallicMap);
-                    Engine.Instance.Context.GenerateMips(metallicMapView);
-                    needSampler = true;
-                }
+                metallicMapView = AssetsLoader.LoadTextureSRV(MetallicMapAsset);
             }
 
-            occlusionMapView?.Dispose();
             occlusionMapView = null;
             if (!string.IsNullOrEmpty(OcclusionMapAsset))
             {
-                Texture2D ambientOcclusionMap = AssetsLoader.LoadTexture(OcclusionMapAsset);
-                if (ambientOcclusionMap != null) {
-                    occlusionMapView = new ShaderResourceView(Engine.Instance.Device, ambientOcclusionMap);
-                    Engine.Instance.Context.GenerateMips(occlusionMapView);
-                    needSampler = true;
-                }
+                occlusionMapView = AssetsLoader.LoadTextureSRV(OcclusionMapAsset);
             }
 
-            if (!needSampler)
-            {
-                return;
-            }
-
-            MaterialSampler = new SamplerState(Engine.Instance.Device, new SamplerStateDescription()
-            {
-                Filter = Filter.MinMagMipLinear,
-                AddressU = TextureAddressMode.Wrap,
-                AddressV = TextureAddressMode.Wrap,
-                AddressW = TextureAddressMode.Wrap,
-                ComparisonFunction = Comparison.Never,
-                MaximumAnisotropy = 16,
-                MipLodBias = 0,
-                MinimumLod = -float.MaxValue,
-                MaximumLod = float.MaxValue
-            });
+            //TODO: sampler selection
+            MaterialSampler = SharedRenderItems.LinearWrapSamplerState;
         }
 
         public void Dispose() {
-            albedoMapView?.Dispose();
+            //Disposed in asset loader
+            /*albedoMapView?.Dispose();
             metallicMapView?.Dispose();
             roughnessMapView?.Dispose();
             normalMapView?.Dispose();
-            occlusionMapView?.Dispose();
+            occlusionMapView?.Dispose();*/
         }
 
         private static Material m_SkySphereMaterial;
@@ -178,25 +132,11 @@ namespace EngineCore
         public static Material GetSkySphereMaterial() {
             if (m_SkySphereMaterial == null) {
                 m_SkySphereMaterial = new Material();
-                Texture2D cubeMap = AssetsLoader.LoadCubeTexture("SkyboxCubeMap");
-                m_SkySphereMaterial.albedoMapView = new ShaderResourceView(Engine.Instance.Device, cubeMap);
-                Engine.Instance.Context.GenerateMips(m_SkySphereMaterial.albedoMapView);
-                
-                Texture2D envMap = AssetsLoader.LoadCubeTexture("SkyboxIrradianceCubeMap");
-                IrradianceMap = new ShaderResourceView(Engine.Instance.Device, envMap);
-                Engine.Instance.Context.GenerateMips(IrradianceMap);
-
-                m_SkySphereMaterial.MaterialSampler = new SamplerState(Engine.Instance.Device, new SamplerStateDescription() {
-                    Filter = Filter.MinMagMipLinear,
-                    AddressU = TextureAddressMode.Clamp,
-                    AddressV = TextureAddressMode.Clamp,
-                    AddressW = TextureAddressMode.Clamp,
-                    ComparisonFunction = Comparison.Never,
-                    MaximumAnisotropy = 16,
-                    MipLodBias = 0,
-                    MinimumLod = -float.MaxValue,
-                    MaximumLod = float.MaxValue
-                });
+                // MiraSkyboxCubeMap
+                m_SkySphereMaterial.albedoMapView = AssetsLoader.LoadTextureSRV("SkyboxCubeMap", true);
+                // MiraSkyboxIrradianceCubeMap
+                IrradianceMap = AssetsLoader.LoadTextureSRV("SkyboxIrradianceCubeMap", true);
+                m_SkySphereMaterial.MaterialSampler = SharedRenderItems.LinearClampSamplerState;
             }
             return m_SkySphereMaterial;
         }

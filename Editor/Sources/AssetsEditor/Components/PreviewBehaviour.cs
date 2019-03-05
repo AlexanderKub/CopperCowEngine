@@ -37,8 +37,8 @@ namespace Editor.AssetsEditor.Components
             //}
 
             ScaleOffset = ScaleOffset > ScaleLimit ? ScaleOffset : ScaleLimit;
-            gameObject.transform.Scale = Vector3.One * ScaleOffset;
-            gameObject.transform.Rotation = Quaternion.RotationYawPitchRoll(Yaw, Pitch, 0.0f);
+            gameObject.transform.LocalScale = Vector3.One * ScaleOffset;
+            gameObject.transform.LocalRotation = Quaternion.RotationYawPitchRoll(Yaw, Pitch, 0.0f);
         }
     }
 }

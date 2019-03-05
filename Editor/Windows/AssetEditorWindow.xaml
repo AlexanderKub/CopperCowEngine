@@ -9,7 +9,7 @@
         xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:c="clr-namespace:CalcBinding;assembly=CalcBinding"
         mc:Ignorable="d"
-        Title="AssetEditorWindow" Width="750"  Height="600" >
+        Title="Asset Editor" Width="750"  Height="600" >
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="36"></RowDefinition>
@@ -91,6 +91,16 @@
                                ShowDescriptionByTooltip="True" ShowSummary="False">
             </xctk:PropertyGrid>
         </Grid>
-        <localControls:AssetsTreeControl Grid.Row="2" Grid.Column="0" x:Name="AssetsTree" Margin="10,0,10,10" MaxWidth="500"/>
+        <Grid Grid.Row="2" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="280"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <localControls:AssetsTreeControl Grid.Column="0" x:Name="AssetsTree" Margin="10,0,10,10" MaxWidth="500" />
+            <StackPanel Grid.Column="1" Margin="0,0,10,0" Orientation="Horizontal" Height="30" VerticalAlignment="Top" HorizontalAlignment="Center">
+                <Button Height="30" Width="100" Margin="0,0,10,0" Command="{Binding ResetAssetValues}">Reset</Button>
+                <Button Height="30" Width="100" Command="{Binding SaveChangingCommand}">Save</Button>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

@@ -133,7 +133,7 @@ namespace Editor
 
         public void BrowseExistProject(object obj) {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Engine project|*.mdproj";
+            openFileDialog.Filter = "Copper Cow Engine project|*.cceproj";
             if (openFileDialog.ShowDialog() == FDialogResult.Cancel) {
                 return;
             }

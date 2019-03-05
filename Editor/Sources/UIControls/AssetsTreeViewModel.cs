@@ -68,6 +68,7 @@ namespace Editor.UIControls
 
         private void RefreshAssetsTable() {
             AssetsManagerInstance AssetManager = AssetsManagerInstance.GetManager();
+            //AssetManager.CreateCubeMapAsset("C:\\Repos\\CopperCowEngine\\RawContent\\Textures\\Skybox\\miramarirrad.bmp", "MiraSkyboxIrradianceCubeMap");
             MetaAssets = AssetManager.LoadProjectAssets();
             SelectedFolder = MetaAssets.Keys.ToArray()[0];
             NotifyPropertyChanged("Folders");
@@ -75,6 +76,26 @@ namespace Editor.UIControls
             //FilesTreeDebugPrint();
         }
 
+        private void CreateNewAsset(string type) {
+            if (type != "Material") {
+                return;
+            }
+            
+            AssetsManagerInstance AssetManager = AssetsManagerInstance.GetManager();
+            AssetManager.CreateMaterialAsset();
+            RefreshAssetsTable();
+            SelectedFolder = AssetTypes.Material;
+        }
+
+        private BaseCommand m_CreateCommand;
+        public BaseCommand CreateCommand {
+            get {
+                return m_CreateCommand ??
+                  (m_CreateCommand = new BaseCommand(obj => {
+                      CreateNewAsset(obj.ToString());
+                  }, obj => true));
+            }
+        }
         #region Debug
         private void FilesTreeDebugPrint() {
             int k = 0;

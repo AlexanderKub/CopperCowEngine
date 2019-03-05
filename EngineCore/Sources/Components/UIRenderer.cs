@@ -40,22 +40,19 @@ namespace EngineCore
         private struct UIGeometryPoint
         {
             public Vector4 position;
-            public Vector4 uv;
+            public Vector2 uv;
         }
 
         public override void Init() {
-            ShaderBytecodePack shaderBytecodePack = AssetsLoader.GetShaderPack("UIShader");
-
-            vertexShader = new VertexShader(Engine.Instance.Device, shaderBytecodePack.VertexShaderByteCode);
-
-            pixelShader = new PixelShader(Engine.Instance.Device, shaderBytecodePack.PixelShaderByteCode);
+            vertexShader = AssetsLoader.GetShader<VertexShader>("UIShaderVS", out ShaderSignature shaderSignature);
+            pixelShader = AssetsLoader.GetShader<PixelShader>("UIShaderPS");
 
             layout = new InputLayout(
                 Engine.Instance.Device,
-                ShaderSignature.GetInputSignature(shaderBytecodePack.VertexShaderByteCode),
+                shaderSignature,
                 new[] {
                     new InputElement("POSITION", 0, Format.R32G32B32A32_Float, 0, 0),
-                    new InputElement("TEXCOORD", 0, Format.R32G32B32A32_Float, 16, 0),
+                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 16, 0),
                 }
             );
 
@@ -70,7 +67,7 @@ namespace EngineCore
             for (int i = 0; i < m_UIGeometryPoints.Length; i++) {
                 m_UIGeometryPoints[i] = new UIGeometryPoint() {
                     position = m_Geometry.Points[i].Position,
-                    uv = m_Geometry.Points[i].UV,
+                    uv = new Vector2(m_Geometry.Points[i].UV0.X, m_Geometry.Points[i].UV0.Y),
                 };
             }
             vertexBuffer = Buffer.Create(Engine.Instance.Device, m_UIGeometryPoints, bufDesc);

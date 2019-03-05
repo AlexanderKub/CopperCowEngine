@@ -4,11 +4,15 @@ using System.IO;
 
 namespace AssetsManager.AssetsMeta
 {
+    public enum ShaderTypeEnum
+    {
+        Vertex, Pixel, Geometry, Compute,
+    }
+
     public class ShaderAsset: BaseAsset
     {
-        public byte[] VertexBytecode;
-        public byte[] PixelBytecode;
-        public byte[] GeometryBytecode;
+        public ShaderTypeEnum ShaderType;
+        public byte[] Bytecode;
 
         public ShaderAsset() {
             this.Type = AssetTypes.Shader;
@@ -20,26 +24,16 @@ namespace AssetsManager.AssetsMeta
                 return false;
             }
 
-            byte[][] pack = ShaderLoader.LoadAndCompileShader(path);
-            this.VertexBytecode = pack[0];
-            this.PixelBytecode = pack[1];
-            this.GeometryBytecode = pack[2];
+            this.Bytecode = ShaderLoader.LoadAndCompileShader(path, this.ShaderType);
             return true;
         }
 
         public override void SaveAsset(BinaryWriter writer) {
             base.SaveAsset(writer);
-            writer.Write(VertexBytecode?.Length ?? 0);
-            if (VertexBytecode != null) {
-                writer.Write(VertexBytecode);
-            }
-            writer.Write(PixelBytecode?.Length ?? 0);
-            if (PixelBytecode != null) {
-                writer.Write(PixelBytecode);
-            }
-            writer.Write(GeometryBytecode?.Length ?? 0);
-            if (GeometryBytecode != null) {
-                writer.Write(GeometryBytecode);
+            writer.Write((int)this.ShaderType);
+            writer.Write(this.Bytecode?.Length ?? 0);
+            if (this.Bytecode != null) {
+                writer.Write(this.Bytecode);
             }
         }
 
@@ -47,18 +41,10 @@ namespace AssetsManager.AssetsMeta
             if (!base.LoadAsset(reader)) {
                 return false;
             }
-            int n;
-            n = reader.ReadInt32();
+            this.ShaderType = (ShaderTypeEnum)reader.ReadInt32();
+            int n = reader.ReadInt32();
             if (n > 0) {
-                this.VertexBytecode = reader.ReadBytes(n);
-            }
-            n = reader.ReadInt32();
-            if (n > 0) {
-                this.PixelBytecode = reader.ReadBytes(n);
-            }
-            n = reader.ReadInt32();
-            if (n > 0) {
-                this.GeometryBytecode = reader.ReadBytes(n);
+                this.Bytecode = reader.ReadBytes(n);
             }
             return true;
         }

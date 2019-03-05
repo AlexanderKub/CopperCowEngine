@@ -41,6 +41,7 @@ namespace EngineCore
                     break;
                 }
             }
+            CheckFeatures();
 
             ZBufferTextureDescription = new Texture2DDescription {
                 Format = Format.R32G8X24_Typeless,

@@ -29,63 +29,119 @@ namespace EngineCore
         private Transform m_Parent;
         public List<Transform> Childs;
 
-        public Vector3 Position
-        {
+        #region Position
+        public Vector3 LocalPosition {
             get {
-                return m_Position;
+                return m_LocalPosition;
             }
             set {
-                if (value != m_Position) {
-                    m_Position = value;
+                if (value != m_LocalPosition) {
+                    m_LocalPosition = value;
                     m_NeedUpdate = true;
                 }
             }
         }
-        private Vector3 m_Position;
+        private Vector3 m_LocalPosition = Vector3.Zero;
 
-        public Vector3 Scale
-        {
+        public Vector3 WorldPosition {
             get {
-                return m_Scale;
+                return TransformMatrix.TranslationVector;
             }
             set {
-                if (value != m_Scale) {
-                    m_Scale = value;
+                Vector3 locPos = value;
+                if (Parent) {
+                    Matrix transformMatrix = Matrix.Translation(locPos) * 
+                        Matrix.Invert(Parent.TransformMatrix);
+                    locPos = transformMatrix.TranslationVector;
+                }
+                if (locPos != m_LocalPosition) {
+                    m_LocalPosition = locPos;
                     m_NeedUpdate = true;
                 }
             }
         }
-        private Vector3 m_Scale;
+        #endregion
 
-        public Quaternion Rotation
-        {
+        #region Scale
+        public Vector3 LocalScale {
             get {
-                return m_Rotation;
+                return m_LocalScale;
             }
             set {
-                if (value != m_Rotation) {
-                    m_Rotation = value;
+                if (value != m_LocalScale) {
+                    m_LocalScale = value;
                     m_NeedUpdate = true;
                 }
             }
         }
-        private Quaternion m_Rotation;
+        private Vector3 m_LocalScale = Vector3.One;
 
-        private Matrix m_TransformMatrix;
-        public Matrix TransformMatrix
-        {
+        public Vector3 WorldScale {
             get {
-                return m_TransformMatrix;
+                Vector3 locScale = m_LocalScale;
+                if (Parent) {
+                    locScale *= Parent.WorldScale;
+                }
+                return locScale;
+            }
+            set {
+                Vector3 locScale = value;
+                if (Parent) {
+                    locScale = locScale / Parent.WorldScale;
+                }
+
+                if (locScale != m_LocalScale) {
+                    m_LocalScale = locScale;
+                    m_NeedUpdate = true;
+                }
             }
         }
+        #endregion
 
-        private bool m_NeedUpdate;
+        #region Rotation
+        public Quaternion LocalRotation
+        {
+            get {
+                return m_LocalRotation;
+            }
+            set {
+                if (value != m_LocalRotation) {
+                    m_LocalRotation = value;
+                    m_NeedUpdate = true;
+                }
+            }
+        }
+        private Quaternion m_LocalRotation = Quaternion.Identity;
+
+        public Quaternion WorldRotation {
+            get {
+                TransformMatrix.Decompose(out Vector3 translate, 
+                    out Quaternion rot, out Vector3 scale);
+                return rot;
+            }
+            set {
+                Quaternion locRot = value;
+                if (Parent) {
+                    Matrix WorldToLocal = Matrix.Invert(Parent.TransformMatrix);
+                    WorldToLocal.Decompose(out Vector3 translate, 
+                        out Quaternion rot, out Vector3 scale);
+                    locRot = rot * locRot;
+                }
+
+                if (locRot != m_LocalRotation) {
+                    m_LocalRotation = locRot;
+                    m_NeedUpdate = true;
+                }
+            }
+        }
+        #endregion
+
+        private bool m_NeedUpdate = true;
+        public Matrix TransformMatrix { get; private set; }
+
+        internal Transform() { }
 
         public override void Init() {
-            m_NeedUpdate = true;
-            if (Scale == Vector3.Zero) {
-                Scale = Vector3.One;
-            }
             Update();
         }
 
@@ -112,46 +168,49 @@ namespace EngineCore
             Quaternion rot;
 
             WorldToLocal.Decompose(out scale, out rot, out pos);
-            Position = pos;
-            Scale = scale;
-            Rotation = rot;
+            LocalPosition = pos;
+            LocalScale = scale;
+            LocalRotation = rot;
         }
 
         public override void Update() {
             if (!IsNeedUpdate() && (Parent == null || !Parent.IsNeedUpdate())) {
+                RequestChildsUpdate();
                 return;
             }
 
-            m_TransformMatrix = Matrix.Identity;
+            TransformMatrix = Matrix.Identity;
 
-            if (Parent != null) {
-                m_TransformMatrix *= Matrix.Scaling(m_Scale);
-                m_TransformMatrix *= Matrix.RotationQuaternion(m_Rotation);
-                m_TransformMatrix *= Matrix.Translation(m_Position);
+            if (Parent) {
+                TransformMatrix *= Matrix.Scaling(m_LocalScale);
+                TransformMatrix *= Matrix.RotationQuaternion(m_LocalRotation);
+                TransformMatrix *= Matrix.Translation(m_LocalPosition);
 
-                m_TransformMatrix *= Parent.TransformMatrix;
+                TransformMatrix *= Parent.TransformMatrix;
             } else {
-                m_TransformMatrix *= Matrix.Scaling(m_Scale);
-                m_TransformMatrix *= Matrix.RotationQuaternion(m_Rotation);
-                m_TransformMatrix *= Matrix.Translation(m_Position);
+                TransformMatrix *= Matrix.Scaling(m_LocalScale);
+                TransformMatrix *= Matrix.RotationQuaternion(m_LocalRotation);
+                TransformMatrix *= Matrix.Translation(m_LocalPosition);
             }
 
+            RequestChildsUpdate();
+            m_NeedUpdate = false;
+        }
 
+        private void RequestChildsUpdate() {
             if (Childs != null) {
                 foreach (Transform eachChild in Childs) {
                     eachChild.gameObject.Update();
                 }
             }
-
-            m_NeedUpdate = false;
         }
 
-        public override void Draw() {
+        public override void Draw() { }
+        public override void Destroy() { }
 
-        }
-
-        public override void Destroy() {
-            
+        public static implicit operator bool(Transform foo)
+        {
+            return !object.ReferenceEquals(foo, null);
         }
     }
 }

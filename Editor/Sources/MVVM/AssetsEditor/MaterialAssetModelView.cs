@@ -128,10 +128,10 @@ namespace Editor.MVVM
         public string RoughnessMapAsset
         {
             get {
-                if (!string.IsNullOrEmpty(m_Asset.OcclusionMapAsset)) {
-                    return m_Asset.OcclusionMapAsset;
+                if (!string.IsNullOrEmpty(m_Asset.RoughnessMapAsset)) {
+                    return m_Asset.RoughnessMapAsset;
                 }
-                return m_Asset.RoughnessMapAsset;
+                return NoneTexture;
             }
             set {
                 m_Asset.RoughnessMapAsset = value;
@@ -172,6 +172,10 @@ namespace Editor.MVVM
         private MaterialAsset m_BackupAsset;
 
         private bool DirtyFlag;
+        public bool IsEdited() {
+            DirtyFlag = !m_Asset.IsSame(m_BackupAsset);
+            return DirtyFlag;
+        }
 
         public MaterialAssetModelView(MaterialAsset asset, PreviewEngine engine) {
             EngineRef = engine;
@@ -183,7 +187,8 @@ namespace Editor.MVVM
             if (!DirtyFlag) {
                 return;
             }
-            //TODO: copy properties from backup asset
+            m_Asset.CopyValues(m_BackupAsset);
+            EngineRef?.UpdateAssetPreview(m_Asset);
             DirtyFlag = false;
         }
 
@@ -195,6 +200,8 @@ namespace Editor.MVVM
             if (!DirtyFlag) {
                 return;
             }
+            var AM = AssetsManager.AssetsManagerInstance.GetManager();
+            AM.SaveAssetChanging(m_Asset);
             //TODO: save changing
             DirtyFlag = false;
         }

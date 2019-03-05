@@ -332,7 +332,8 @@ namespace EngineCore
                     if (j != resolution - 1) {
                         indeces[iPos + 1] = ((j + 1) * resolution) + i;
                     } else {
-                        indeces[iPos + 1] = resolution * resolution;
+                        indeces[iPos + 1] = (resolution - 1) * resolution;
+                        //indeces[iPos + 1] = ((j + 1) * resolution) + i;
                     }
 
                     indeces[iPos + 3] = indeces[iPos + 2];

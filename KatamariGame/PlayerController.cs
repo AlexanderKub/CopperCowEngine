@@ -36,13 +36,13 @@ namespace KatamariGame
             }
 
             Vector3 axis = m_transform.TransformMatrix.Left;
-            m_transform.Rotation *= Quaternion.RotationAxis(
+            m_transform.WorldRotation *= Quaternion.RotationAxis(
                 m_transform.TransformMatrix.Up, 
                 MathUtil.RadiansToDegrees(m_RotationAngle) * RotSpeed * deltaTime
             );
-            m_transform.Position += m_transform.TransformMatrix.Forward * Speed * deltaTime;
+            m_transform.WorldPosition += m_transform.TransformMatrix.Forward * Speed * deltaTime;
            
-            m_visTransform.Rotation *= Quaternion.RotationAxis(axis, Speed * deltaTime);
+            m_visTransform.WorldRotation *= Quaternion.RotationAxis(axis, Speed * deltaTime);
         }
     }
 }

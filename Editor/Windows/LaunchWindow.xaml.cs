@@ -1,4 +1,6 @@
-﻿using System;
+﻿using AssetsManager;
+using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +12,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Editor
 {
@@ -31,7 +32,7 @@ namespace Editor
 
         public void LaunchProjectEditor(ProjectLink project) {
             this.Hide();
-            Window editorWindowRef = new AssetEditorWindow();
+            Window editorWindowRef = new AssetEditorWindow(project);
             editorWindowRef.Owner = this.Owner;
             editorWindowRef.ShowDialog ();
             this.Close();

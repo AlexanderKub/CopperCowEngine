@@ -22,6 +22,7 @@ namespace EngineCore
         public Texture2D BackBuffer { get; protected set; }
         public Texture2D ZBuffer { get; protected set; }
         public DepthStencilView DepthStencilViewRef { get; protected set; }
+        public ShaderResourceView DepthStencilSRVRef { get; protected set; }
 
         protected RenderTargetProperties RenderTarget2DProperites;
 
@@ -57,8 +58,13 @@ namespace EngineCore
             ));
         }
 
+        public bool ShaderDoubles;
+        protected void CheckFeatures() {
+            ShaderDoubles = DeviceRef.CheckFeatureSupport(SharpDX.Direct3D11.Feature.ShaderDoubles);
+        }
+
         protected void Resize() {
-            Engine.Instance.RendererTechnique.Resize();
+            Engine.Instance.RendererTechniqueRef.Resize();
             Engine.Instance.MainCamera.AspectRatio = AspectRatio;
         }
 
@@ -67,6 +73,12 @@ namespace EngineCore
             Context?.Flush();
             Context?.Dispose();
             DeviceRef?.Dispose();
+
+            RenderTargetViewRef?.Dispose();
+            BackBuffer?.Dispose();
+            ZBuffer?.Dispose();
+            DepthStencilViewRef?.Dispose();
+            DepthStencilSRVRef?.Dispose();
 
             DeviceRef = null;
 
