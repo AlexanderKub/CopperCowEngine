@@ -7,15 +7,15 @@ Best engine for copper cows visualization 2019. (In my opinion).
 This WIP version ([last stable version](855c8236615f03e8fb036c2fc57a4b127f5073ab)):
 
 Features:
-1) PBR with metallic workflow, prefiltered IBL and precalculated BRDF. (UE4 paper)[https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf]
+1) PBR with metallic workflow, prefiltered IBL and precalculated BRDF. [UE4 paper](https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf)
 2) HDR and tonemapping with adaptation. Bloom in progress.
-3) Deffered rendering with MRT and light accumulation accumulation pass. (some lights issues, WIP)
+3) Deffered rendering with MRT and light accumulation accumulation pass and MSAA. (some lights issues, WIP)
 4) Forward rendering with Z-prepass, Velocity map pass and tiled light culling. (broken after refactoring, WIP)
 5) Shadow maps (issues with different render paths).
 6) Assets manager WIP - all raw assets packs into custom binary assets files for improve engine loading performance.
 7) Asset manager can import .hdr spherical maps and convert to engine CubeMaps, with calculation IBL additional map. Also asset manager can calculate BRDF map.
 8) UI Editor really early WIP, only project creation and assets import with preview.
-9) Flexible ECS pattern with "singleton" components. (Overwatch ecs architecture)[https://www.youtube.com/watch?v=W3aieHjyNvw]
+9) Flexible ECS pattern with "singleton" components. [Overwatch ecs architecture](https://www.youtube.com/watch?v=W3aieHjyNvw)
 
 Roadmap: 
 1) Finish render paths.
