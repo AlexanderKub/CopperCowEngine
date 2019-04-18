@@ -22,7 +22,8 @@
                         FontSize="20" FontWeight="Bold">Assets tree</TextBlock>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Height="22">
                     <Button Content="Refresh" Padding="5,0" Margin="0,0,6,0" />
-                    <Button Content="Create" Padding="5,0" Margin="0,0,6,0" local:ClickOpensContextMenuBehavior.Enabled="True">
+                    <Button Content="Import" Padding="5,0" Margin="0,0,6,0" Command="{Binding ImportCommand}"/>
+                    <Button Content="Create" Padding="5,0" Margin="0,0,6,0" local:ClickOpensContextMenuBehavior.Enabled="True" Height="22" VerticalAlignment="Top">
                         <Button.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Material" Command="{Binding CreateCommand}" 

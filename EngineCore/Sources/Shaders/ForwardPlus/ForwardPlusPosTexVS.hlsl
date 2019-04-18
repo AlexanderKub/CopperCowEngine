@@ -12,6 +12,7 @@ COMMON_POSITION_AND_UV_PS_IN VSMain(COMMON_VS_IN Input)
     
     Input.pos.w = 1.0f;
     Output.Position = mul(Input.pos, cbPerObject.WorldViewProjMatrix);
+    Output.PrevPosition = mul(Input.pos, cbPerObject.PreviousWorldViewProjMatrix);
 
     Output.TextureUV = Input.uv0.xy;
     Output.TextureUV.x *= cbPerObject.textureTiling.x;

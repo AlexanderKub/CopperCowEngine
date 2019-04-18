@@ -21,10 +21,10 @@ namespace KatamariGame
             float radius
         ) {
             go = Engine.Instance.AddGameObject(name);
-            go.transform.WorldPosition = position;
-            go.transform.WorldRotation = rotation;
-            go.transform.WorldScale = scale;
-            go.GetComponent<Renderer>().SetMeshAndMaterial(geometry, material);
+            go.transform.Position = position;
+            go.transform.Rotation = rotation;
+            go.transform.Scale = scale;
+            go.GetComponent<DeprecatedRenderer>().SetMeshAndMaterial(geometry, material);
 
 
             CBoundingSphere BSC = new CBoundingSphere() {
@@ -35,17 +35,16 @@ namespace KatamariGame
                 if (other.gameObject.Name == "Player") {
                     PlayerController PC = other.gameObject.GetComponent<PlayerController>();
                     if (BSC.Radius < other.Radius) {
-                        self.Components.Remove(BSC);
                         BSC.Destroy();
                         self.transform.SetParent(PC.GetVisualTransform());
                         other.Radius += BSC.Radius * 0.5f;
-                        other.gameObject.transform.WorldPosition += Vector3.Up * BSC.Radius * 0.5f;
+                        other.transform.Position += Vector3.Up * BSC.Radius * 0.5f;
                         if (FollCam == null) {
                             FollCam = Engine.Instance.MainCamera.gameObject.GetComponent<FollowCamera>();
                         }
                         FollCam.Distance += BSC.Radius * 1.25f;
                     } else {
-                        PC.gameObject.transform.WorldRotation *= Quaternion.RotationAxis(PC.gameObject.transform.TransformMatrix.Up,
+                        PC.transform.Rotation *= Quaternion.RotationAxis(PC.transform.TransformMatrix.Up,
                             MathUtil.DegreesToRadians(180f));
                     }
                 }

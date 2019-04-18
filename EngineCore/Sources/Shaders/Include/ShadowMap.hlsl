@@ -1,13 +1,23 @@
 float3 GetShadowMapCoordinates(float4 lightViewPosition)
 {
-    float2 ligtProjectTexCoord;
-    lightViewPosition = normalize(lightViewPosition);
-    ligtProjectTexCoord.x = lightViewPosition.x / lightViewPosition.w * 0.5f + 0.5f;
-    ligtProjectTexCoord.y = 1.0f - (lightViewPosition.y / lightViewPosition.w * 0.5f + 0.5f);
-    ligtProjectTexCoord = saturate(ligtProjectTexCoord);
-    float lightDepthValue = lightViewPosition.z / lightViewPosition.w;
+    float2 lightProjectTexCoord;
+    //lightViewPosition = normalize(lightViewPosition);
+    lightProjectTexCoord.x = lightViewPosition.x / lightViewPosition.w * 0.5f + 0.5f;
+    lightProjectTexCoord.y = -lightViewPosition.y / lightViewPosition.w * 0.5f + 0.5f;
 
-    return float3(ligtProjectTexCoord, lightDepthValue);
+    float depth;
+    [branch]
+    if ((saturate(lightProjectTexCoord.x) == lightProjectTexCoord.x) &&
+        (saturate(lightProjectTexCoord.y) == lightProjectTexCoord.y))
+    {
+        depth = lightViewPosition.z / lightViewPosition.w;
+    }
+    else
+    {
+        depth = 2;
+    }
+    return float3(lightProjectTexCoord, depth);
+
 }
 
 float GetShadowOneSample(float3 ShadowCoord, Texture2D ShadowMap, SamplerComparisonState ShadowsSampler)

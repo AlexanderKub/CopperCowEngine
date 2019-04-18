@@ -19,6 +19,11 @@ cbuffer Lights : register(b2)
     LightBuffer LightData[MaxLightsCount];
 }
 
+cbuffer ShadowLights : register(b3)
+{
+    ShadowMapLightBuffer ShadowLightData[MaxLightsCount];
+}
+
 SamplerState Sampler : register(s0);
 Texture2D AlbedoMap : register(t0);
 Texture2D NormalMap : register(t1);
@@ -28,7 +33,7 @@ Texture2D OcclusionMap : register(t4);
 TextureCube RaddianceEnvMap : register(t5);
 TextureCube IrradianceEnvMap : register(t6);
 
-Texture2D ShadowMap : register(t7);
+Texture2D ShadowMapAtlas : register(t7);
 SamplerComparisonState ShadowsSampler : register(s1);
 
 float4 PSMain(COMMON_PS_IN Input) : SV_Target
@@ -36,10 +41,13 @@ float4 PSMain(COMMON_PS_IN Input) : SV_Target
     float unlit = cbPerObject.optionsMask1.g;
     float nonShadow = cbPerObject.optionsMask1.b;
 
+    float AlphaValue = cbPerObject.AlbedoColor.a;
     float3 AlbedoValue = cbPerObject.AlbedoColor.rgb;
     if (cbPerObject.optionsMask0.r > 0)
     {
-        AlbedoValue = AlbedoMap.Sample(Sampler, Input.uv0.xy).rgb;
+        float4 albedoTex = AlbedoMap.Sample(Sampler, Input.uv0.xy);
+        AlphaValue = albedoTex.a;
+        AlbedoValue = albedoTex.rgb;
     }
 
     if (unlit > 0.0f) {
@@ -76,13 +84,14 @@ float4 PSMain(COMMON_PS_IN Input) : SV_Target
     //return OcclusionValue;
 
     float shadowDepthValue = 1.0;
-    /*if (nonShadow < 1.0f) {
-        float4 lightViewPosition = mul(input.worldPos, LightData[0].lightViewProjMatrix);
-        shadowDepthValue = GetShadowOneSample(GetShadowMapCoordinates(lightViewPosition), ShadowMap, ShadowsSampler);
-    }*/
+    if (nonShadow < 1.0f) {
+        float4 lightViewPosition = mul(Input.posWS, ShadowLightData[0].LightViewProjMatrix);
+        shadowDepthValue = GetShadow8X(GetShadowMapCoordinates(lightViewPosition), ShadowMapAtlas, ShadowsSampler);
+        //return float4(GetShadowMapCoordinates(lightViewPosition).z, 0, 0, 1);
+    }
     
     float3 V = normalize(cbPerFrame.CameraPos.xyz - Input.posWS.xyz);
 
     float3 color = LightSurface(V, NormalValue, 1, LightData, AlbedoValue, RoughnessValue, MetallicValue, OcclusionValue, RaddianceEnvMap, IrradianceEnvMap, Sampler, Input.posWS.xyz);
-    return float4(color, 1.0) * shadowDepthValue;
+    return float4(color * shadowDepthValue, AlphaValue);
 }

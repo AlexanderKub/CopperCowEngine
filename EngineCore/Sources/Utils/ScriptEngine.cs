@@ -8,24 +8,35 @@ using NLua;
 namespace EngineCore {
     public class ScriptEngine {
         public Lua LuaInstance;
+        private Engine EngineRef;
 
-        public ScriptEngine() {
+        public ScriptEngine(Engine engine) {
+            EngineRef = engine;
             LuaInstance = new Lua();
             LuaInstance.LoadCLRPackage();
             RegisterFunctions();
-            ExecuteScriptLine(@"DebugLog('Lua script engine loaded');");
+            ExecuteScriptLine(@"Debug('Lua script engine loaded');");
         }
+
+        internal static D3D11.DefferedD3D11RenderPath TestRef;
 
         private void RegisterFunctions()
         {
             RegisterFunction("Help", this, typeof(ScriptEngine).GetMethod("Help"));
-            RegisterFunction("DebugLog", Engine.Instance, typeof(Engine).GetMethod("Log"));
-            RegisterFunction("Quit", Engine.Instance, typeof(Engine).GetMethod("Quit"));
-            RegisterFunction("DebugRender", Engine.Instance.RendererTechniqueRef, typeof(RenderTechnique.BaseRendererTechnique).GetMethod("SetDebug"));
-            RegisterFunction("RenderIndex", Engine.Instance.RendererTechniqueRef, typeof(RenderTechnique.BaseRendererTechnique).GetMethod("SetDebugIndex"));
-            RegisterFunction("WireframeRender", Engine.Instance, typeof(Engine).GetMethod("SetWireframeRender"));
-            RegisterFunction("SolidRender", Engine.Instance, typeof(Engine).GetMethod("SetSolidRender"));
-            RegisterFunction("FPS", Engine.Instance.UIConsoleInstance, typeof(UIConsole).GetMethod("ToggleFPSCounter"));
+            RegisterFunction("Debug", typeof(Debug).GetMethod("ScriptLog"));
+            RegisterFunction("Quit", EngineRef, typeof(Engine).GetMethod("Quit"));
+            RegisterFunction("setTM", this, typeof(ScriptEngine).GetMethod("TestTM"));
+            //RegisterFunction("setTM", TestRef, typeof(D3D11.DefferedD3D11RenderPath).GetMethod("SetToneMappingParams"));
+            //RegisterFunction("DebugRender", Engine.Instance.RendererTechniqueRef, typeof(RenderTechnique.BaseRendererTechnique).GetMethod("SetDebug"));
+            //RegisterFunction("RenderIndex", Engine.Instance.RendererTechniqueRef, typeof(RenderTechnique.BaseRendererTechnique).GetMethod("SetDebugIndex"));
+            // RegisterFunction("WireframeRender", Engine.Instance, typeof(Engine).GetMethod("SetWireframeRender"));
+            // RegisterFunction("SolidRender", Engine.Instance, typeof(Engine).GetMethod("SetSolidRender"));
+            //RegisterFunction("stat", Engine.Instance.UIConsoleInstance, typeof(UIConsole).GetMethod("ToggleFPSCounter"));
+        }
+
+        public void TestTM(float a, float b, float c)
+        {
+            TestRef.SetToneMappingParams(a, b, c);
         }
 
         public string ExecuteScriptLine(string chunk) {
@@ -38,7 +49,7 @@ namespace EngineCore {
                 return "Ok";
             }
             catch (Exception e) {
-                Engine.Log(e.ToString());
+                Debug.ScriptLog(e.ToString());
                 return e.ToString();
             }
         }
@@ -48,7 +59,7 @@ namespace EngineCore {
                 LuaInstance.DoFile(fileName);
             }
             catch (Exception e) {
-                Engine.Log(e.ToString());
+                Debug.ScriptLog(e.ToString());
             }
         }
 
@@ -59,9 +70,15 @@ namespace EngineCore {
             LuaInstance.RegisterFunction(name, target, methodInfo);
         }
 
+        private void RegisterFunction(string name, System.Reflection.MethodInfo methodInfo)
+        {
+            MethodList += name + "\n";
+            LuaInstance.RegisterFunction(name, methodInfo);
+        }
+
         public void Help()
         {
-            Engine.Log(MethodList);
+            Debug.ScriptLog(MethodList);
         }
     }
 }

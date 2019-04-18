@@ -21,7 +21,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
-    <UseVSHostingProcess>true</UseVSHostingProcess>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -45,35 +45,46 @@
     </Reference>
     <Reference Include="SharpDX, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SharpDX.D3DCompiler, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.D3DCompiler.4.0.1\lib\net45\SharpDX.D3DCompiler.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SharpDX.Desktop, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.Desktop.4.0.1\lib\net45\SharpDX.Desktop.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SharpDX.Direct2D1, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.Direct2D1.4.0.1\lib\net45\SharpDX.Direct2D1.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SharpDX.Direct3D11, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.Direct3D11.4.0.1\lib\net45\SharpDX.Direct3D11.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SharpDX.Direct3D9, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.Direct3D9.4.0.1\lib\net45\SharpDX.Direct3D9.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SharpDX.DirectInput, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.DirectInput.4.0.1\lib\net45\SharpDX.DirectInput.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SharpDX.DXGI, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.DXGI.4.0.1\lib\net45\SharpDX.DXGI.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SharpDX.Mathematics, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.Mathematics.4.0.1\lib\net45\SharpDX.Mathematics.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="SharpDX.RawInput, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.RawInput.4.0.1\lib\net45\SharpDX.RawInput.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -86,29 +97,112 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Sources\Components\Advanced\FollowCamera.cs" />
-    <Compile Include="Sources\Components\Advanced\FreeCamera.cs" />
-    <Compile Include="Sources\Components\Camera.cs" />
-    <Compile Include="Sources\Components\Component.cs" />
-    <Compile Include="Sources\Components\GameObject.cs" />
-    <Compile Include="Sources\Components\Light.cs" />
+    <Compile Include="Sources\Components\MaterialBase.cs" />
+    <Compile Include="Sources\D3D11\ConsoleRenderer.cs" />
+    <Compile Include="Sources\D3D11\D3D11AssetsLoader.cs" />
     <Compile Include="Sources\Components\Material.cs" />
     <Compile Include="Sources\Components\Renderer.cs" />
-    <Compile Include="Sources\Components\Transform.cs" />
-    <Compile Include="Sources\Components\UIRenderer.cs" />
-    <Compile Include="Sources\Components\UITexture.cs" />
-    <Compile Include="Sources\Displays\FormDisplay.cs" />
-    <Compile Include="Sources\Displays\InteropDisplay.cs" />
-    <Compile Include="Sources\Displays\Display.cs" />
+    <Compile Include="Sources\D3D11\RenderPaths\DefferedD3D11RenderPath.cs" />
+    <Compile Include="Sources\D3D11\RenderPaths\ForwardBaseD3D11RenderPath.cs" />
+    <Compile Include="Sources\D3D11\RenderPaths\TiledForwardD3D11RenderPath.cs" />
+    <Compile Include="Sources\D3D11\Utils\UtilsExtensions.cs" />
+    <Compile Include="Sources\ECS\Common\Bases\EntityFilter.cs" />
+    <Compile Include="Sources\ECS\Common\Bases\SystemComponentsFilter.cs" />
+    <Compile Include="Sources\ECS\Components\Light.cs" />
+    <Compile Include="Sources\ECS\Components\Renderer.cs" />
+    <Compile Include="Sources\ECS\Components\Camera.cs" />
+    <Compile Include="Sources\ECS\Components\Singletons\SingletonConfigVar.cs" />
+    <Compile Include="Sources\ECS\Components\Singletons\SingletonFrameScene.cs" />
+    <Compile Include="Sources\ECS\Components\Singletons\SingletonInput.cs" />
+    <Compile Include="Sources\ECS\Components\Transform.cs" />
+    <Compile Include="Sources\ECS\Systems\LightSystem.cs" />
+    <Compile Include="Sources\ECS\Systems\RenderSystem.cs" />
+    <Compile Include="Sources\ECS\Systems\CamerasSystem.cs" />
+    <Compile Include="Sources\ECS\Systems\TransformsSystem.cs" />
+    <Compile Include="Sources\Components\AssetsLoader.cs" />
+    <Compile Include="Sources\D3D11\D3D11RenderBackend.cs" />
+    <Compile Include="Sources\D3D11\Displays\Display.cs" />
+    <Compile Include="Sources\D3D11\Displays\FormDisplay.cs" />
+    <Compile Include="Sources\D3D11\Displays\InteropDisplay.cs" />
+    <Compile Include="Sources\D3D11\RenderPaths\BaseD3D11RenderPath.cs" />
+    <Compile Include="Sources\D3D11\RenderPaths\CommonStructs.cs" />
+    <Compile Include="Sources\D3D11\RenderPaths\ForwardD3D11RenderPath.cs" />
+    <Compile Include="Sources\Components\InputDevice.cs" />
+    <Compile Include="Sources\Debug.cs" />
+    <Compile Include="Sources\RenderBackend\StandartFrameData.cs" />
+    <Compile Include="Sources\Utils\Benchmark.cs" />
+    <Compile Include="Sources\ECS\Common\Storage\EntityCache.cs" />
+    <Compile Include="Sources\ECS\Common\Storage\EntityComponentsStorage.cs" />
+    <Compile Include="Sources\ECS\Common\Exceptions\SystemsExceptions .cs" />
+    <Compile Include="Sources\ECS\Common\Exceptions\ComponentsExceptions.cs" />
+    <Compile Include="Sources\ECS\Common\Extensions.cs" />
+    <Compile Include="Sources\ECS\Common\Bases\IEntityComponent.cs" />
+    <Compile Include="Sources\ECS\Common\Bases\Entity.cs" />
+    <Compile Include="Sources\ECS\Common\Bases\BaseSystem.cs" />
+    <Compile Include="Sources\ECS\Common\Bases\World.cs" />
+    <Compile Include="Sources\ECS\Common\Storage\EntityPool.cs" />
+    <Compile Include="Sources\ECS\Common\Storage\EntitySystemsStorage.cs" />
+    <Compile Include="Sources\RenderBackend\IRenderBackend.cs" />
     <Compile Include="Sources\Engine.cs" />
     <Compile Include="Sources\EngineRenderForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Sources\Loaders\AssetsLoader.cs" />
-    <Compile Include="Sources\Physics\BoundingScene.cs" />
-    <Compile Include="Sources\Physics\CBoundingSphere.cs" />
-    <Content Include="Sources\Shaders\ForwardPlus\ForwardPlusScenePS.hlsl">
+    <Content Include="Sources\Shaders\Commons\IBL_AssetsPreRender.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Commons\LinearGammaTest.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Commons\DepthShadowsPS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Commons\ScreenQuadPS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Commons\ScreenQuadVS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Commons\DownSamplingPS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\CommonsInclude\CommonMath.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\CommonsInclude\StandardHeaders.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\CommonVS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\DownscalingCS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\LightPass.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\LightVolumes.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\Include\LightSurface.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\Include\BRDF.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\Include\PBR.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\Include\Structures.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\FillGBuffer.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Deffered\Include\Layouts.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\ForwardPlus\ForwardPlusScenePS.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Sources\Shaders\ForwardPlus\ForwardPlusPosTexPS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -122,36 +216,147 @@
     <Content Include="Sources\Shaders\ForwardPlus\LightCullingCS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Compile Include="Sources\RenderTechnique\BaseRendererTechnique.cs" />
-    <Compile Include="Sources\RenderTechnique\CommonStructs.cs" />
-    <Compile Include="Sources\RenderTechnique\DefferedQuadRenderer.cs" />
-    <Compile Include="Sources\RenderTechnique\DefferedRendererTechnique.cs" />
-    <Compile Include="Sources\RenderTechnique\ForwardPlusRendererTechnique.cs" />
-    <Compile Include="Sources\RenderTechnique\ForwardRendererTechnique.cs" />
-    <Compile Include="Sources\RenderTechnique\GBuffer.cs" />
-    <Compile Include="Sources\RenderTechnique\SharedRenderItems.cs" />
+    <Compile Include="Sources\RenderBackend\DefferedRendererTechnique.cs" />
+    <Compile Include="Sources\RenderBackend\ForwardPlusRendererTechnique.cs" />
+    <Compile Include="Sources\RenderBackend\ForwardRendererTechnique.cs" />
+    <Compile Include="Sources\RenderBackend\GBuffer.cs" />
+    <Compile Include="Sources\D3D11\SharedRenderItemsStorage.cs" />
+    <Compile Include="Sources\Utils\BoundsBox.cs" />
     <Compile Include="Sources\Utils\CPUProfiler.cs" />
-    <Compile Include="Sources\Utils\GPUProfiler.cs" />
-    <Compile Include="Sources\Utils\InputDevice.cs" />
+    <Compile Include="Sources\Utils\EngineConsole.cs" />
+    <Compile Include="Sources\D3D11\Utils\GPUProfiler.cs" />
+    <Compile Include="Sources\Utils\Miscellaneous.cs" />
     <Compile Include="Sources\Utils\Primitives.cs" />
     <Compile Include="Sources\Utils\ScriptEngine.cs" />
-    <Compile Include="Sources\Utils\Timer.cs" />
-    <Compile Include="Sources\Utils\UIConsole.cs" />
+    <Compile Include="Sources\Utils\StatCollector.cs" />
+    <Compile Include="Sources\Components\Timer.cs" />
+    <Content Include="Sources\Shaders\Include\Tonemapping.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Assets\Materials\CopperMaterial.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Meshes\CowMesh.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\Meshes\Cube1mMesh.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Meshes\SkyDomeMesh.cceaf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Assets\Meshes\SkySphereMesh.cceaf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Assets\Shaders\CapsuleLightVolumeDS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\Shaders\CommonVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\DepthShadowsPS.ccesf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Assets\Shaders\DepthShadowsVS.ccesf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Assets\Shaders\DownsamplingFirstCS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\DownSamplingPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\DownsamplingSecondCS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\FillGBufferMaskedPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\FillGBufferPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\FillGBufferSkyboxPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\FillGBufferVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\ForwardPlusPosOnlyVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\ForwardPlusPosTexPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\ForwardPlusPosTexVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\ForwardPlusScenePS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\Shaders\FwdSkySpherePS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\IBL_PR_IntegrateBRDFxPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\IBL_PR_IntegrateQuadVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\IBL_PR_IrradiancePS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\IBL_PR_PreFilteredPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\IBL_PR_SphereToCubeMapPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\IBL_PR_SphereToCubeMapVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\LightCullingCS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\LightPassDirectionalPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\LightPassPointPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\LightPassPointQuadPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\LightPassPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\LightPassVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\LightVolumeDS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\LightVolumesHS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\LightVolumesVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\MaskedVelocityPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\MSAA_LightPassPointPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\MSAA_LightPassPointQuadPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\MSAA_LightPassPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\MSAA_ScreenQuadPS.ccesf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Assets\Shaders\PBRDefferedPS.ccesf">
@@ -166,10 +371,43 @@
     <None Include="Assets\Shaders\PBRForwardPS.ccesf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Assets\Shaders\PointLightDS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\PointLightHS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\PointLightPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\PointLightVolumeDS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\PointLightVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\Shaders\ReflectionSpherePS.ccesf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Assets\Shaders\ScreenQuadCompressedPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\ScreenQuadPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\ScreenQuadVS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\Shaders\SkySpherePS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\SpotLightDS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\SpotLightVolumeDS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Shaders\TestShader.ccesf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Assets\Shaders\UITexturePS.ccesf">
@@ -178,24 +416,39 @@
     <None Include="Assets\Shaders\UITextureVS.ccesf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Assets\Shaders\VelocityPS.ccesf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Textures\CopperAlbedoMap.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Textures\CopperMetallicMap.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Textures\CopperNormalMap.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Textures\CopperRoughnessMap.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\Textures\DebugTextureMap.cceaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\MiraSkyboxCubeMap.cceaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Include="Assets\Textures\HouseCubeMap.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SkyboxCubeMap.cceaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Include="Assets\Textures\HouseIrradianceCubeMap.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Assets\Textures\SkyboxIrradianceCubeMap.cceaf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Include="Assets\Textures\HousePreFilteredCubeMap.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Textures\StandardBRDFxLUT.cceaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Sources\Shaders\Commons\UITexturePS.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Sources\Shaders\Commons\DepthShadowsVS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -211,13 +464,10 @@
     <Content Include="Sources\Shaders\PBR\PBRForwardPS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Commons\UITextureVS.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Sources\Shaders\Commons\CommonVS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Sources\Shaders\Include\Constants.hlsl">
+    <Content Include="Sources\Shaders\CommonsInclude\Constants.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Sources\Shaders\Include\ShadowMap.hlsl">
@@ -235,10 +485,21 @@
     <Content Include="Sources\Shaders\PBR\PBRLightSurface.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Sources\Shaders\Private\ConstantBuffers.hlsl" />
+    <Content Include="Sources\Shaders\Private\InputLayouts.hlsl" />
+    <Content Include="Sources\Shaders\Templates\Unlit.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Sources\Shaders\Unlit\FwdSkySpherePS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Sources\Shaders\Unlit\ReflectionSpherePS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Unlit\MaskedVelocityPS.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sources\Shaders\Unlit\VelocityPS.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Sources\Shaders\Unlit\SkySpherePS.hlsl">

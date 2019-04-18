@@ -3,21 +3,21 @@ using EngineCore;
 
 namespace PongGame
 {
-    class ScorePoint : Component
+    class ScorePoint : BehaviourComponent
     {
         public Vector3 TargetScale;
         private float LerpSpeed = 8f;
        
-        public override void Update() {
+        public override void OnUpdate() {
             float deltaTime = Engine.Instance.Time.DeltaTime;
             float m_Time = Engine.Instance.Time.Time;
-            gameObject.transform.WorldScale = 
-                Vector3.Lerp(gameObject.transform.WorldScale, TargetScale, deltaTime * LerpSpeed);
+            transform.Scale = 
+                Vector3.Lerp(transform.Scale, TargetScale, deltaTime * LerpSpeed);
         }
 
         public void Hide() {
             TargetScale = Vector3.Zero;
-            gameObject.transform.WorldScale = TargetScale;
+            transform.Scale = TargetScale;
         }
 
         public void Show() {

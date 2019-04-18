@@ -12,6 +12,8 @@ COMMON_POSITION_ONLY_PS_IN VSMain(COMMON_VS_IN Input)
     
     Input.pos.w = 1.0f;
     Output.Position = mul(Input.pos, cbPerObject.WorldViewProjMatrix);
+    Output.PrevPosition = mul(Input.pos, cbPerObject.PreviousWorldViewProjMatrix);
+    Output.Velocity = Output.Position.xy - Output.PrevPosition.xy;
     
     return Output;
 }

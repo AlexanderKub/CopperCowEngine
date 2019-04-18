@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using AssetsManager.AssetsMeta;
 
 namespace AssetsManager.FSWorkers
@@ -32,8 +33,15 @@ namespace AssetsManager.FSWorkers
 
             using (FileStream stream = new FileStream(path, FileMode.Create))
             using (BinaryWriter writer = new BinaryWriter(stream)) {
+                /*using (MemoryStream ms = new MemoryStream()) {
+                    using (GZipStream compressStream = new GZipStream(ms, CompressionMode.Compress))
+                    using (BinaryWriter compressWriter = new BinaryWriter(compressStream)) {
+                        asset.SaveAsset(compressWriter);
+                        //compressWriter.Close();
+                    }
+                    writer.Write(ms.ToArray());
+                }*/
                 asset.SaveAsset(writer);
-                writer.Close();
             }
             return true;
         }

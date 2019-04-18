@@ -84,7 +84,7 @@ float3 LightSurface(float3 V, float3 N, int numLights, LightBuffer lightData[Max
         }
         else if (lightData[i].type == 2)
         {
-            lightTypeCoeff = lightData[i].distanceSqr / dot(lightData[i].position.xyz - position.xyz, lightData[i].position.xyz - position.xyz) * 0.35;
+            lightTypeCoeff *= lightData[i].distanceSqr / dot(lightData[i].position.xyz - position.xyz, lightData[i].position.xyz - position.xyz) * 0.35;
         }
         
         float diffuse_factor = Diffuse_Burley(NdotL, NdotV, LdotH, roughness);
@@ -116,7 +116,7 @@ float3 DirectionalLightAccValue(float3 LightDir, float LightIntensity, float3 Li
     float diffuse_factor = Diffuse_Burley(NdotL, NdotV, LdotH, roughness);
     float3 specular = Specular_BRDF(alpha, c_spec, NdotV, NdotL, LdotH, NdotH);
         
-    return NdotL * LightIntensity * LightColor * (((c_diff * diffuse_factor) + specular));
+    return NdotL * LightIntensity * LightColor * ((c_diff * diffuse_factor) + specular);
 }
 
 float3 PointLightAccValue(float3 PixelPos, float3 LightPos, float LightRadius, float3 LightColor, float Intensity,
@@ -146,35 +146,36 @@ float3 PointLightAccValue(float3 PixelPos, float3 LightPos, float LightRadius, f
     float diffuse_factor = Diffuse_Burley(NdotL, NdotV, LdotH, roughness);
     float3 specular = Specular_BRDF(alpha, c_spec, NdotV, NdotL, LdotH, NdotH);
         
-    return NdotL * pointTypeCoeff * LightColor * (((c_diff * diffuse_factor) + specular));
+    return NdotL * pointTypeCoeff * LightColor * ((c_diff * diffuse_factor) + specular);
 }
 
+//Posible wrong
 float3 SpotLightAccValue(float3 PixelPos, float3 LightPos, float LightRadius, float3 LightDir, float CosineOfConeAngle, float3 LightColor, float Intensity,
     float3 V, float3 N, float NdotV, float roughness, float alpha, float3 c_diff, float3 c_spec)
 {
     const float3 L = normalize(LightDir);
-    const float3 VtoLN = normalize(LightPos - PixelPos);
     const float3 H = normalize(L + V);
     const float NdotL = max(dot(N, L), 0);
     const float LdotH = max(dot(L, H), 0);
     const float NdotH = max(dot(N, H), 0);
 
-    float spotTypeCoeff = Intensity;
-    float fLightDistance = length(LightPos - PixelPos);
-    spotTypeCoeff *= fLightDistance < LightRadius ? 1 : 0;
-    
-    float fCosineOfCurrentConeAngle = dot(-VtoLN, LightDir);
-    float fRadialAttenuation = (fCosineOfCurrentConeAngle - CosineOfConeAngle) / (1.0 - CosineOfConeAngle);
-    fRadialAttenuation = fRadialAttenuation * fRadialAttenuation;
+    float3 vLight = LightPos - PixelPos;
+    float3 vLightNormalized = normalize(vLight);
+    float fLightDistance = length(vLight);
+    float CosineOfCurrentConeAngle = dot(-normalize(vLight), LightDir);
+    float fRad = 1.333333333333f * LightRadius;
 
-    float x = fLightDistance / LightRadius;
+    float k = (fLightDistance < fRad && CosineOfCurrentConeAngle > CosineOfConeAngle) ? 1 : 0;
+
+    float fRadialAttenuation = (CosineOfCurrentConeAngle - CosineOfConeAngle) / (1.0 - CosineOfConeAngle);
+    fRadialAttenuation = fRadialAttenuation * fRadialAttenuation;
+    float x = fLightDistance / fRad;
     float fFalloff = -0.05 + 1.05 / (1 + 20 * x * x);
-    spotTypeCoeff = saturate(dot(VtoLN, N)) * fFalloff * 1.0f;
-        
-    float diffuse_factor = Diffuse_Burley(NdotL, NdotV, LdotH, roughness);
+
+    float diffuse_factor = Diffuse_Burley(NdotL, NdotV, LdotH, roughness) * fFalloff * fRadialAttenuation;
     float3 specular = Specular_BRDF(alpha, c_spec, NdotV, NdotL, LdotH, NdotH);
-        
-    return NdotL * spotTypeCoeff * LightColor * (((c_diff * diffuse_factor) + specular));
+    return k * Intensity * LightColor * ((c_diff * diffuse_factor) + specular);
+
 }
 
 float3 LightSurfaceTiled(float3 V, float3 N, float3 position,
@@ -191,7 +192,7 @@ float3 LightSurfaceTiled(float3 V, float3 N, float3 position,
     const float3 c_spec = lerp(DEF_kSpecularCoefficient, albedo, metallic) * ambientOcclusion;
     float3 acc_color = 0;
 
-    //Directional light
+    //Directional light (posible wrong)
     [loop]
     for (uint i = 0; i < dirLightsNum; i++)
     {
@@ -199,7 +200,7 @@ float3 LightSurfaceTiled(float3 V, float3 N, float3 position,
         V, N, NdotV, roughness, alpha, c_diff, c_spec);
     }
 
-    //Point and Spot lights
+    //Point and Spot lights (posible wrong)
     uint loopIndex = nIndex;
     uint loopNextLightIndex = nNextLightIndex;
     [loop]
@@ -223,10 +224,12 @@ float3 LightSurfaceTiled(float3 V, float3 N, float3 position,
             SpotLightDir.xy = g_NonDirLightBufferParams[nLightIndex].xy;
             SpotLightDir.z = sqrt(1 - SpotLightDir.x * SpotLightDir.x - SpotLightDir.y * SpotLightDir.y);
             SpotLightDir.z = (g_NonDirLightBufferParams[nLightIndex].z > 0) ? SpotLightDir.z : -SpotLightDir.z;
+            float3 LightPosition = CenterAndRadius.xyz - CenterAndRadius.w * SpotLightDir;
+
             float CosineOfConeAngle = g_NonDirLightBufferParams[nLightIndex].z;
             CosineOfConeAngle = abs(CosineOfConeAngle);
 
-            acc_color += SpotLightAccValue(position, CenterAndRadius.xyz, CenterAndRadius.w, SpotLightDir, CosineOfConeAngle,
+            acc_color += SpotLightAccValue(position, LightPosition, CenterAndRadius.w, SpotLightDir, CosineOfConeAngle,
                 Color, intensity, V, N, NdotV, roughness, alpha, c_diff, c_spec);
         }
     }

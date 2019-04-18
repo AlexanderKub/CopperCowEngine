@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using EngineCore;
 using AssetsManager;
 using AssetsManager.AssetsMeta;
+using System.Diagnostics;
 
 namespace SandBoxProject
 {
@@ -57,8 +58,10 @@ namespace SandBoxProject
 
                 //Shaders import
                 //AM.ImportAsset("ClusteredForward/ClusteredForwardScenePS.hlsl", "ClusteredForwardScenePS");
-                AM.ImportAsset("ForwardPlus/ForwardPlusScenePS.hlsl", "ForwardPlusScenePS");
-                AM.ImportAsset("ForwardPlus/LightCullingCS.hlsl", "LightCullingCS");
+                //AM.ImportAsset("ForwardPlus/ForwardPlusScenePS.hlsl", "ForwardPlusScenePS");
+                //AM.ImportAsset("ForwardPlus/LightCullingCS.hlsl", "LightCullingCS");
+                //AM.ImportAsset("RawContent/Sponza.fbx", "SponzaMesh", true);
+                //AM.ImportAsset("RawContent/Cube1m.fbx", "Cube1mMesh", true);
                 Console.ReadKey();
                 //AM.ImportAsset("Commons/CommonVS.hlsl", "CommonVS");
                 //AM.ImportAsset("ForwardPlus/ForwardPlusPosOnlyVS.hlsl", "ForwardPlusPosOnlyVS");
@@ -70,8 +73,6 @@ namespace SandBoxProject
                 AM.ImportAsset("PBR/PBRForwardPS.hlsl", "PBRForwardPS");
                 
                 //AM.ImportAsset("Commons/DepthShadowsVS.hlsl", "DepthShadowsVS");
-                //AM.ImportAsset("Commons/UITextureVS.hlsl", "UITextureVS");
-                //AM.ImportAsset("Commons/UITexturePS.hlsl", "UITexturePS");
                 
                 AM.ImportAsset("Unlit/ReflectionSpherePS.hlsl", "ReflectionSpherePS");
                 AM.ImportAsset("Unlit/SkySpherePS.hlsl", "SkySpherePS");

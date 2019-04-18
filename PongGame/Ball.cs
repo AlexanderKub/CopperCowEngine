@@ -4,24 +4,24 @@ using EngineCore;
 
 namespace PongGame
 {
-    class Ball : Component
+    class Ball : BehaviourComponent
     {
         public float Speed;
-        public Transform RedPlayerTransform;
-        public Transform BluePlayerTransform;
-        public Transform LeftWall;
-        public Transform RightWall;
+        public DeprecatedTransform RedPlayerTransform;
+        public DeprecatedTransform BluePlayerTransform;
+        public DeprecatedTransform LeftWall;
+        public DeprecatedTransform RightWall;
 
         private Vector3 m_Vector;
         private Vector3 ZeroPosition;
         private Random m_RandomGen;
 
-        private Transform m_transform;
-        public override void Init() {
-            m_transform = gameObject.transform;
-            m_transform.WorldRotation = Quaternion.Identity;
-            m_transform.WorldScale = new Vector3(2f, 2f, 2f);
-            ZeroPosition = m_transform.WorldPosition;
+        private DeprecatedTransform m_transform;
+        public override void OnInit() {
+            m_transform = transform;
+            m_transform.Rotation = Quaternion.Identity;
+            m_transform.Scale = new Vector3(2f, 2f, 2f);
+            ZeroPosition = m_transform.Position;
             m_RandomGen = new Random();
         }
 
@@ -30,55 +30,55 @@ namespace PongGame
         }
 
         public void ResetGame() {
-            m_transform.WorldPosition = ZeroPosition;
+            m_transform.Position = ZeroPosition;
             m_Vector = Vector3.Zero;
         }
 
         private bool onGoal;
-        public override void Update() {
+        public override void OnUpdate() {
             float m_Time = Engine.Instance.Time.Time;
-            m_transform.WorldRotation = Quaternion.RotationAxis(Vector3.Left, MathUtil.DegreesToRadians(m_Time * 100f)) *
+            m_transform.Rotation = Quaternion.RotationAxis(Vector3.Left, MathUtil.DegreesToRadians(m_Time * 100f)) *
                 Quaternion.RotationAxis(Vector3.ForwardLH, MathUtil.DegreesToRadians(m_Time * 100f));
-            m_transform.WorldPosition += m_Vector * Speed * Engine.Instance.Time.DeltaTime;
+            m_transform.Position += m_Vector * Speed * Engine.Instance.Time.DeltaTime;
 
             if(m_Vector.X < 0) {
-                if(m_transform.WorldPosition.X - m_transform.WorldScale.X * 0.5f < LeftWall.WorldPosition.X + LeftWall.WorldScale.X * 0.5f) {
+                if(m_transform.Position.X - m_transform.Scale.X * 0.5f < LeftWall.Position.X + LeftWall.Scale.X * 0.5f) {
                     WallBounce();
                 }
             } else {
-                if (m_transform.WorldPosition.X + m_transform.WorldScale.X * 0.5f > RightWall.WorldPosition.X - RightWall.WorldScale.X * 0.5f) {
+                if (m_transform.Position.X + m_transform.Scale.X * 0.5f > RightWall.Position.X - RightWall.Scale.X * 0.5f) {
                     WallBounce();
                 }
             }
 
             if (m_Vector.Z < 0) {
-                if (m_transform.WorldPosition.Z - m_transform.WorldScale.Z * 0.5f < 
-                    RedPlayerTransform.WorldPosition.Z + RedPlayerTransform.WorldScale.Z * 0.5f) {
+                if (m_transform.Position.Z - m_transform.Scale.Z * 0.5f < 
+                    RedPlayerTransform.Position.Z + RedPlayerTransform.Scale.Z * 0.5f) {
 
-                    if (!onGoal && m_transform.WorldPosition.X + m_transform.WorldScale.X * 0.5 > 
-                        RedPlayerTransform.WorldPosition.X - RedPlayerTransform.WorldScale.X * 0.5f
-                        && m_transform.WorldPosition.X - m_transform.WorldScale.X * 0.5f < 
-                        RedPlayerTransform.WorldPosition.X + RedPlayerTransform.WorldScale.X * 0.5f) {
-                        Bounce(1f, RedPlayerTransform.WorldPosition.X - m_transform.WorldPosition.X);
+                    if (!onGoal && m_transform.Position.X + m_transform.Scale.X * 0.5 > 
+                        RedPlayerTransform.Position.X - RedPlayerTransform.Scale.X * 0.5f
+                        && m_transform.Position.X - m_transform.Scale.X * 0.5f < 
+                        RedPlayerTransform.Position.X + RedPlayerTransform.Scale.X * 0.5f) {
+                        Bounce(1f, RedPlayerTransform.Position.X - m_transform.Position.X);
                     } else {
                         onGoal = true;
-                        if (m_transform.WorldPosition.Z < RedPlayerTransform.WorldPosition.Z - RedPlayerTransform.WorldScale.Z * 2f) {
+                        if (m_transform.Position.Z < RedPlayerTransform.Position.Z - RedPlayerTransform.Scale.Z * 2f) {
                             Goal(Player.TeamType.Blue);
                         }
                     }
                 }
             } else {
-                if (m_transform.WorldPosition.Z + m_transform.WorldScale.Z * 0.5f > 
-                    BluePlayerTransform.WorldPosition.Z - BluePlayerTransform.WorldScale.Z * 0.5f) {
+                if (m_transform.Position.Z + m_transform.Scale.Z * 0.5f > 
+                    BluePlayerTransform.Position.Z - BluePlayerTransform.Scale.Z * 0.5f) {
 
-                    if (!onGoal && m_transform.WorldPosition.X + m_transform.WorldScale.X * 0.5 > 
-                        BluePlayerTransform.WorldPosition.X - BluePlayerTransform.WorldScale.X * 0.5f
-                        && m_transform.WorldPosition.X - m_transform.WorldScale.X * 0.5f < 
-                        BluePlayerTransform.WorldPosition.X + BluePlayerTransform.WorldScale.X * 0.5f) {
-                        Bounce(-1f, BluePlayerTransform.WorldPosition.X - m_transform.WorldPosition.X);
+                    if (!onGoal && m_transform.Position.X + m_transform.Scale.X * 0.5 > 
+                        BluePlayerTransform.Position.X - BluePlayerTransform.Scale.X * 0.5f
+                        && m_transform.Position.X - m_transform.Scale.X * 0.5f < 
+                        BluePlayerTransform.Position.X + BluePlayerTransform.Scale.X * 0.5f) {
+                        Bounce(-1f, BluePlayerTransform.Position.X - m_transform.Position.X);
                     } else {
                         onGoal = true;
-                        if (m_transform.WorldPosition.Z > BluePlayerTransform.WorldPosition.Z + BluePlayerTransform.WorldScale.Z * 2f) {
+                        if (m_transform.Position.Z > BluePlayerTransform.Position.Z + BluePlayerTransform.Scale.Z * 2f) {
                             Goal(Player.TeamType.Red);
                         }
                     }
@@ -96,7 +96,7 @@ namespace PongGame
         }
 
         private void Goal(Player.TeamType Team) {
-            m_transform.WorldPosition = ZeroPosition;
+            m_transform.Position = ZeroPosition;
             m_Vector = RandomDirection(Team == Player.TeamType.Red ? -1f : 1f);
             onGoal = false;
             ((Game)Engine.Instance).Goal(Team);

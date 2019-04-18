@@ -2,6 +2,7 @@
 #define __DEPENDENCY_HLSL_STRUCTURES__
 struct CBufferPerObjectStruct
 {
+    float4x4 PreviousWorldViewProjMatrix;
     float4x4 WorldViewProjMatrix;
     float4x4 WorldViewMatrix;
     float4x4 WorldMatrix;
@@ -29,14 +30,20 @@ struct CBufferPerFrameStruct
 {
     float4x4 Projection;
     float4x4 ProjectionInv;
+    float4x4 ViewInv;
+    float4x4 PrevView;
+    float4 CameraForward;
     float3 CameraPos;
     float AlphaTest;
+
     uint NumLights;
     uint WindowWidth;
     uint WindowHeight;
     uint MaxNumLightsPerTile;
+
     uint DirLightNum;
-    float3 filler;
+    uint currentFPS;
+    float2 filler;
 };
 
 struct CBufferDirLightStruct
@@ -56,6 +63,13 @@ struct LightBuffer
     float3 position;
     float3 direction;
     float distanceSqr;
+};
+
+struct ShadowMapLightBuffer
+{
+    float4x4 LightViewProjMatrix;
+    float2 LeftTopCorner;
+    float2 RightBottomCorner;
 };
 
 struct PixelOutputType

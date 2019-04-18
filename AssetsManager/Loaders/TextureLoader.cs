@@ -1,20 +1,27 @@
-﻿using SharpDX.WIC;
+﻿using AssetsManager.AssetsMeta;
+using SharpDX.WIC;
 using System.Collections.Generic;
 
 namespace AssetsManager.Loaders
 {
-    public struct TextureAssetData
+    public enum ColorSpaceEnum
     {
-        public int Width;
-        public int Height;
-        public byte[] buffer;
+        Gamma,
+        Linear,
     }
 
-    public struct TextureCubeAssetData
+    public enum ChannelsCountEnum
     {
-        public int Width;
-        public int Height;
-        public byte[][] buffer;
+        One = 1,
+        Two = 2,
+        Four = 4,
+    }
+
+    public enum BytesPerChannelEnum
+    {
+        One = 1,
+        Two = 2,
+        Four = 4,
     }
 
     internal class TextureLoader
@@ -30,17 +37,48 @@ namespace AssetsManager.Loaders
             }
         }
 
-        private static BitmapSource LoadBitmap(string filename) {
+        private static BitmapSource LoadBitmap(string filename, out bool IsSRgb) {
             var bitmapDecoder = new BitmapDecoder(
                 Factory,
                 filename,
                 DecodeOptions.CacheOnDemand
             );
 
+            BitmapFrameDecode bitmapFrameDecode = bitmapDecoder.GetFrame(0);
+            var metaReader = bitmapFrameDecode.MetadataQueryReader;
+
+            if (metaReader == null) {
+                IsSRgb = false;
+            } else {
+                var list = metaReader.QueryPaths;
+                Dictionary<string, object> test = new Dictionary<string, object>();
+                foreach (var item in list) {
+                    test.Add(item, metaReader.GetMetadataByName(item));
+                }
+
+                if (metaReader.TryGetMetadataByName("/sRGB/RenderingIntent", out object t).Success) {
+                    if ((ushort)t == 1) {
+                        IsSRgb = true;
+                    }
+                }
+
+                if (metaReader.TryGetMetadataByName("/app1/ifd/exif/{ushort=40961}", out t).Success) {
+                    if ((ushort)t == 1) {
+                        IsSRgb = true;
+                    }
+                }
+                
+                IsSRgb = false;
+            }
+            
+            if (IsSRgb) {
+                System.Console.WriteLine(filename + " SRGB!");
+            }
+
             var formatConverter = new FormatConverter(Factory);
 
             formatConverter.Initialize(
-                bitmapDecoder.GetFrame(0),
+                bitmapFrameDecode,
                 PixelFormat.Format32bppPRGBA,
                 BitmapDitherType.None,
                 null,
@@ -50,8 +88,8 @@ namespace AssetsManager.Loaders
             return formatConverter;
         }
 
-        static public TextureAssetData LoadTexture(string path) {
-            BitmapSource bit = LoadBitmap(path);
+        static public TextureAssetData LoadTexture(string path, bool forceSRgb) {
+            BitmapSource bit = LoadBitmap(path, out bool IsSRgb);
             int stride = bit.Size.Width * 4;
             byte[] data = new byte[bit.Size.Height * stride];
             bit.CopyPixels(data, stride);
@@ -59,6 +97,9 @@ namespace AssetsManager.Loaders
             return new TextureAssetData() {
                 Width = bit.Size.Width,
                 Height = bit.Size.Height,
+                ChannelsCount = ChannelsCountEnum.Four,
+                BytesPerChannel = BytesPerChannelEnum.One,
+                ColorSpace = (forceSRgb || IsSRgb) ? ColorSpaceEnum.Gamma : ColorSpaceEnum.Linear,
                 buffer = data,
             };
         }
@@ -74,29 +115,52 @@ namespace AssetsManager.Loaders
             int stride, w, h;
             w = h = -1;
 
-            List<byte[]> buffers = new List<byte[]>();
+            List<byte[][]> buffers = new List<byte[][]>();
 
             for (int i = 0; i < 6; i++) {
                 string p = splitName[0] + "_" + CubePostfixes[i] + "." + splitName[1];
 
-                bit = LoadBitmap(p);
+                bit = LoadBitmap(p, out bool isSRgb);
                 if (w == -1) {
                     w = bit.Size.Width;
                     h = bit.Size.Height;
                 }
                 stride = bit.Size.Width * 4;
 
-                byte[] data = new byte[bit.Size.Height * stride];
-                bit.CopyPixels(data, stride);
+                byte[][] data = new byte[1][];
+                data[0] = new byte[bit.Size.Height * stride];
+                bit.CopyPixels(data[0], stride);
                 buffers.Add(data);
             }
 
             return new TextureCubeAssetData() {
                 Width = w,
                 Height = h,
+                ChannelsCount = 4,
+                BytesPerChannel = 1,
+                ColorSpace = ColorSpaceEnum.Gamma,
                 buffer = buffers.ToArray(),
             };
         }
-        
+
+        static private NativeUtilsNS.NativeUtils m_NativeUtilsRef;
+        static private NativeUtilsNS.NativeUtils NativeUtilsRef {
+            get {
+                if (m_NativeUtilsRef == null) {
+                    m_NativeUtilsRef = new NativeUtilsNS.NativeUtils();
+                }
+                return m_NativeUtilsRef;
+            }
+        }
+
+        static public float[] LoadHDRTexture(string path, out int width, out int height, out int pixelSize)
+        {
+            NativeUtilsNS.ImageData imageData = NativeUtilsRef.LoadHDRImage(path);
+            float[] imageFloats = imageData.Data.ToArray();
+            width = imageData.Width;
+            height = imageData.Height;
+            pixelSize = sizeof(float) * 3;
+            return imageFloats;
+        }
     }
 }

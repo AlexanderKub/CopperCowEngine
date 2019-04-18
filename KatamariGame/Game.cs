@@ -49,10 +49,10 @@ namespace KatamariGame
             camera.Distance = 10f;
             camera.Target = Player.transform;
 
-            Light LightObj = new Light() {
+            DeprecatedLight LightObj = new DeprecatedLight() {
                 LightColor = Vector4.One * 0.5f,
                 radius = 20,
-                Type = Light.LightType.Directional,
+                Type = DeprecatedLight.LightType.Directional,
                 EnableShadows = true,
             };
             AddLight("Light", LightObj, new Vector3(0f, 10f, 10f), Quaternion.RotationYawPitchRoll(-MathUtil.Pi * 0.5f, -MathUtil.Pi * 0.5f, 0), true);
@@ -178,21 +178,21 @@ namespace KatamariGame
 
         private GameObject CreatePlayer() {
             GameObject PlayerGO = AddGameObject("Player", true);
-            PlayerGO.transform.WorldRotation = Quaternion.Identity;
-            PlayerGO.transform.WorldScale = Vector3.One;
-            PlayerGO.transform.WorldPosition = new Vector3(0, 0.5f, 0);
+            PlayerGO.transform.Rotation = Quaternion.Identity;
+            PlayerGO.transform.Scale = Vector3.One;
+            PlayerGO.transform.Position = new Vector3(0, 0.5f, 0);
             PlayerGO.AddComponent(new CBoundingSphere() {
                 Radius = 1f,
             });
             PlayerController PC = (PlayerController)(PlayerGO.AddComponent(new PlayerController()));
 
             GameObject GO = AddGameObject("SpherePlayer");
-            GO.transform.LocalRotation = Quaternion.Identity;
-            GO.transform.LocalScale = Vector3.One * 2f;
-            GO.transform.LocalPosition = new Vector3(0, 0, 0);
+            GO.transform.RelativeRotation = Quaternion.Identity;
+            GO.transform.RelativeScale = Vector3.One * 2f;
+            GO.transform.RelativePosition = new Vector3(0, 0, 0);
             GO.transform.Parent = PlayerGO.transform;
-            GO.GetComponent<Renderer>().RendererMaterial = playerMat;
-            GO.GetComponent<Renderer>().UpdateMesh(Primitives.Sphere(30));
+            GO.GetComponent<DeprecatedRenderer>().RendererMaterial = playerMat;
+            GO.GetComponent<DeprecatedRenderer>().UpdateMesh(Primitives.Sphere(30));
             PC.SetVisualTransform(GO.transform);
 
             return PlayerGO;
@@ -213,11 +213,11 @@ namespace KatamariGame
             mat.LoadMapsAndInitSampler();
 
             GameObject FloorGO = AddGameObject("Floor");
-            FloorGO.transform.WorldPosition = -0.5f * Vector3.Up;
-            FloorGO.transform.WorldScale = new Vector3(200f, 200f, 1f);
-            FloorGO.transform.WorldRotation = Quaternion.RotationYawPitchRoll(0, -MathUtil.DegreesToRadians(90f), 0);
-            FloorGO.GetComponent<Renderer>().RendererMaterial = mat;
-            FloorGO.GetComponent<Renderer>().UpdateMesh(Primitives.PlaneWithUV);
+            FloorGO.transform.Position = -0.5f * Vector3.Up;
+            FloorGO.transform.Scale = new Vector3(200f, 200f, 1f);
+            FloorGO.transform.Rotation = Quaternion.RotationYawPitchRoll(0, -MathUtil.DegreesToRadians(90f), 0);
+            FloorGO.GetComponent<DeprecatedRenderer>().RendererMaterial = mat;
+            FloorGO.GetComponent<DeprecatedRenderer>().UpdateMesh(Primitives.PlaneWithUV);
             return FloorGO;
         }
     }

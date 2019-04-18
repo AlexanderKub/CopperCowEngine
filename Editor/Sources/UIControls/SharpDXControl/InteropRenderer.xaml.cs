@@ -60,22 +60,22 @@ namespace Editor.UIControls
         // override focus TODO: fix unfocus by double arrows
         protected override void OnKeyDown(KeyEventArgs e) {
             base.OnKeyDown(e);
-            EngineRef?.WpfKeyboardInput(false, (System.Windows.Forms.Keys)KeyInterop.VirtualKeyFromKey(e.Key));
+           // EngineRef?.WpfKeyboardInput(false, (System.Windows.Forms.Keys)KeyInterop.VirtualKeyFromKey(e.Key));
             switch (e.Key) {
                 case Key.Left:
-                    EngineRef?.OnSpecialKeyPressedWpf(System.Windows.Forms.Keys.Left);
+                    //EngineRef?.OnSpecialKeyPressedWpf(System.Windows.Forms.Keys.Left);
                     e.Handled = true;
                     return;
                 case Key.Up:
-                    EngineRef?.OnSpecialKeyPressedWpf(System.Windows.Forms.Keys.Up);
+                    //EngineRef?.OnSpecialKeyPressedWpf(System.Windows.Forms.Keys.Up);
                     e.Handled = true;
                     return;
                 case Key.Right:
-                    EngineRef?.OnSpecialKeyPressedWpf(System.Windows.Forms.Keys.Right);
+                    //EngineRef?.OnSpecialKeyPressedWpf(System.Windows.Forms.Keys.Right);
                     e.Handled = true;
                     return;
                 case Key.Down:
-                    EngineRef?.OnSpecialKeyPressedWpf(System.Windows.Forms.Keys.Down);
+                    //EngineRef?.OnSpecialKeyPressedWpf(System.Windows.Forms.Keys.Down);
                     e.Handled = true;
                     return;
                 default:
@@ -85,7 +85,7 @@ namespace Editor.UIControls
 
         protected override void OnKeyUp(KeyEventArgs e) {
             base.OnKeyUp(e);
-            EngineRef?.WpfKeyboardInput(true, (System.Windows.Forms.Keys)KeyInterop.VirtualKeyFromKey(e.Key));
+            //EngineRef?.WpfKeyboardInput(true, (System.Windows.Forms.Keys)KeyInterop.VirtualKeyFromKey(e.Key));
         }
 
         protected override void OnPreviewTextInput(TextCompositionEventArgs e) {
@@ -94,7 +94,7 @@ namespace Editor.UIControls
             if (e.Text.Length == 0) {
                 return;
             }
-            EngineRef?.OnKeyCharPressWpf(e.Text[0]);
+            //EngineRef?.OnKeyCharPressWpf(e.Text[0]);
         }
         #endregion
 
@@ -107,19 +107,19 @@ namespace Editor.UIControls
         protected override void OnMouseLeave(MouseEventArgs e) {
             base.OnMouseLeave(e);
             this.MoveFocus(new TraversalRequest(FocusNavigationDirection.Previous));
-            EngineRef?.WpfKeyboardInputReset();
+            //EngineRef?.WpfKeyboardInputReset();
         }
 
         private void EngineRefSetter(EngineCore.Engine engine) {
             EngineRef = engine;
             if (this.IsLoaded) {
-                ItializeRendering();
+                InitializeRendering();
             }
         }
 
         private void Host_Loaded(object sender, RoutedEventArgs e) {
             if (EngineRef != null) {
-                ItializeRendering();
+                InitializeRendering();
             }
         }
 
@@ -153,9 +153,23 @@ namespace Editor.UIControls
             }
         }
 
-        private void ItializeRendering() {
-            //EngineRef = new PreviewEngine();
-            EngineRef.Run();
+        private void InitializeRendering() {
+
+            EngineCore.Engine.EngineConfiguration config = new EngineCore.Engine.EngineConfiguration()
+            {
+                AppName = "ECS SandBox",
+                RenderBackend = EngineCore.Engine.EngineConfiguration.RenderBackendEnum.D3D11,
+                RenderPath = EngineCore.RenderPathEnum.Deffered,
+                //RenderPath = RenderPathEnum.Forward,
+                EnableHDR = true,
+                //EnableMSAA = EngineConfiguration.MSAAEnabled.x4,
+                DebugMode = true,
+                InteropDisplay = true,
+            };
+
+            EngineRef.Run(config);
+            RenderRequest = EngineRef.GetInteropRenderRequest();
+
             Window parentWindow = Window.GetWindow(this);
             InteropImage.WindowOwner = (new WindowInteropHelper(parentWindow)).Handle;
             parentWindow.Closing += new System.ComponentModel.CancelEventHandler((object o, System.ComponentModel.CancelEventArgs t) => {
@@ -166,8 +180,10 @@ namespace Editor.UIControls
             InteropImage.RequestRender();
         }
 
+        private Action<IntPtr, bool> RenderRequest;
         private void DoRender(IntPtr surface, bool isNewSurface) {
-            EngineRef?.RunFrame(surface, isNewSurface);
+            RenderRequest?.Invoke(surface, isNewSurface);
+            //EngineRef?.RunFrame(surface, isNewSurface);
         }
 
         private void UninitializeRendering() {

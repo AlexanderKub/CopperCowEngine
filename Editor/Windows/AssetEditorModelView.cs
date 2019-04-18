@@ -123,6 +123,7 @@ namespace Editor
             //AssetsManagerInstance.GetManager().ImportAsset("PBR/DefferedPBRShader.hlsl", "DefferedPBRShader");
             //AssetsManagerInstance.GetManager().ImportAsset("PBR/DefferedPBRQuadShader.hlsl", "DefferedPBRQuadShader");
             EngineRef = new PreviewEngine();
+
             EngineRef.OnSetViewsControlsEnabled += (bool zoom, bool yaw, bool pitch, bool viewPos, bool meshType) => {
                 ControlsVisibleFlags = new bool[] { zoom, yaw, pitch, viewPos, meshType };
             };

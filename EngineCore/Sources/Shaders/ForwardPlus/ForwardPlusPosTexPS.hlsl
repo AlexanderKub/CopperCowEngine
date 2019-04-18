@@ -17,10 +17,7 @@ SamplerState g_Sampler : register(s0);
 
 float4 PSMain(COMMON_POSITION_AND_UV_PS_IN Input) : SV_TARGET
 {
-    float4 DiffuseTex = g_TxDiffuse.Sample(g_Sampler, Input.TextureUV);
-    float fAlpha = min(DiffuseTex.a, cbPerObject.AlbedoColor.a);
-    if (fAlpha < cbPerFrame.AlphaTest) {
-        discard;
-    }    
-    return DiffuseTex;
+    float4 diffuse = g_TxDiffuse.Sample(g_Sampler, Input.TextureUV);
+    if (diffuse.a < cbPerFrame.AlphaTest) discard;
+    return diffuse;
 }

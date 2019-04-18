@@ -1,18 +1,21 @@
 ﻿using AssetsManager.Loaders;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace AssetsManager.AssetsMeta
 {
     public enum ShaderTypeEnum
     {
-        Vertex, Pixel, Geometry, Compute,
+        Vertex, Pixel, Geometry, Compute, Hull, Domain,
     }
 
     public class ShaderAsset: BaseAsset
     {
         public ShaderTypeEnum ShaderType;
         public byte[] Bytecode;
+        internal string EntryPoint;
+        internal Dictionary<string, object> Macro;
 
         public ShaderAsset() {
             this.Type = AssetTypes.Shader;
@@ -24,7 +27,7 @@ namespace AssetsManager.AssetsMeta
                 return false;
             }
 
-            this.Bytecode = ShaderLoader.LoadAndCompileShader(path, this.ShaderType);
+            this.Bytecode = ShaderLoader.LoadAndCompileShader(path, this.ShaderType, EntryPoint, Macro);
             return true;
         }
 

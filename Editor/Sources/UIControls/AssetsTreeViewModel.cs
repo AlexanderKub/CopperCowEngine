@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Editor.MVVM;
 using AssetsManager;
 using AssetsManager.AssetsMeta;
+using OpenFileDialog = System.Windows.Forms.OpenFileDialog;
+using FDialogResult = System.Windows.Forms.DialogResult;
 
 namespace Editor.UIControls
 {
@@ -87,7 +89,34 @@ namespace Editor.UIControls
             SelectedFolder = AssetTypes.Material;
         }
 
-        private BaseCommand m_CreateCommand;
+        private void ImportAsset()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Raw assets|*.obj;*.fbx;*.bmp;*.jpg;*.png|Shader source code|*.hlsl|All files|*.*";
+            if (openFileDialog.ShowDialog() == FDialogResult.Cancel)
+            {
+                return;
+            }
+            string FilePath = openFileDialog.FileName;
+            string SafeFileName = openFileDialog.SafeFileName;
+
+            AssetsManagerInstance AssetManager = AssetsManagerInstance.GetManager();
+            string assetName = SafeFileName.Split('.')[0];
+            BaseAsset asset;
+            if (AssetManager.ImportAsset(FilePath, assetName, true, out asset))
+            {
+                if (asset.Type == AssetTypes.Mesh)
+                {
+                    EngineCore.AssetsLoader.DropCachedMesh(assetName);
+                }
+                RefreshAssetsTable();
+            } else {
+                System.Windows.MessageBox.Show("Import Failed");
+            }
+            SelectedFolder = asset.Type;
+        }
+
+private BaseCommand m_CreateCommand;
         public BaseCommand CreateCommand {
             get {
                 return m_CreateCommand ??
@@ -96,6 +125,17 @@ namespace Editor.UIControls
                   }, obj => true));
             }
         }
+
+        private BaseCommand m_ImportCommand;
+        public BaseCommand ImportCommand {
+            get {
+                return m_ImportCommand ??
+                  (m_ImportCommand = new BaseCommand(obj => {
+                      ImportAsset();
+                  }, obj => true));
+            }
+        }
+
         #region Debug
         private void FilesTreeDebugPrint() {
             int k = 0;

@@ -1,4 +1,5 @@
-﻿using EngineCore.RenderTechnique;
+﻿using EngineCore;
+using EngineCore.D3D11;
 using SharpDX;
 using SharpDX.Direct3D11;
 
@@ -12,53 +13,71 @@ namespace EngineCore
         public float MetallicValue = 0.0f;
         public Vector2 Tile = Vector2.One;
         public Vector2 Shift = Vector2.Zero;
-    };
+    }; 
 
-    public class Material {
+    public class Material
+    {
+        public enum SamplerType
+        {
+            PointClamp,
+            PointWrap,
+
+            BilinearClamp,
+            BilinearWrap,
+
+            TrilinearClamp,
+            TrilinearWrap,
+        }
+
+        // TODO: shader meta info (name, quequ)
+        public ShaderGraph.MetaMaterial MetaMaterial { get; private set; }
+        public int ShaderQueue => MetaMaterial.Queue;
+
         public string Name;
-        internal ShaderResourceView albedoMapView;
-        internal ShaderResourceView normalMapView;
-        internal ShaderResourceView roughnessMapView;
-        internal ShaderResourceView metallicMapView;
-        internal ShaderResourceView occlusionMapView;
-        internal SamplerState MaterialSampler;
-
-        public bool HasSampler {
+        public SamplerType TexturesSampler;
+        internal SRITypeEnums.SamplerType GetSamplerType {
             get {
-                return MaterialSampler != null;
+                return (SRITypeEnums.SamplerType)TexturesSampler;
             }
         }
 
+        public bool HasSampler {
+            get {
+                return HasAlbedoMap || HasMetallicMap || HasNormalMap || HasOcclusionMap || HasRoughnessMap;
+            }
+        }
+
+        // TODO: change to ShaderGraphMaterials by Meta material
         public bool HasAlbedoMap
         {
             get {
-                return albedoMapView != null;
+                return !string.IsNullOrEmpty(AlbedoMapAsset);
             }
         }
 
         public bool HasNormalMap {
             get {
-                return normalMapView != null;
+                return !string.IsNullOrEmpty(NormalMapAsset);
             }
         }
 
         public bool HasRoughnessMap
         {
             get {
-                return roughnessMapView != null;
+                return !string.IsNullOrEmpty(RoughnessMapAsset);
             }
         }
         
         public bool HasMetallicMap {
             get {
-                return metallicMapView != null;
+                return !string.IsNullOrEmpty(MetallicMapAsset);
             }
         }
 
         public bool HasOcclusionMap
         {
             get {
-                return occlusionMapView != null;
+                return !string.IsNullOrEmpty(OcclusionMapAsset);
             }
         }
 
@@ -72,71 +91,46 @@ namespace EngineCore
 
         public static Material DefaultMaterial = new Material()
         {
+            Name = "DefaultMaterial",
+            MetaMaterial = ShaderGraph.MetaMaterial.Standard,
             PropetyBlock = new MaterialPropetyBlock()
             {
                 AlbedoColor = Vector3.One * 0.8f,
             },
+            AlbedoMapAsset = "DebugTextureMap",
+            TexturesSampler = SamplerType.BilinearWrap,
         };
 
         public Material()
         {
+            MetaMaterial = ShaderGraph.MetaMaterial.Standard;
             PropetyBlock = new MaterialPropetyBlock();
         }
 
-        public void LoadMapsAndInitSampler()
+        public Material(ShaderGraph.MetaMaterial meta)
         {
-            albedoMapView = null;
-            if (!string.IsNullOrEmpty(AlbedoMapAsset)) {
-                albedoMapView = AssetsLoader.LoadTextureSRV(AlbedoMapAsset, PropetyBlock.MetallicValue < 0);
-            }
-
-            normalMapView = null;
-            if (!string.IsNullOrEmpty(NormalMapAsset))
-            {
-                normalMapView = AssetsLoader.LoadTextureSRV(NormalMapAsset);
-            }
-
-            roughnessMapView = null;
-            if (!string.IsNullOrEmpty(RoughnessMapAsset))
-            {
-                roughnessMapView = AssetsLoader.LoadTextureSRV(RoughnessMapAsset);
-            }
-
-            metallicMapView = null;
-            if (!string.IsNullOrEmpty(MetallicMapAsset))
-            {
-                metallicMapView = AssetsLoader.LoadTextureSRV(MetallicMapAsset);
-            }
-
-            occlusionMapView = null;
-            if (!string.IsNullOrEmpty(OcclusionMapAsset))
-            {
-                occlusionMapView = AssetsLoader.LoadTextureSRV(OcclusionMapAsset);
-            }
-
-            //TODO: sampler selection
-            MaterialSampler = SharedRenderItems.LinearWrapSamplerState;
-        }
-
-        public void Dispose() {
-            //Disposed in asset loader
-            /*albedoMapView?.Dispose();
-            metallicMapView?.Dispose();
-            roughnessMapView?.Dispose();
-            normalMapView?.Dispose();
-            occlusionMapView?.Dispose();*/
+            MetaMaterial = meta;
+            PropetyBlock = new MaterialPropetyBlock();
         }
 
         private static Material m_SkySphereMaterial;
-        public static ShaderResourceView IrradianceMap;
         public static Material GetSkySphereMaterial() {
             if (m_SkySphereMaterial == null) {
-                m_SkySphereMaterial = new Material();
-                // MiraSkyboxCubeMap
-                m_SkySphereMaterial.albedoMapView = AssetsLoader.LoadTextureSRV("SkyboxCubeMap", true);
-                // MiraSkyboxIrradianceCubeMap
-                IrradianceMap = AssetsLoader.LoadTextureSRV("SkyboxIrradianceCubeMap", true);
-                m_SkySphereMaterial.MaterialSampler = SharedRenderItems.LinearClampSamplerState;
+                m_SkySphereMaterial = new Material()
+                {
+                    Name = "SkySphereMaterial",
+                    // SkyboxCubeMap MiraSkyboxCubeMap NightskySkyboxCubeMap
+                    AlbedoMapAsset = "HouseCubeMap",
+                    TexturesSampler = SamplerType.PointWrap,
+                    MetaMaterial = new ShaderGraph.MetaMaterial()
+                    {
+                        shadingMode = ShaderGraph.MetaMaterial.ShadingMode.Unlit,
+                        blendMode = ShaderGraph.MetaMaterial.BlendMode.Opaque,
+                        cullMode = ShaderGraph.MetaMaterial.CullMode.Back,
+                        materialDomain = ShaderGraph.MetaMaterial.MaterialDomain.Surface,
+                        Wireframe = false,
+                    }
+                };
             }
             return m_SkySphereMaterial;
         }

@@ -77,6 +77,19 @@ float4 PSMain(COMMON_PS_IN Input) : SV_TARGET
     uint nTileIndex = GetTileIndex(Input.pos.xy, cbPerFrame.WindowWidth);
     uint nIndex = cbPerFrame.MaxNumLightsPerTile * nTileIndex;
     uint nNextLightIndex = g_PerTileLightIndexBuffer[nIndex];
+    
+    //DEBUG LIGHTS COUNTS
+    /*uint count = 0;
+    [loop]
+    while (nNextLightIndex != LIGHT_INDEX_BUFFER_SENTINEL)
+    {
+        nIndex++;
+        nNextLightIndex = g_PerTileLightIndexBuffer[nIndex];
+        count++;
+    }
+    float c = saturate((float) count / cbPerFrame.MaxNumLightsPerTile);
+    return float4(c, 1.0f - c, 0.0f, 1.0f);*/
+
     float3 color = LightSurfaceTiled(
         V, NormalValue, Input.posWS.xyz, 
         AlbedoValue.rgb, RoughnessValue, MetallicValue, OcclusionValue,

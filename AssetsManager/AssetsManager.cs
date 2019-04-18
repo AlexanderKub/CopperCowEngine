@@ -6,7 +6,7 @@ using AssetsManager.AssetsMeta;
 
 namespace AssetsManager
 {
-    public class AssetsManagerInstance
+    public partial class AssetsManagerInstance
     {
         private string m_RootPath;
         public string RootPath {
@@ -51,27 +51,10 @@ namespace AssetsManager
             string[] arr = Path.Split('.');
             string ext = arr[arr.Length - 1].ToLower();
 
-            //TODO: Asset Type detection
             assetRes = null;
             BaseAsset asset;
             if (shaderExts.Contains(ext)) {
-                ShaderTypeEnum ST = ShaderTypeEnum.Vertex;
-                if (Name.EndsWith("VS")) {
-                    ST = ShaderTypeEnum.Vertex;
-                } else if (Name.EndsWith("PS")) {
-                    ST = ShaderTypeEnum.Pixel;
-                } else if (Name.EndsWith("GS")) {
-                    ST = ShaderTypeEnum.Geometry;
-                } else if (Name.EndsWith("CS")) {
-                    ST = ShaderTypeEnum.Compute;
-                } else {
-                    Console.WriteLine("Unknown shader type, please add correct postfix e.g. VS");
-                    return false;
-                }
-                asset = new ShaderAsset() {
-                    Name = Name,
-                    ShaderType = ST,
-                };
+                return ImportShaderAsset(Path, Name, null, null, true, out assetRes);
             } else if(meshExts.Contains(ext)) {
                 asset = new MeshAsset() {
                     Name = Name,
@@ -79,6 +62,8 @@ namespace AssetsManager
             } else if (textureExts.Contains(ext)) {
                 asset = new Texture2DAsset() {
                     Name = Name,
+                    // Hack for forcing srgb image with wrong meta-data
+                    ForceSRgb = Name.Contains("Albedo"),
                 };
             } else {
                 Console.WriteLine("Unknown asset extension: {0}", ext);
@@ -90,6 +75,78 @@ namespace AssetsManager
             }
             assetRes = asset;
             return FSWorker.CreateAssetFile(asset, Rewrite || asset.Type == AssetTypes.Shader);
+        }
+
+        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, bool Rewrite)
+        {
+            BaseAsset dummy;
+            return ImportShaderAsset(Path, Name, EntryPoint, null, Rewrite, out dummy);
+        }
+
+        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, string Macro, bool Rewrite)
+        {
+            BaseAsset dummy;
+            return ImportShaderAsset(Path, Name, EntryPoint, new Dictionary<string, object>() {
+                { Macro, 1 } }, Rewrite, out dummy);
+        }
+
+        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, string Macro, string Macro2, bool Rewrite)
+        {
+            BaseAsset dummy;
+            return ImportShaderAsset(Path, Name, EntryPoint, new Dictionary<string, object>() {
+                { Macro, 1 }, { Macro2, 1 } }, Rewrite, out dummy);
+        }
+
+        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, Dictionary<string, object> Macro, bool Rewrite)
+        {
+            BaseAsset dummy;
+            return ImportShaderAsset(Path, Name, EntryPoint, Macro, Rewrite, out dummy);
+        }
+
+        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, Dictionary<string,object> Macro, bool Rewrite, out BaseAsset assetRes)
+        {
+            string[] arr = Path.Split('.');
+            string ext = arr[arr.Length - 1].ToLower();
+            assetRes = null;
+
+            if (!shaderExts.Contains(ext))
+            {
+                return false;
+            }
+
+            BaseAsset asset;
+            
+            ShaderTypeEnum ST = ShaderTypeEnum.Vertex;
+            if (Name.EndsWith("VS")) {
+                ST = ShaderTypeEnum.Vertex;
+            } else if (Name.EndsWith("PS")) {
+                ST = ShaderTypeEnum.Pixel;
+            } else if (Name.EndsWith("GS")) {
+                ST = ShaderTypeEnum.Geometry;
+            } else if (Name.EndsWith("CS")) {
+                ST = ShaderTypeEnum.Compute;
+            } else if (Name.EndsWith("HS")) {
+                ST = ShaderTypeEnum.Hull;
+            } else if (Name.EndsWith("DS")) {
+                ST = ShaderTypeEnum.Domain;
+            } else {
+                Console.WriteLine("Unknown shader type, please add correct postfix e.g. VS");
+                return false;
+            }
+
+            asset = new ShaderAsset() {
+                Name = Name,
+                ShaderType = ST,
+                EntryPoint = EntryPoint,
+                Macro = Macro,
+            };
+
+            if (!asset.ImportAsset(Path, ext)) {
+                return false;
+            }
+
+            assetRes = asset;
+            return FSWorker.CreateAssetFile(asset, Rewrite);
         }
 
         public bool CreateCubeMapAsset(string Path, string Name) {
@@ -105,7 +162,7 @@ namespace AssetsManager
             if (!asset.ImportAsset(Path, ext)) {
                 return false;
             }
-            return FSWorker.CreateAssetFile(asset);
+            return FSWorker.CreateAssetFile(asset, true);
         }
 
         public bool CreateMaterialAsset() {
@@ -113,6 +170,18 @@ namespace AssetsManager
                 Name = "NewMaterial",
             };
             return FSWorker.CreateAssetFile(asset);
+        }
+
+        //FOR TESTING
+        public bool CreateShaderGraphAsset(string name, SharpDX.D3DCompiler.ShaderBytecode bytecode)
+        {
+            BaseAsset asset = new ShaderAsset()
+            {
+                Name = name,
+                ShaderType = ShaderTypeEnum.Pixel,
+                Bytecode = bytecode,
+            };
+            return FSWorker.CreateAssetFile(asset, true);
         }
 
         public bool SaveAssetChanging(BaseAsset asset) {
@@ -133,7 +202,6 @@ namespace AssetsManager
             FSWorker.LoadAssetFile(asset);
             return asset;
         }
-
 
         private Dictionary<AssetTypes, List<MetaAsset>> CachedAssetsTable;
         public Dictionary<AssetTypes, List<MetaAsset>> LoadProjectAssets() {
@@ -174,5 +242,79 @@ namespace AssetsManager
             }
             return result;
         }
+
     }
+
+    #region Debug Asset Creators
+
+    public partial class AssetsManagerInstance
+    {
+        public bool CreateMaterialAsset(string name, string albedoAsset, string normalAsset)
+        {
+            BaseAsset asset = new MaterialAsset()
+            {
+                Name = name,
+                AlbedoMapAsset = albedoAsset,
+                NormalMapAsset = normalAsset,
+                MetallicValue = 0.05f,
+                RoughnessValue = 0.95f,
+            };
+            return FSWorker.CreateAssetFile(asset, true);
+        }
+
+        public bool CreateMaterialAsset(string name, string albedoAsset, string normalAsset, string roughnessAsset, string metallicAsset)
+        {
+            return CreateMaterialAsset(name, albedoAsset, normalAsset, roughnessAsset, metallicAsset, "");
+        }
+
+        public bool CreateMaterialAsset(string name, string albedoAsset, string normalAsset, string roughnessAsset, string metallicAsset, string occlusionAsset)
+        {
+            BaseAsset asset = new MaterialAsset()
+            {
+                Name = name,
+                AlbedoMapAsset = albedoAsset,
+                NormalMapAsset = normalAsset,
+                RoughnessMapAsset = roughnessAsset,
+                MetallicMapAsset = metallicAsset,
+                OcclusionMapAsset = occlusionAsset,
+            };
+            return FSWorker.CreateAssetFile(asset, true);
+        }
+
+        public bool CreateMeshAsset(string path, string name, float fileScale)
+        {
+            string ext = path.Split('.').Last().ToLower();
+            MeshAsset asset = new MeshAsset()
+            {
+                Name = name,
+            };
+            bool r = asset.ImportAsset(path, ext, fileScale);
+            return FSWorker.CreateAssetFile(asset, true);
+        }
+    }
+
+    #endregion
+
+    #region PreRender Tools
+
+    public partial class AssetsManagerInstance
+    {
+        public void CubeMapPrerender(string path, string outputName)
+        {
+            Loaders.IBLMapsPreRender cubeMapsPrerender = new Loaders.IBLMapsPreRender();
+            cubeMapsPrerender.Init(path);
+            cubeMapsPrerender.Render(outputName);
+            cubeMapsPrerender.Dispose();
+        }
+
+        public void BRDFIntegrate(string outputName)
+        {
+            Loaders.IBLMapsPreRender cubeMapsPrerender = new Loaders.IBLMapsPreRender();
+            cubeMapsPrerender.RenderBRDF(outputName);
+            cubeMapsPrerender.Dispose();
+            Console.WriteLine($"BRDFIntegrated: {outputName}");
+        }
+    }
+
+    #endregion
 }

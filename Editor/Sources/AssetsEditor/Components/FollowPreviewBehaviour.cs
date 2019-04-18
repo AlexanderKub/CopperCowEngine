@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace Editor.AssetsEditor.Components
 {
-    class FollowPreviewBehaviour: Component
-    {
-        private Transform Target;
+    //class FollowPreviewBehaviour: BehaviourComponent
+    //{
+    //    private DeprecatedTransform Target;
 
-        public FollowPreviewBehaviour(Transform target) {
-            Target = target;
-        }
+    //    public FollowPreviewBehaviour(DeprecatedTransform target) {
+    //        Target = target;
+    //    }
 
-        public override void Update() {
-            gameObject.transform.LocalRotation = Target.LocalRotation;
-            gameObject.transform.LocalScale = Target.LocalScale;
-        }
-    }
+    //    public override void OnUpdate() {
+    //        transform.RelativeRotation = Target.RelativeRotation;
+    //        transform.RelativeScale = Target.RelativeScale;
+    //    }
+    //}
 }

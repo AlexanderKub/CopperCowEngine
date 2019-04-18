@@ -363,9 +363,10 @@ void FbxNative::FbxLoader::HandleMesh(Scene ^scene, Node ^node, FbxNode *fbxNode
 	}
 
 	Matrix^ meshTransform = Matrix::Identity;
-	array<Int4>		^skinIndices = gcnew array<Int4>(fbxMesh->GetControlPointsCount());
+	int n = fbxMesh->GetControlPointsCount();
+	array<Int4>		^skinIndices = gcnew array<Int4>(n);
 	//array<Int4>		^skinIndices = nullptr;
-	array<Vector4>	^skinWeights = gcnew array<Vector4>(fbxMesh->GetControlPointsCount());
+	array<Vector4>	^skinWeights = gcnew array<Vector4>(n);
 	//array<Int4>		^skinWeights = nullptr;
 
 	HandleSkinning(nodeMesh, scene, node, fbxNode, meshTransform, skinIndices, skinWeights);

@@ -3,28 +3,28 @@ using EngineCore;
 
 namespace KatamariGame
 {
-    public class PlayerController : Component
+    public class PlayerController : BehaviourComponent
     {
         private Vector3 Direction = Vector3.Zero;
-        private Transform m_transform;
+        private DeprecatedTransform m_transform;
       
         public float Speed = 10f;
         public float RotSpeed = 0.03f;
 
-        public override void Init() {
-            m_transform = gameObject.transform;
+        public override void OnInit() {
+            m_transform = transform;
         }
 
-        private Transform m_visTransform;
-        public void SetVisualTransform(Transform inTransform) {
+        private DeprecatedTransform m_visTransform;
+        public void SetVisualTransform(DeprecatedTransform inTransform) {
             m_visTransform = inTransform;
         }
-        public Transform GetVisualTransform() {
+        public DeprecatedTransform GetVisualTransform() {
             return m_visTransform;
         }
 
         private float m_RotationAngle;
-        public override void Update() {
+        public override void OnUpdate() {
             float deltaTime = Engine.Instance.Time.DeltaTime;
 
             m_RotationAngle = 0;
@@ -36,13 +36,13 @@ namespace KatamariGame
             }
 
             Vector3 axis = m_transform.TransformMatrix.Left;
-            m_transform.WorldRotation *= Quaternion.RotationAxis(
+            m_transform.Rotation *= Quaternion.RotationAxis(
                 m_transform.TransformMatrix.Up, 
                 MathUtil.RadiansToDegrees(m_RotationAngle) * RotSpeed * deltaTime
             );
-            m_transform.WorldPosition += m_transform.TransformMatrix.Forward * Speed * deltaTime;
+            m_transform.Position += m_transform.TransformMatrix.Forward * Speed * deltaTime;
            
-            m_visTransform.WorldRotation *= Quaternion.RotationAxis(axis, Speed * deltaTime);
+            m_visTransform.Rotation *= Quaternion.RotationAxis(axis, Speed * deltaTime);
         }
     }
 }

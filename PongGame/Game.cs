@@ -11,7 +11,11 @@ namespace PongGame
         private int BlueScore;
         private int MaxScore = 7;
         private bool isGameStarted;
-        public Game(string name) : base(name) { }
+
+        public Game(string name) : base() {
+            StartD3D11(name);
+        }
+
         public override RenderPath GetRenderPath()
         {
             return RenderPath.Forward;
@@ -43,14 +47,14 @@ namespace PongGame
         public override void OnStart() {
             ClearColor = Color.Black;
 
-            AddCamera<Camera>("MainCamera", new Vector3(0f, 40f, 0f), Quaternion.RotationYawPitchRoll(
+            AddCamera<DeprecatedCamera>("MainCamera", new Vector3(0f, 40f, 0f), Quaternion.RotationYawPitchRoll(
                 MathUtil.DegreesToRadians(0f), MathUtil.DegreesToRadians(89.99f), 0
             ));
 
-            Light LightObj = new Light() {
+            DeprecatedLight LightObj = new DeprecatedLight() {
                 LightColor = new Vector4(0.1f, 0.1f, 0.1f, 1f),
                 radius = 10,
-                Type = Light.LightType.Directional,
+                Type = DeprecatedLight.LightType.Directional,
                 EnableShadows = true,
             };
             AddLight("Light", LightObj, new Vector3(0f, 10f, 10f), Quaternion.RotationYawPitchRoll(30f, 30f, 30f), true);
@@ -97,11 +101,11 @@ namespace PongGame
         
         private ScorePoint CreateScorePoint(int i, bool isRed) {
             GameObject GO = AddGameObject((isRed ? "RedScores" : "BlueScores") + i);
-            GO.transform.WorldRotation = Quaternion.Identity;
-            GO.transform.WorldScale = Vector3.One * 0.01f;
-            GO.transform.WorldPosition = new Vector3(-25f, 1f, isRed ? (i * 4f - 28f) : (28f - i * 4f));
-            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
-            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), isRed ? GetMaterial("M_Red") : GetMaterial("M_Blue"));
+            GO.transform.Rotation = Quaternion.Identity;
+            GO.transform.Scale = Vector3.One * 0.01f;
+            GO.transform.Position = new Vector3(-25f, 1f, isRed ? (i * 4f - 28f) : (28f - i * 4f));
+            GO.GetComponent<DeprecatedRenderer>().SpecificType = DeprecatedRenderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<DeprecatedRenderer>().SetMeshAndMaterial(Primitives.Cube(), isRed ? GetMaterial("M_Red") : GetMaterial("M_Blue"));
             return (ScorePoint)GO.AddComponent(new ScorePoint());
         }
 
@@ -141,14 +145,14 @@ namespace PongGame
         private Ball m_Ball;
         private void CreateBall() {
             GameObject GO = AddGameObject("Ball");
-            GO.transform.WorldPosition = Vector3.Up;
-            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
-            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Ball"));
+            GO.transform.Position = Vector3.Up;
+            GO.GetComponent<DeprecatedRenderer>().SpecificType = DeprecatedRenderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<DeprecatedRenderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Ball"));
 
             m_Ball = (Ball)GO.AddComponent(new Ball() {
                 Speed = 60f,
-                RedPlayerTransform = RedPlayer.gameObject.transform,
-                BluePlayerTransform = BluePlayer.gameObject.transform,
+                RedPlayerTransform = RedPlayer.transform,
+                BluePlayerTransform = BluePlayer.transform,
                 LeftWall = LeftWall,
                 RightWall = RightWall
             });
@@ -158,9 +162,9 @@ namespace PongGame
         private Player BluePlayer;
         private void CreatePlayers() {
             GameObject GO = AddGameObject("RedPlayer");
-            GO.transform.WorldPosition = Vector3.Up;
-            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
-            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Red"));
+            GO.transform.Position = Vector3.Up;
+            GO.GetComponent<DeprecatedRenderer>().SpecificType = DeprecatedRenderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<DeprecatedRenderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Red"));
             RedPlayer = (Player)GO.AddComponent(new Player() {
                 Team = Player.TeamType.Red,
                 LeftWall = LeftWall,
@@ -168,9 +172,9 @@ namespace PongGame
             });
 
             GO = AddGameObject("BluePlayer");
-            GO.transform.WorldPosition = Vector3.Up;
-            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
-            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Blue"));
+            GO.transform.Position = Vector3.Up;
+            GO.GetComponent<DeprecatedRenderer>().SpecificType = DeprecatedRenderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<DeprecatedRenderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Blue"));
             BluePlayer = (Player)GO.AddComponent(new Player() {
                 Team = Player.TeamType.Blue,
                 LeftWall = LeftWall,
@@ -178,23 +182,23 @@ namespace PongGame
             });
         }
 
-        private Transform LeftWall;
-        private Transform RightWall;
+        private DeprecatedTransform LeftWall;
+        private DeprecatedTransform RightWall;
         private void CreateWalls() {
             GameObject GO = AddGameObject("LeftWall");
-            GO.transform.WorldRotation = Quaternion.Identity;
-            GO.transform.WorldScale = new Vector3(2f, 2f, 58f);
-            GO.transform.WorldPosition = new Vector3(-20f, 1f, 0);
-            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
-            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Green"));
+            GO.transform.Rotation = Quaternion.Identity;
+            GO.transform.Scale = new Vector3(2f, 2f, 58f);
+            GO.transform.Position = new Vector3(-20f, 1f, 0);
+            GO.GetComponent<DeprecatedRenderer>().SpecificType = DeprecatedRenderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<DeprecatedRenderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Green"));
             LeftWall = GO.transform;
 
             GO = AddGameObject("RightWall");
-            GO.transform.WorldRotation = Quaternion.Identity;
-            GO.transform.WorldScale = new Vector3(2f, 2f, 58f);
-            GO.transform.WorldPosition = new Vector3(20f, 1f, 0);
-            GO.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
-            GO.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Green"));
+            GO.transform.Rotation = Quaternion.Identity;
+            GO.transform.Scale = new Vector3(2f, 2f, 58f);
+            GO.transform.Position = new Vector3(20f, 1f, 0);
+            GO.GetComponent<DeprecatedRenderer>().SpecificType = DeprecatedRenderer.SpecificTypeEnum.Unlit;
+            GO.GetComponent<DeprecatedRenderer>().SetMeshAndMaterial(Primitives.Cube(), GetMaterial("M_Green"));
             RightWall = GO.transform;
         }
 
@@ -202,12 +206,12 @@ namespace PongGame
             Primitives.CeilSizeX = 20;
             Primitives.CeilSizeY = 29;
             GameObject Ceil = AddGameObject("Ceil");
-            Ceil.transform.WorldRotation = Quaternion.Identity;
-            Ceil.transform.WorldScale = Vector3.One * 4f;
-            Ceil.transform.WorldPosition = Vector3.Zero;
-            Ceil.GetComponent<Renderer>().SpecificType = Renderer.SpecificTypeEnum.Unlit;
-            Ceil.GetComponent<Renderer>().Topology = PrimitiveTopology.LineList;
-            Ceil.GetComponent<Renderer>().SetMeshAndMaterial(Primitives.Ceil, GetMaterial("M_Green"));
+            Ceil.transform.Rotation = Quaternion.Identity;
+            Ceil.transform.Scale = Vector3.One * 4f;
+            Ceil.transform.Position = Vector3.Zero;
+            Ceil.GetComponent<DeprecatedRenderer>().SpecificType = DeprecatedRenderer.SpecificTypeEnum.Unlit;
+            Ceil.GetComponent<DeprecatedRenderer>().Topology = PrimitiveTopology.LineList;
+            Ceil.GetComponent<DeprecatedRenderer>().SetMeshAndMaterial(Primitives.Ceil, GetMaterial("M_Green"));
         }
 
     }

@@ -9,36 +9,43 @@ using System.Collections.Generic;
 using SharpDX.DXGI;
 using SharpDX.Direct3D11;
 using Device = SharpDX.Direct3D11.Device;
+using EngineCore.ECS;
+using EngineCore.ECS.Components;
 
 namespace Editor.AssetsEditor
 {
     class PreviewEngine: Engine
     {
-        public PreviewEngine():base() {
+        public Entity CameraEntity { get; private set; }
+        private PreviewBehaviourSystem PreviewBehaviourSystemRef;
 
-        }
-
-        public PreviewEngine(System.Windows.Forms.Control surface):base(surface) {
-
-        }
-
-        public override void OnStart() {
-            ClearColor = Color.Blue;
+        protected override void OnStart() {
             CreateScene();
         }
 
+        protected override void Update(Timer timer)
+        {
+            base.Update(timer);
+            PreviewBehaviourSystemRef.Update(timer);
+        }
+
+        protected override void OnQuit()
+        {
+            base.OnQuit();
+            PreviewBehaviourSystemRef?.Destroy();
+        }
+
         private void CreateScene() {
-            CreateSkySphere();
-            SetMainCamera(AddCamera<Camera>("MainCamera", new Vector3(0f, 1f, 0f), Quaternion.RotationYawPitchRoll(MathUtil.Pi * 0.5f, 0, 0)));
-            Light LightObj = new Light() {
-                LightColor = Vector4.One * 0.25f,
-                radius = 20,
-                Type = Light.LightType.Directional,
-                EnableShadows = true,
-            };
-            AddLight("Light", LightObj, new Vector3(0f, 5.5f, 0.1f),
-                Quaternion.RotationYawPitchRoll(-MathUtil.Pi * 0.5f, -MathUtil.Pi * 0.5f, 0), true);
-            
+            PreviewBehaviourSystemRef = new PreviewBehaviourSystem();
+            ECSWorld.AddSystem(PreviewBehaviourSystemRef);
+
+            CameraEntity = ECSWorld.CreateEntityWith<Transform, Camera>("MainCamera");
+            CameraEntity.GetComponent<Transform>().SetTransformations(new Vector3(0f, 1f, 0f), 
+                Quaternion.RotationYawPitchRoll(MathUtil.Pi * 0.5f, 0, 0));
+            CameraEntity.SetActive(true);
+
+            ECSWorld.Refresh();
+
             AssetViewsInit();
         }
 
@@ -127,12 +134,6 @@ namespace Editor.AssetsEditor
             OnSetViewsControlsEnabled?.Invoke(zoom, yaw, pitch, viewPos, meshType);
         }
         #endregion
-
-
-        public override void Update() {
-            if (Input.IsKeyDown(System.Windows.Forms.Keys.Escape)) {
-                //Quit();
-            }
-        }
+        
     }
 }

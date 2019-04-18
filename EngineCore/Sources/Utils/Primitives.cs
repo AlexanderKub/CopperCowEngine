@@ -19,7 +19,8 @@ namespace EngineCore
         private static ModelGeometry m_PlaneWithUV;
         public static ModelGeometry PlaneWithUV {
             get {
-                if(m_PlaneWithUV == null) {
+                if (m_PlaneWithUV == null)
+                {
                     Vector3[] Verts = new Vector3[] {
                         new Vector3(-0.5f, -0.5f, -0.5f),
                         new Vector3(0.5f, -0.5f, -0.5f),
@@ -59,41 +60,62 @@ namespace EngineCore
             }
         }
 
-        public static ModelGeometry Cube() {
-            return Cube(White);
+        private static ModelGeometry m_Cube;
+        public static ModelGeometry Cube {
+            get {
+                if (m_Cube == null)
+                {
+                    m_Cube = GenCube();
+                }
+                return m_Cube;
+            }
         }
-
-        public static ModelGeometry Cube(Vector4 Color) {
+        private static ModelGeometry GenCube()
+        {
             int n = 34;
             int m = 24;
             int[] indxs = new int[n];
             Vector4[] colors = new Vector4[m];
             Vector3[] normals = new Vector3[m];
             Vector2[] uvs = new Vector2[m];
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < n; i++)
+            {
                 indxs[i] = i;
-                if(i >= m) {
+                if (i >= m)
+                {
                     continue;
-                } 
-                colors[i] = Color;
-                if(i < 4) {
+                }
+                colors[i] = Vector4.One;
+                if (i < 4)
+                {
                     normals[i] = new Vector3(0, 0, -1f);
-                } else if(i< 8) {
+                }
+                else if (i < 8)
+                {
                     normals[i] = new Vector3(0, 0, 1f);
-                } else if (i < 12) {
+                }
+                else if (i < 12)
+                {
                     normals[i] = new Vector3(0, -1f, 0);
-                } else if (i < 16) {
+                }
+                else if (i < 16)
+                {
                     normals[i] = new Vector3(0, 1f, 0);
-                } else if (i < 20) {
+                }
+                else if (i < 20)
+                {
                     normals[i] = new Vector3(-1f, 0, 0);
-                } else if (i < 24) {
+                }
+                else if (i < 24)
+                {
                     normals[i] = new Vector3(1f, 0, 0);
                 }
-                if (i % 4 == 0) {
-                    uvs[i] = new Vector2(0, 0);
-                    uvs[i + 1] = new Vector2(1, 0);
-                    uvs[i + 3] = new Vector2(0, 1);
-                    uvs[i + 2] = new Vector2(1, 1);
+                if (i % 4 == 0)
+                {
+                    uvs[i] = new Vector2(1, 1);
+                    uvs[i + 1] = new Vector2(0, 1);
+                    uvs[i + 3] = new Vector2(1, 0);
+                    uvs[i + 2] = new Vector2(0, 0);
                 }
             }
             return new ModelGeometry(
@@ -158,10 +180,10 @@ namespace EngineCore
                 new int[] {
                     0, 4, 1, 2, 3, 4,
                     1, 6, 2, 6, 3, 0,
-                    
+
                     5, 1, 4, 3, 7, 6,
                     6, 1, 5, 4, 7, 2,
-                
+
                     8, 3, 9, 5, 11, 3,
                     11, 0, 9, 6, 10, 6,
 
@@ -180,13 +202,13 @@ namespace EngineCore
 
         private static bool m_NeedUpdateCeil;
         private static int m_CeilSizeX = 10;
-        public static int CeilSizeX
-        {
+        public static int CeilSizeX {
             get {
                 return m_CeilSizeX;
             }
             set {
-                if(m_CeilSizeX != value) {
+                if (m_CeilSizeX != value)
+                {
                     m_CeilSizeX = value;
                     m_NeedUpdateCeil = true;
                 }
@@ -194,13 +216,13 @@ namespace EngineCore
         }
 
         private static int m_CeilSizeY = 10;
-        public static int CeilSizeY
-        {
+        public static int CeilSizeY {
             get {
                 return m_CeilSizeY;
             }
             set {
-                if (m_CeilSizeY != value) {
+                if (m_CeilSizeY != value)
+                {
                     m_CeilSizeY = value;
                     m_NeedUpdateCeil = true;
                 }
@@ -208,12 +230,12 @@ namespace EngineCore
         }
 
         private static ModelGeometry m_Ceil;
-        public static ModelGeometry Ceil
-        {
+        public static ModelGeometry Ceil {
             get {
-                if (m_Ceil == null || m_NeedUpdateCeil) {
+                if (m_Ceil == null || m_NeedUpdateCeil)
+                {
                     Vector4 white = new Vector4(0.9f, 0.9f, 0.9f, 1f);
-                    
+
                     int s = m_CeilSizeX;
                     int l = m_CeilSizeY;
                     int n = (s + l + 2) * 2;
@@ -223,16 +245,19 @@ namespace EngineCore
                     int[] Indcs = new int[n];
 
                     float lineLength = 0.5f;
-                    
+
                     int j = 0;
                     float x, y;
-                    for (int i = 0; i < l + 1; i++) {
+                    for (int i = 0; i < l + 1; i++)
+                    {
                         x = lineLength * (s / 2);
-                        if (s % 2 != 0) {
+                        if (s % 2 != 0)
+                        {
                             x += 0.25f;
                         }
                         y = lineLength * (i - l / 2);
-                        if(l % 2 != 0) {
+                        if (l % 2 != 0)
+                        {
                             y -= 0.25f;
                         }
 
@@ -247,13 +272,16 @@ namespace EngineCore
                         j += 2;
                     }
 
-                    for (int i = 0; i < s + 1; i++) {
+                    for (int i = 0; i < s + 1; i++)
+                    {
                         x = lineLength * (i - s / 2);
-                        if (s % 2 != 0) {
+                        if (s % 2 != 0)
+                        {
                             x -= 0.25f;
                         }
                         y = lineLength * (l / 2);
-                        if (l % 2 != 0) {
+                        if (l % 2 != 0)
+                        {
                             y += 0.25f;
                         }
 
@@ -276,87 +304,91 @@ namespace EngineCore
         }
 
         private static Dictionary<int, ModelGeometry> SphereCache;
-        public static ModelGeometry Sphere(int resolution)
+        public static ModelGeometry Sphere(int tessellation)
         {
-            if (SphereCache == null) {
+            if (SphereCache == null)
+            {
                 SphereCache = new Dictionary<int, ModelGeometry>();
             }
 
-            if (SphereCache.ContainsKey(resolution)) {
-                return SphereCache[resolution];
+            if (SphereCache.ContainsKey(tessellation))
+            {
+                return SphereCache[tessellation];
             }
 
-            Vector3[] verteces = new Vector3[resolution * resolution + 1];
-            Vector3[] normals = new Vector3[resolution * resolution + 1];
-            Vector2[] uvs = new Vector2[resolution * resolution + 1];
+            int verticalSegments = tessellation;
+            int horizontalSegments = tessellation * 2;
 
-            Vector3[] arr_verteces = new Vector3[resolution * resolution * 6];
-            Vector2[] arr_uvs = new Vector2[resolution * resolution * 6];
-            Vector3[] arr_normals = new Vector3[resolution * resolution * 6];
-            int[] indeces = new int[resolution * resolution * 6];
+            Vector3[] vertices = new Vector3[(verticalSegments + 1) * (horizontalSegments + 1)];
+            Vector3[] normals = new Vector3[(verticalSegments + 1) * (horizontalSegments + 1)];
+            Vector2[] uvs = new Vector2[(verticalSegments + 1) * (horizontalSegments + 1)];
+            int[] indices = new int[(verticalSegments) * (horizontalSegments + 1) * 6];
 
-            float PI = (float)Math.PI;
-            int i, j, iPos;
-            float phi, x, y, z;
-            for (i = 0; i < resolution; i++) {
-                float theta = (PI * i) / (resolution);
-                for (j = 0; j < resolution; j++) {
-                    phi = (2 * PI * j) / (resolution);
-                    x = (float)(Math.Sin(theta) * Math.Cos(phi)) * 0.5f;
-                    y = (float)(Math.Sin(theta) * Math.Sin(phi)) * 0.5f;
-                    z = (float)(Math.Cos(theta)) * 0.5f;
-                    verteces[i * resolution + j] = new Vector3(x, y, z);
-                    normals[i * resolution + j] = verteces[i * resolution + j];
-                    uvs[i * resolution + j] = new Vector2(theta, phi);
+            float radius = 1.0f * 0.5f;
+
+            int vertexCount = 0;
+            // Create rings of vertices at progressively higher latitudes.
+            for (int i = 0; i <= verticalSegments; i++)
+            {
+                float v = 1.0f - (float)i / verticalSegments;
+
+                var latitude = (float)((i * Math.PI / verticalSegments) - Math.PI / 2.0);
+                var dy = (float)Math.Sin(latitude);
+                var dxz = (float)Math.Cos(latitude);
+
+                // Create a single ring of vertices at this latitude.
+                for (int j = 0; j <= horizontalSegments; j++)
+                {
+                    float u = (float)j / horizontalSegments;
+
+                    var longitude = (float)(j * 2.0 * Math.PI / horizontalSegments);
+                    var dx = (float)Math.Sin(longitude);
+                    var dz = (float)Math.Cos(longitude);
+
+                    dx *= dxz;
+                    dz *= dxz;
+
+                    var normal = new Vector3(dx, dy, dz);
+                    var textureCoordinate = new Vector2(u, v);
+
+                    vertices[vertexCount] = normal * radius;
+                    normals[vertexCount] = normal;
+                    uvs[vertexCount] = textureCoordinate;
+                    vertexCount++;
                 }
             }
 
-            verteces[resolution * resolution] = new Vector3(0, 0, -0.5f);
-            normals[resolution * resolution] = new Vector3(0, 0, -0.5f);
-            uvs[resolution * resolution] = new Vector2(0, 0);
+            // Fill the index buffer with triangles joining each pair of latitude rings.
+            int stride = horizontalSegments + 1;
 
-            int iNext = 0;
+            int indexCount = 0;
+            for (int i = 0; i < verticalSegments; i++)
+            {
+                for (int j = 0; j <= horizontalSegments; j++)
+                {
+                    int nextI = i + 1;
+                    int nextJ = (j + 1) % stride;
 
-            for (j = 0; j < resolution; j++) {
-                for (i = 0; i < resolution; i++) {
-                    if (i == resolution - 1) {
-                        iNext = 0;
-                    } else {
-                        iNext = i + 1;
-                    }
+                    indices[indexCount++] = (i * stride + j);
+                    indices[indexCount++] = (i * stride + nextJ);
+                    indices[indexCount++] = (nextI * stride + j);
 
-                    iPos = (j * resolution * 6) + (i * 6);
-                    indeces[iPos] = j * resolution + i;
-                    indeces[iPos + 2] = j * resolution + iNext;
-
-                    if (j != resolution - 1) {
-                        indeces[iPos + 1] = ((j + 1) * resolution) + i;
-                    } else {
-                        indeces[iPos + 1] = (resolution - 1) * resolution;
-                        //indeces[iPos + 1] = ((j + 1) * resolution) + i;
-                    }
-
-                    indeces[iPos + 3] = indeces[iPos + 2];
-                    indeces[iPos + 4] = indeces[iPos + 1];
-
-                    if (j != resolution - 1) {
-                        indeces[iPos + 5] = ((j + 1) * resolution) + iNext;
-                    } else {
-                        indeces[iPos + 5] = resolution * resolution;
-                    }
+                    indices[indexCount++] = (i * stride + nextJ);
+                    indices[indexCount++] = (nextI * stride + nextJ);
+                    indices[indexCount++] = (nextI * stride + j);
                 }
             }
 
-            SphereCache[resolution] = new ModelGeometry(
-                verteces,
+            SphereCache[tessellation] = new ModelGeometry(
+                vertices,
                 null,
                 uvs,
-                indeces,
+                indices,
                 null,
                 normals
             );
-            
-            return SphereCache[resolution];
+
+            return SphereCache[tessellation];
         }
     }
 }
