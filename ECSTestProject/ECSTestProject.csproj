@@ -8,10 +8,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>ECSTestProject</RootNamespace>
     <AssemblyName>ECSTestProject</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -23,6 +24,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -33,6 +35,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX.Mathematics, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
@@ -1368,6 +1371,14 @@
     <ProjectReference Include="..\AssetsManager\AssetsManager.csproj">
       <Project>{333e14b0-7ce6-4036-b931-1f8059c103bf}</Project>
       <Name>AssetsManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CopperCowEngine.ECS.Builtin\CopperCowEngine.ECS.Builtin.csproj">
+      <Project>{5EF39CDF-FDF1-4BAC-B720-E82864A0BD56}</Project>
+      <Name>CopperCowEngine.ECS.Builtin</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine.ECS\CopperCowEngine.ECS.csproj">
+      <Project>{060632ee-fa0a-4247-8504-3afaae5630f5}</Project>
+      <Name>CopperCowEngine.ECS</Name>
     </ProjectReference>
     <ProjectReference Include="..\EngineCore\EngineCore.csproj">
       <Project>{7af8909d-510d-4c86-b3fe-5be0971cf045}</Project>

@@ -11,7 +11,7 @@ using EngineCore;
 
 namespace ECSTestProject
 {
-    public class TestSystem : BasicSystem<Requires<Transform, TestComponent>>
+    public class TestEcsSystem : BasicSystem<Requires<Transform, TestComponent>>
     {
         protected override void OnInit()
         {

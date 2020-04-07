@@ -34,6 +34,7 @@ namespace EngineCore.D3D11
             AnisotropicWrap,
             ShadowMap,
             PreIntegratedSampler,
+            // What the sampler (Who?)
             IBLSampler,
         }
     }
@@ -608,7 +609,7 @@ namespace EngineCore.D3D11
             bool ForceNoMips = false;
 
             int stride = asset.Data.Width * 4;
-            IntPtr ptr = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(asset.Data.buffer, 0);
+            IntPtr ptr = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(asset.Data.Buffer, 0);
             DataBox dataBox = new DataBox(ptr, stride, stride * asset.Data.Height);
             Texture2D texture2D = new Texture2D(
                 m_RenderBackend.Device,
@@ -676,7 +677,7 @@ namespace EngineCore.D3D11
             for (int mip = 0; mip < miplvls; mip++) {
                 int mipSize = (int)(asset.Data.Width * Math.Pow(0.5, mip));
                 for (int i = 0; i < 6; i++) {
-                    byte[] bts = asset.Data.buffer[i][mip];
+                    byte[] bts = asset.Data.Buffer[i][mip];
                     IntPtr ptr = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(bts, 0);
                     var dataBox = new DataBox(ptr, stride * mipSize, stride * mipSize * mipSize);
                     initData[i * miplvls + mip] = dataBox;

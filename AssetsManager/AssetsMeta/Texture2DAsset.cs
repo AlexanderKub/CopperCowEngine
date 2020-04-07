@@ -13,57 +13,65 @@ namespace AssetsManager.AssetsMeta
         public BytesPerChannelEnum BytesPerChannel;
         public ColorSpaceEnum ColorSpace;
         // TODO: mip levels
-        public byte[] buffer;
+        public byte[] Buffer;
 
-        public Format GetFormat {
-            get {
-                switch (ChannelsCount) {
+        public Format GetFormat
+        {
+            get
+            {
+                switch (ChannelsCount)
+                {
                     case ChannelsCountEnum.One:
-                        switch (BytesPerChannel) {
+                        switch (BytesPerChannel)
+                        {
                             case BytesPerChannelEnum.One:
                                 return Format.R8_UNorm;
                             case BytesPerChannelEnum.Two:
                                 return Format.R16_Float;
                             case BytesPerChannelEnum.Four:
                                 return Format.R32_Float;
+                            default:
+                                throw new ArgumentOutOfRangeException();
                         }
-                        break;
                     case ChannelsCountEnum.Two:
-                        switch (BytesPerChannel) {
+                        switch (BytesPerChannel)
+                        {
                             case BytesPerChannelEnum.One:
                                 return Format.R8G8_UNorm;
                             case BytesPerChannelEnum.Two:
                                 return Format.R16G16_Float;
                             case BytesPerChannelEnum.Four:
                                 return Format.R32G32_Float;
+                            default:
+                                throw new ArgumentOutOfRangeException();
                         }
-                        break;
                     case ChannelsCountEnum.Four:
-                        switch (BytesPerChannel) {
+                        switch (BytesPerChannel)
+                        {
                             case BytesPerChannelEnum.One:
-                                switch (ColorSpace) {
+                                switch (ColorSpace)
+                                {
                                     case ColorSpaceEnum.Gamma:
                                         return Format.R8G8B8A8_UNorm_SRgb;
                                     case ColorSpaceEnum.Linear:
                                         return Format.R8G8B8A8_UNorm;
+                                    default:
+                                        throw new ArgumentOutOfRangeException();
                                 }
-                                break;
                             case BytesPerChannelEnum.Two:
                                 return Format.R16G16B16A16_Float;
                             case BytesPerChannelEnum.Four:
                                 return Format.R32G32B32A32_Float;
+                            default:
+                                throw new ArgumentOutOfRangeException();
                         }
-                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
-                return Format.R8G8B8A8_UNorm_SRgb;
             }
         }
 
-        public bool GetMips {
-            get {
-                return ChannelsCount == ChannelsCountEnum.Four;
-            }
-        }
+        public bool GetMips => ChannelsCount == ChannelsCountEnum.Four;
     }
 
     public class Texture2DAsset : BaseAsset
@@ -71,38 +79,52 @@ namespace AssetsManager.AssetsMeta
         public TextureAssetData Data;
         public bool ForceSRgb;
 
-        public Texture2DAsset() {
-            this.Type = AssetTypes.Texture2D;
+        public Texture2DAsset()
+        {
+            Type = AssetTypes.Texture2D;
         }
 
-        public override bool ImportAsset(string path, string ext) {
+        public override void CopyValues(BaseAsset source)
+        {
+        }
+
+        public override bool ImportAsset(string path, string ext)
+        {
             Data = TextureLoader.LoadTexture(path, ForceSRgb);
             return true;
         }
 
-        public override void SaveAsset(BinaryWriter writer) {
+        public override void SaveAsset(BinaryWriter writer)
+        {
             base.SaveAsset(writer);
             writer.Write(Data.Width);
             writer.Write(Data.Height);
             writer.Write((int)Data.ChannelsCount);
             writer.Write((int)Data.BytesPerChannel);
             writer.Write((int)Data.ColorSpace);
-            writer.Write(Data.buffer);
+            writer.Write(Data.Buffer);
         }
 
-        public override bool LoadAsset(BinaryReader reader) {
-            if(!base.LoadAsset(reader)) {
+        public override bool LoadAsset(BinaryReader reader)
+        {
+            if (!base.LoadAsset(reader))
+            {
                 return false;
             }
-            Data = new TextureAssetData();
-            Data.Width = reader.ReadInt32();
-            Data.Height = reader.ReadInt32();
-            int channelsCount = reader.ReadInt32();
+
+            Data = new TextureAssetData
+            {
+                Width = reader.ReadInt32(),
+                Height = reader.ReadInt32(),
+            };
+            var channelsCount = reader.ReadInt32();
             Data.ChannelsCount = (ChannelsCountEnum)channelsCount;
-            int bytesPerChannel = reader.ReadInt32();
+
+            var bytesPerChannel = reader.ReadInt32();
             Data.BytesPerChannel = (BytesPerChannelEnum)bytesPerChannel;
+
             Data.ColorSpace = (ColorSpaceEnum)reader.ReadInt32();
-            Data.buffer = reader.ReadBytes(Data.Width * Data.Height * channelsCount * bytesPerChannel);
+            Data.Buffer = reader.ReadBytes(Data.Width * Data.Height * channelsCount * bytesPerChannel);
             return true;
         }
     }

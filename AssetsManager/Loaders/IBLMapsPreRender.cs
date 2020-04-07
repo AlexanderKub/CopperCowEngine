@@ -17,83 +17,83 @@ namespace AssetsManager.Loaders
     /// </summary>
     internal class IBLMapsPreRender
     {
-        struct CubeFaceCamera
+        // TODO: D3D11 specific code
+        private struct CubeFaceCamera
         {
             public Matrix View;
             public Matrix Projection;
         }
 
-        struct BRDFParamsBufferStruct
+        private struct BRDFParamsBufferStruct
         {
             public float Roughness;
-            public Vector3 filler;
+            private Vector3 filler;
         }
 
-        Buffer ConstantsBuffer;
-        Buffer BRDFParamsBuffer;
+        private Buffer _constantsBuffer;
+        private Buffer _brdfParamsBuffer;
 
-        VertexShader SphereToCubeMapVS;
-        VertexShader IntegrateQuadVS;
-        PixelShader SphereToCubeMapPS;
-        PixelShader IrradiancePS;
-        PixelShader PreFilteredPS;
-        PixelShader IntegrateBRDFxPS;
-        InputLayout CustomInputLayout;
-        SamplerState Sampler;
+        private VertexShader _sphereToCubeMapVs;
+        private VertexShader _integrateQuadVs;
+        private PixelShader _sphereToCubeMapPs;
+        private PixelShader _irradiancePs;
+        private PixelShader _preFilteredPs;
+        private PixelShader _integrateBrdFxPs;
+        private InputLayout _customInputLayout;
+        private SamplerState _sampler;
 
-        Texture2D InputMap;
-        Texture2D ConvertedCubeMap;
-        Texture2D IrradianceCubeMap;
-        Texture2D PreFilteredCubeMap;
-        Texture2D IntegrateBRDFxMap;
+        private Texture2D _inputMap;
+        private Texture2D _convertedCubeMap;
+        private Texture2D _irradianceCubeMap;
+        private Texture2D _preFilteredCubeMap;
+        private Texture2D _integrateBrdFxMap;
 
-        ShaderResourceView InputSRV;
-        ShaderResourceView ConvertedCubeSRV;
+        private ShaderResourceView _inputSrv;
+        private ShaderResourceView _convertedCubeSrv;
 
-        DeviceContext[] contextList;
-        RenderTargetView[] OutputRTVs = new RenderTargetView[6];
-        RenderTargetView IntegrateBRDFxRTV;
-        CubeFaceCamera[] Cameras = new CubeFaceCamera[6];
-        ViewportF Viewport;
+        private DeviceContext[] _contextList;
+        private RenderTargetView[] _outputRtVs = new RenderTargetView[6];
+        private RenderTargetView _integrateBrdFxRtv;
+        private readonly CubeFaceCamera[] _cameras = new CubeFaceCamera[6];
+        private ViewportF _viewport;
 
-        Device m_Device;
-        DeviceContext GetContext {
-            get {
-                return m_Device?.ImmediateContext;
-            }
-        }
+        private Device _device;
 
-        const int OutputMapSize = 512;
-        const int IrradianceSize = 32;
-        const int PreFilteredSize = 512;
-        const int PreFilteredMipsCount = 6;
-        const int BRDFxMapSize = 512;
+        public DeviceContext GetContext => _device?.ImmediateContext;
 
-        readonly int Threads = 2;
-        int OutputResolution = OutputMapSize;
+        private const int OutputMapSize = 512;
+        private const int IrradianceSize = 32;
+        private const int PreFilteredSize = 512;
+        private const int PreFilteredMipsCount = 6;
+        private const int BrdFxMapSize = 512;
 
-        enum RenderState
+        private const int Threads = 2;
+        private int _outputResolution = OutputMapSize;
+
+        private enum RenderState
         {
             CubeMap,
             IrradianceMap,
             PreFilteredMap,
-            IntegrateBRDF,
+            IntegrateBrdf,
         }
-        RenderState CurrentState;
+
+        private RenderState _currentState;
 
         public void Init(string sourcePath)
         {
-            if (!InitDevice()) {
+            if (!InitDevice())
+            {
                 return;
             }
-            
+
             #region InputMap
-            DataBox[] initData = GetHDRTextureData(sourcePath, out int InputWidth, out int InputHeight);
-            Texture2DDescription InputTextureDesc = new Texture2DDescription()
+            var initData = GetHDRTextureData(sourcePath, out var inputWidth, out var inputHeight);
+            var inputTextureDesc = new Texture2DDescription()
             {
                 Format = Format.R32G32B32_Float,
-                Width = InputWidth,
-                Height = InputHeight,
+                Width = inputWidth,
+                Height = inputHeight,
                 MipLevels = 1,
                 ArraySize = 1,
                 SampleDescription = new SampleDescription(1, 0),
@@ -102,25 +102,24 @@ namespace AssetsManager.Loaders
                 OptionFlags = ResourceOptionFlags.None,
                 Usage = ResourceUsage.Default,
             };
-            InputMap = ToDispose(new Texture2D(m_Device, InputTextureDesc, initData));
-            InputMap.DebugName = "InputMap";
+            _inputMap = ToDispose(new Texture2D(_device, inputTextureDesc, initData));
+            _inputMap.DebugName = "InputMap";
 
-            ShaderResourceViewDescription descSRV = new ShaderResourceViewDescription()
+            var descSrv = new ShaderResourceViewDescription
             {
-                Format = InputTextureDesc.Format,
+                Format = inputTextureDesc.Format,
                 Dimension = ShaderResourceViewDimension.Texture2D,
+                Texture2D = {MipLevels = inputTextureDesc.MipLevels, MostDetailedMip = 0},
             };
-            descSRV.Texture2D.MipLevels = InputTextureDesc.MipLevels;
-            descSRV.Texture2D.MostDetailedMip = 0;
-            InputSRV = ToDispose(new ShaderResourceView(m_Device, InputMap, descSRV));
-            InputSRV.DebugName = "InputSRV";
+            _inputSrv = ToDispose(new ShaderResourceView(_device, _inputMap, descSrv));
+            _inputSrv.DebugName = "InputSRV";
             #endregion
 
             #region OutputMap
-            Texture2DDescription OutputTextureDescription = new Texture2DDescription()
+            var outputTextureDescription = new Texture2DDescription()
             {
-                Width = OutputResolution,
-                Height = OutputResolution,
+                Width = _outputResolution,
+                Height = _outputResolution,
                 ArraySize = 6,
                 MipLevels = 0,
                 Format = Format.R16G16B16A16_Float,
@@ -130,134 +129,139 @@ namespace AssetsManager.Loaders
                 SampleDescription = new SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
             };
-            ConvertedCubeMap = ToDispose(new Texture2D(m_Device, OutputTextureDescription));
-            ConvertedCubeMap.DebugName = "ConvertedCubeMap";
-            OutputTextureDescription.OptionFlags = ResourceOptionFlags.TextureCube;
+            _convertedCubeMap = ToDispose(new Texture2D(_device, outputTextureDescription));
+            _convertedCubeMap.DebugName = "ConvertedCubeMap";
+            outputTextureDescription.OptionFlags = ResourceOptionFlags.TextureCube;
 
-            descSRV = new ShaderResourceViewDescription()
+            descSrv = new ShaderResourceViewDescription
             {
-                Format = OutputTextureDescription.Format,
+                Format = outputTextureDescription.Format,
                 Dimension = ShaderResourceViewDimension.TextureCube,
+                TextureCube = {MipLevels = -1, MostDetailedMip = 0},
             };
-            descSRV.TextureCube.MipLevels = -1;
-            descSRV.TextureCube.MostDetailedMip = 0;
-            ConvertedCubeSRV = ToDispose(new ShaderResourceView(m_Device, ConvertedCubeMap, descSRV));
-            ConvertedCubeSRV.DebugName = "ConvertedCubeSRV";
+            _convertedCubeSrv = ToDispose(new ShaderResourceView(_device, _convertedCubeMap, descSrv));
+            _convertedCubeSrv.DebugName = "ConvertedCubeSRV";
             #endregion
 
             #region IrradianceMap
-            OutputTextureDescription.Width = IrradianceSize;
-            OutputTextureDescription.Height = IrradianceSize;
-            OutputTextureDescription.MipLevels = 1;
-            IrradianceCubeMap = ToDispose(new Texture2D(m_Device, OutputTextureDescription));
-            IrradianceCubeMap.DebugName = "IrradianceCubeMap";
+            outputTextureDescription.Width = IrradianceSize;
+            outputTextureDescription.Height = IrradianceSize;
+            outputTextureDescription.MipLevels = 1;
+            _irradianceCubeMap = ToDispose(new Texture2D(_device, outputTextureDescription));
+            _irradianceCubeMap.DebugName = "IrradianceCubeMap";
             #endregion
 
             #region PreFilteredMap
-            OutputTextureDescription.Width = PreFilteredSize;
-            OutputTextureDescription.Height = PreFilteredSize;
-            OutputTextureDescription.MipLevels = PreFilteredMipsCount;
-            PreFilteredCubeMap = ToDispose(new Texture2D(m_Device, OutputTextureDescription));
-            PreFilteredCubeMap.DebugName = "PreFilteredCubeMap";
+            outputTextureDescription.Width = PreFilteredSize;
+            outputTextureDescription.Height = PreFilteredSize;
+            outputTextureDescription.MipLevels = PreFilteredMipsCount;
+            _preFilteredCubeMap = ToDispose(new Texture2D(_device, outputTextureDescription));
+            _preFilteredCubeMap.DebugName = "PreFilteredCubeMap";
             #endregion
 
             SetupShadersAndBuffers();
         }
 
-        bool InitDevice()
+        private bool InitDevice()
         {
-            DriverType CurrentDriverType = DriverType.Null;
-            DriverType[] driverTypes = new DriverType[] {
+            var driverTypes = new[] {
                 DriverType.Hardware,
                 DriverType.Warp,
                 DriverType.Reference,
             };
 
-            DeviceCreationFlags deviceCreationFlags = DeviceCreationFlags.BgraSupport | DeviceCreationFlags.Debug;
-            FeatureLevel[] levels = new FeatureLevel[] {
+            const DeviceCreationFlags deviceCreationFlags = DeviceCreationFlags.BgraSupport | DeviceCreationFlags.Debug;
+            var levels = new[] {
                 FeatureLevel.Level_11_0,
                 FeatureLevel.Level_10_1,
                 FeatureLevel.Level_10_0,
             };
 
-            foreach (var driverType in driverTypes) {
-                m_Device = new Device(driverType, deviceCreationFlags, levels);
-                if (m_Device != null) {
-                    m_Device.DebugName = "The Device";
-                    CurrentDriverType = driverType;
-                    break;
+            foreach (var driverType in driverTypes)
+            {
+                _device = new Device(driverType, deviceCreationFlags, levels);
+                if (_device == null)
+                {
+                    continue;
                 }
+                _device.DebugName = "The Device";
+                break;
             }
 
-            if (m_Device == null) {
+            if (_device == null)
+            {
                 Console.WriteLine("Device not created!");
                 return false;
             }
 
             // Create context list
-            if (Threads == 1) {
-                contextList = null;
-            } else {
-                contextList = new DeviceContext[Threads];
-                for (var i = 0; i < Threads; i++) {
-                    contextList[i] = ToDispose(new DeviceContext(m_Device));
-                    contextList[i].DebugName = $"Context#{i}";
+            if (Threads == 1)
+            {
+                _contextList = null;
+            }
+            else
+            {
+                _contextList = new DeviceContext[Threads];
+                for (var i = 0; i < Threads; i++)
+                {
+                    _contextList[i] = ToDispose(new DeviceContext(_device));
+                    _contextList[i].DebugName = $"Context#{i}";
                 }
             }
             //Console.WriteLine($"Device was created! DriverType: {CurrentDriverType.ToString()}");
             return true;
         }
 
-        void SetupShadersAndBuffers()
+        private void SetupShadersAndBuffers()
         {
-            AssetsManagerInstance AM = AssetsManagerInstance.GetManager();
-            AssetsMeta.ShaderAsset meta = AM.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_SphereToCubeMapPS");
-            ShaderBytecode shaderBytecode = new ShaderBytecode(meta.Bytecode);
-            SphereToCubeMapPS = ToDispose(new PixelShader(m_Device, shaderBytecode));
-            SphereToCubeMapPS.DebugName = "SphereToCubeMapPS";
+            var assetsManager = AssetsManagerInstance.GetManager();
+            var meta = assetsManager.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_SphereToCubeMapPS");
+            var shaderBytecode = new ShaderBytecode(meta.Bytecode);
+            _sphereToCubeMapPs = ToDispose(new PixelShader(_device, shaderBytecode));
+            _sphereToCubeMapPs.DebugName = "SphereToCubeMapPS";
 
-            meta = AM.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_IrradiancePS");
+            meta = assetsManager.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_IrradiancePS");
             shaderBytecode = new ShaderBytecode(meta.Bytecode);
-            IrradiancePS = ToDispose(new PixelShader(m_Device, shaderBytecode));
-            IrradiancePS.DebugName = "IrradiancePS";
+            _irradiancePs = ToDispose(new PixelShader(_device, shaderBytecode));
+            _irradiancePs.DebugName = "IrradiancePS";
 
-            meta = AM.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_PreFilteredPS");
+            meta = assetsManager.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_PreFilteredPS");
             shaderBytecode = new ShaderBytecode(meta.Bytecode);
-            PreFilteredPS = ToDispose(new PixelShader(m_Device, shaderBytecode));
-            PreFilteredPS.DebugName = "PreFilteredPS";
+            _preFilteredPs = ToDispose(new PixelShader(_device, shaderBytecode));
+            _preFilteredPs.DebugName = "PreFilteredPS";
 
-            meta = AM.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_SphereToCubeMapVS");
+            meta = assetsManager.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_SphereToCubeMapVS");
             shaderBytecode = new ShaderBytecode(meta.Bytecode);
-            SphereToCubeMapVS = ToDispose(new VertexShader(m_Device, shaderBytecode));
-            SphereToCubeMapVS.DebugName = "SphereToCubeMapVS";
+            _sphereToCubeMapVs = ToDispose(new VertexShader(_device, shaderBytecode));
+            _sphereToCubeMapVs.DebugName = "SphereToCubeMapVS";
 
-            CustomInputLayout = ToDispose(new InputLayout(m_Device, 
-                ShaderSignature.GetInputSignature(shaderBytecode), new InputElement[] {
+            _customInputLayout = ToDispose(new InputLayout(_device,
+                ShaderSignature.GetInputSignature(shaderBytecode), new[] {
                 new InputElement("SV_VertexID", 0, Format.R32G32B32_Float, 0, 0),
             }));
 
             // Create the per environment map buffer ViewProjection matrices
-            ConstantsBuffer = ToDispose(new Buffer(
-                m_Device,
+            _constantsBuffer = ToDispose(new Buffer(
+                _device,
                 Utilities.SizeOf<Matrix>() * 2,
                 ResourceUsage.Default,
                 BindFlags.ConstantBuffer,
                 CpuAccessFlags.None,
                 ResourceOptionFlags.None, 0)
             );
-            ConstantsBuffer.DebugName = "ConstantsBuffer";
+            _constantsBuffer.DebugName = "ConstantsBuffer";
 
-            BRDFParamsBuffer = ToDispose(new Buffer(
-                m_Device,
+            _brdfParamsBuffer = ToDispose(new Buffer(
+                _device,
                 Utilities.SizeOf<BRDFParamsBufferStruct>(),
                 ResourceUsage.Default,
                 BindFlags.ConstantBuffer,
                 CpuAccessFlags.None,
                 ResourceOptionFlags.None, 0)
             );
-            BRDFParamsBuffer.DebugName = "BRDFParamsBuffer";
+            _brdfParamsBuffer.DebugName = "BRDFParamsBuffer";
 
-            Sampler = ToDispose(new SamplerState(m_Device, new SamplerStateDescription()
+            _sampler = ToDispose(new SamplerState(_device, new SamplerStateDescription()
             {
                 Filter = Filter.MinMagMipLinear, // Trilinear
                 AddressU = TextureAddressMode.Wrap,
@@ -268,7 +272,7 @@ namespace AssetsManager.Loaders
                 MinimumLod = 0,
                 MaximumLod = float.MaxValue
             }));
-            Sampler.DebugName = "DefaultTrilinearSampler";
+            _sampler.DebugName = "DefaultTrilinearSampler";
         }
 
         void SetViewPoint(Vector3 camera)
@@ -294,146 +298,158 @@ namespace AssetsManager.Loaders
             };
 
             // Create view and projection matrix for each face
-            for (int i = 0; i < 6; i++) {
-                Cameras[i].View = Matrix.LookAtLH(camera, targets[i], upVectors[i]);
-                Cameras[i].Projection = Matrix.PerspectiveFovLH(MathUtil.PiOverTwo, 1.0f, 0.1f, 100.0f);
+            for (var i = 0; i < 6; i++)
+            {
+                _cameras[i].View = Matrix.LookAtLH(camera, targets[i], upVectors[i]);
+                _cameras[i].Projection = Matrix.PerspectiveFovLH(MathUtil.PiOverTwo, 1.0f, 0.1f, 100.0f);
             }
         }
 
-        void CreateRenderTargetsFromMap(Texture2D Map, bool withMips)
+        private void CreateRenderTargetsFromMap(Texture2D map, bool withMips)
         {
-            RenderTargetViewDescription RTVdesc = new RenderTargetViewDescription()
+            var renderTargetViewDescription = new RenderTargetViewDescription
             {
-                Format = Map.Description.Format,
+                Format = map.Description.Format,
                 Dimension = RenderTargetViewDimension.Texture2DArray,
+                Texture2DArray = {ArraySize = 1},
             };
-            RTVdesc.Texture2DArray.ArraySize = 1;
 
-            for (int i = 0; i < OutputRTVs.Length; i++) {
-                OutputRTVs[i]?.Dispose();
+            foreach (var renderTarget in _outputRtVs)
+            {
+                renderTarget?.Dispose();
             }
 
-            if (withMips) {
-                OutputRTVs = new RenderTargetView[6 * PreFilteredMipsCount];
-                for (int j = 0; j < 6; j++) {
-                    for (int i = 0; i < PreFilteredMipsCount; i++) {
-                        RTVdesc.Texture2DArray.MipSlice = i;
-                        RTVdesc.Texture2DArray.FirstArraySlice = j;
-                        OutputRTVs[j * PreFilteredMipsCount + i] = ToDispose(new RenderTargetView(m_Device, Map, RTVdesc));
-                        OutputRTVs[j * PreFilteredMipsCount + i].DebugName = $"CubeRTVFace{j}Mip{i}";
+            if (withMips)
+            {
+                _outputRtVs = new RenderTargetView[6 * PreFilteredMipsCount];
+                for (var j = 0; j < 6; j++)
+                {
+                    for (var i = 0; i < PreFilteredMipsCount; i++)
+                    {
+                        renderTargetViewDescription.Texture2DArray.MipSlice = i;
+                        renderTargetViewDescription.Texture2DArray.FirstArraySlice = j;
+                        _outputRtVs[j * PreFilteredMipsCount + i] = ToDispose(new RenderTargetView(_device, map, renderTargetViewDescription));
+                        _outputRtVs[j * PreFilteredMipsCount + i].DebugName = $"CubeRTVFace{j}Mip{i}";
                     }
                 }
                 return;
             }
 
-            OutputRTVs = new RenderTargetView[6];
+            _outputRtVs = new RenderTargetView[6];
 
-            RTVdesc.Texture2DArray.MipSlice = 0;
-            for (int i = 0; i < OutputRTVs.Length; i++) {
-                RTVdesc.Texture2DArray.FirstArraySlice = i;
-                OutputRTVs[i]?.Dispose();
-                OutputRTVs[i] = ToDispose(new RenderTargetView(m_Device, Map, RTVdesc));
-                OutputRTVs[i].DebugName = $"CubeRTVFace{i}";
+            renderTargetViewDescription.Texture2DArray.MipSlice = 0;
+            for (var i = 0; i < _outputRtVs.Length; i++)
+            {
+                renderTargetViewDescription.Texture2DArray.FirstArraySlice = i;
+                _outputRtVs[i]?.Dispose();
+                _outputRtVs[i] = ToDispose(new RenderTargetView(_device, map, renderTargetViewDescription));
+                _outputRtVs[i].DebugName = $"CubeRTVFace{i}";
             }
         }
 
-        DataBox[] GetHDRTextureData(string sourcePath, out int InputWidth, out int InputHeight)
+        private static DataBox[] GetHDRTextureData(string sourcePath, out int inputWidth, out int inputHeight)
         {
-            float[] imageFloats = TextureLoader.LoadHDRTexture(sourcePath, out InputWidth, out InputHeight, out int pixelSize);
-            if (InputWidth == 0) {
+            var imageFloats = TextureLoader.LoadHdrTexture(sourcePath, out inputWidth, out inputHeight, out var pixelSize);
+            if (inputWidth == 0)
+            {
                 Console.WriteLine("Texture not loaded!");
                 return null;
             }
 
-            IntPtr pSrcBits = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(imageFloats, 0);
-            DataBox[] initData = new DataBox[1];
+            var pSrcBits = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(imageFloats, 0);
+            var initData = new DataBox[1];
             initData[0].DataPointer = pSrcBits;
-            initData[0].RowPitch = InputWidth * pixelSize;
-            initData[0].SlicePitch = InputWidth * InputHeight * pixelSize;
+            initData[0].RowPitch = inputWidth * pixelSize;
+            initData[0].SlicePitch = inputWidth * inputHeight * pixelSize;
             return initData;
         }
-        
+
         public void Render(string path)
         {
-            if (GetContext == null) {
+            if (GetContext == null)
+            {
                 return;
             }
 
-            CurrentState = RenderState.CubeMap;
+            _currentState = RenderState.CubeMap;
             SetViewPoint(Vector3.Zero);
-            OutputResolution = OutputMapSize;
-            Viewport = new Viewport(0, 0, OutputResolution, OutputResolution);
-            CreateRenderTargetsFromMap(ConvertedCubeMap, false);
+            _outputResolution = OutputMapSize;
+            _viewport = new Viewport(0, 0, _outputResolution, _outputResolution);
+            CreateRenderTargetsFromMap(_convertedCubeMap, false);
             UpdateThreaded(path);
 
-            CurrentState = RenderState.IrradianceMap;
-            Viewport = new Viewport(0, 0, IrradianceSize, IrradianceSize);
-            OutputResolution = IrradianceSize;
-            CreateRenderTargetsFromMap(IrradianceCubeMap, false);
+            _currentState = RenderState.IrradianceMap;
+            _viewport = new Viewport(0, 0, IrradianceSize, IrradianceSize);
+            _outputResolution = IrradianceSize;
+            CreateRenderTargetsFromMap(_irradianceCubeMap, false);
             UpdateThreaded(path);
 
-            CurrentState = RenderState.PreFilteredMap;
-            Viewport = new Viewport(0, 0, PreFilteredSize, PreFilteredSize);
-            OutputResolution = PreFilteredSize;
-            CreateRenderTargetsFromMap(PreFilteredCubeMap, true);
+            _currentState = RenderState.PreFilteredMap;
+            _viewport = new Viewport(0, 0, PreFilteredSize, PreFilteredSize);
+            _outputResolution = PreFilteredSize;
+            CreateRenderTargetsFromMap(_preFilteredCubeMap, true);
             UpdateThreaded(path);
         }
 
         public void RenderBRDF(string outputPath)
         {
-            CurrentState = RenderState.IntegrateBRDF;
+            _currentState = RenderState.IntegrateBrdf;
 
-            if (GetContext == null) {
-                if (!InitDevice()) {
+            if (GetContext == null)
+            {
+                if (!InitDevice())
+                {
                     return;
                 }
             }
             SetViewPoint(Vector3.Zero);
             InitBRDFxResources();
-            Viewport = new Viewport(0, 0, BRDFxMapSize, BRDFxMapSize);
+            _viewport = new Viewport(0, 0, BrdFxMapSize, BrdFxMapSize);
             UpdateCubeFace(GetContext, 0);
-            IntegrateBRDFxMap.Save(GetContext, m_Device, outputPath, false);
+            _integrateBrdFxMap.Save(GetContext, _device, outputPath, false);
         }
 
         private void InitBRDFxResources()
         {
-            AssetsManagerInstance AM = AssetsManagerInstance.GetManager();
-            AssetsMeta.ShaderAsset meta = AM.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_SphereToCubeMapPS");
+            var assetsManager = AssetsManagerInstance.GetManager();
+            //var meta = assetsManager.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_SphereToCubeMapPS");
 
-            meta = AM.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_IntegrateBRDFxPS");
-            ShaderBytecode shaderBytecode = new ShaderBytecode(meta.Bytecode);
-            IntegrateBRDFxPS = ToDispose(new PixelShader(m_Device, shaderBytecode));
-            IntegrateBRDFxPS.DebugName = "IntegrateBRDFxPS";
-            
-            meta = AM.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_IntegrateQuadVS");
+            var meta = assetsManager.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_IntegrateBRDFxPS");
+            var shaderBytecode = new ShaderBytecode(meta.Bytecode);
+            _integrateBrdFxPs = ToDispose(new PixelShader(_device, shaderBytecode));
+            _integrateBrdFxPs.DebugName = "IntegrateBRDFxPS";
+
+            meta = assetsManager.LoadAsset<AssetsMeta.ShaderAsset>("IBL_PR_IntegrateQuadVS");
             shaderBytecode = new ShaderBytecode(meta.Bytecode);
-            IntegrateQuadVS = ToDispose(new VertexShader(m_Device, shaderBytecode));
-            IntegrateQuadVS.DebugName = "IntegrateQuadVS";
+            _integrateQuadVs = ToDispose(new VertexShader(_device, shaderBytecode));
+            _integrateQuadVs.DebugName = "IntegrateQuadVS";
 
-            if (CustomInputLayout == null) {
-                CustomInputLayout = ToDispose(new InputLayout(m_Device,
-                    ShaderSignature.GetInputSignature(shaderBytecode), new InputElement[] {
+            if (_customInputLayout == null)
+            {
+                _customInputLayout = ToDispose(new InputLayout(_device,
+                    ShaderSignature.GetInputSignature(shaderBytecode), new[] {
                     new InputElement("SV_VertexID", 0, Format.R32G32B32_Float, 0, 0),
                 }));
             }
 
-            if (ConstantsBuffer == null) {
+            if (_constantsBuffer == null)
+            {
                 // Create the per environment map buffer ViewProjection matrices
-                ConstantsBuffer = ToDispose(new Buffer(
-                    m_Device,
+                _constantsBuffer = ToDispose(new Buffer(
+                    _device,
                     Utilities.SizeOf<Matrix>() * 2,
                     ResourceUsage.Default,
                     BindFlags.ConstantBuffer,
                     CpuAccessFlags.None,
                     ResourceOptionFlags.None, 0)
                 );
-                ConstantsBuffer.DebugName = "ConstantsBuffer";
+                _constantsBuffer.DebugName = "ConstantsBuffer";
             }
 
-            IntegrateBRDFxMap = ToDispose(new Texture2D(m_Device, new Texture2DDescription()
+            _integrateBrdFxMap = ToDispose(new Texture2D(_device, new Texture2DDescription()
             {
-                Width = BRDFxMapSize,
-                Height = BRDFxMapSize,
+                Width = BrdFxMapSize,
+                Height = BrdFxMapSize,
                 Format = Format.R16G16_Float, //R8G8B8A8_UNorm for debug
                 ArraySize = 1,
                 MipLevels = 1,
@@ -444,10 +460,10 @@ namespace AssetsManager.Loaders
                 CpuAccessFlags = CpuAccessFlags.None,
             }));
 
-            IntegrateBRDFxRTV = ToDispose(new RenderTargetView(m_Device, IntegrateBRDFxMap, new RenderTargetViewDescription()
+            _integrateBrdFxRtv = ToDispose(new RenderTargetView(_device, _integrateBrdFxMap, new RenderTargetViewDescription()
             {
                 Dimension = RenderTargetViewDimension.Texture2D,
-                Format = IntegrateBRDFxMap.Description.Format,
+                Format = _integrateBrdFxMap.Description.Format,
                 Texture2D = new RenderTargetViewDescription.Texture2DResource()
                 {
                     MipSlice = 0,
@@ -455,61 +471,67 @@ namespace AssetsManager.Loaders
             }));
         }
 
-        void UpdateCubeFace(DeviceContext context, int index)
+        private void UpdateCubeFace(DeviceContext context, int index)
         {
             UpdateCubeFace(context, index, -1);
         }
 
-        void UpdateCubeFace(DeviceContext context, int index, int mip)
+        private void UpdateCubeFace(DeviceContext context, int index, int mip)
         {
             // Prepare pipeline
             context.ClearState();
 
-            context.Rasterizer.SetViewport(Viewport);
-            context.InputAssembler.InputLayout = CustomInputLayout;
+            context.Rasterizer.SetViewport(_viewport);
+            context.InputAssembler.InputLayout = _customInputLayout;
             context.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(null, 0, 0));
             context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleStrip;
 
-            if (CurrentState == RenderState.IntegrateBRDF) {
-                context.OutputMerger.SetRenderTargets(null, IntegrateBRDFxRTV);
-                context.ClearRenderTargetView(IntegrateBRDFxRTV, Color.CornflowerBlue);
-                context.VertexShader.Set(IntegrateQuadVS);
-                context.PixelShader.Set(IntegrateBRDFxPS);
+            if (_currentState == RenderState.IntegrateBrdf)
+            {
+                context.OutputMerger.SetRenderTargets(null, _integrateBrdFxRtv);
+                context.ClearRenderTargetView(_integrateBrdFxRtv, Color.CornflowerBlue);
+                context.VertexShader.Set(_integrateQuadVs);
+                context.PixelShader.Set(_integrateBrdFxPs);
                 context.Draw(4, 0);
                 UnbindContextRTV(context);
                 return;
             }
 
-            int rtvIndex = mip < 0 ? index : (index * PreFilteredMipsCount + mip);
-            context.OutputMerger.SetRenderTargets(null, OutputRTVs[rtvIndex]);
+            var rtvIndex = mip < 0 ? index : (index * PreFilteredMipsCount + mip);
+            context.OutputMerger.SetRenderTargets(null, _outputRtVs[rtvIndex]);
             // Render the scene using the view, projection, RTV and DSV of this cube face
-            context.ClearRenderTargetView(OutputRTVs[rtvIndex], Color.CornflowerBlue);
+            context.ClearRenderTargetView(_outputRtVs[rtvIndex], Color.CornflowerBlue);
 
 
-            Matrix[] ViewProj = new Matrix[]
+            var viewProj = new[]
             {
-                Cameras[index].View,
-                Cameras[index].Projection,
+                _cameras[index].View,
+                _cameras[index].Projection,
             };
-            context.UpdateSubresource(ViewProj, ConstantsBuffer);
-            context.VertexShader.Set(SphereToCubeMapVS);
-            context.VertexShader.SetConstantBuffer(0, ConstantsBuffer);
-            context.PixelShader.SetConstantBuffer(1, BRDFParamsBuffer);
-            context.PixelShader.SetSampler(0, Sampler);
+            context.UpdateSubresource(viewProj, _constantsBuffer);
+            context.VertexShader.Set(_sphereToCubeMapVs);
+            context.VertexShader.SetConstantBuffer(0, _constantsBuffer);
+            context.PixelShader.SetConstantBuffer(1, _brdfParamsBuffer);
+            context.PixelShader.SetSampler(0, _sampler);
 
-            switch (CurrentState) {
+            switch (_currentState)
+            {
                 case RenderState.CubeMap:
-                    context.PixelShader.Set(SphereToCubeMapPS);
-                    context.PixelShader.SetShaderResource(0, InputSRV);
+                    context.PixelShader.Set(_sphereToCubeMapPs);
+                    context.PixelShader.SetShaderResource(0, _inputSrv);
                     break;
                 case RenderState.IrradianceMap:
-                    context.PixelShader.Set(IrradiancePS);
-                    context.PixelShader.SetShaderResource(1, ConvertedCubeSRV);
+                    context.PixelShader.Set(_irradiancePs);
+                    context.PixelShader.SetShaderResource(1, _convertedCubeSrv);
                     break;
                 case RenderState.PreFilteredMap:
-                    context.PixelShader.Set(PreFilteredPS);
-                    context.PixelShader.SetShaderResource(1, ConvertedCubeSRV);
+                    context.PixelShader.Set(_preFilteredPs);
+                    context.PixelShader.SetShaderResource(1, _convertedCubeSrv);
                     break;
+                case RenderState.IntegrateBrdf:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             context.Draw(14, 0);
@@ -528,55 +550,61 @@ namespace AssetsManager.Loaders
             context.OutputMerger.ResetTargets();
         }
 
-        void UpdatePreFilteredFaces(DeviceContext context, int startIndex, int endIndex)
+        private void UpdatePreFilteredFaces(DeviceContext context, int startIndex, int endIndex)
         {
-            int mipSize;
-            float roughness;
-
-            for (int mip = 0; mip < PreFilteredMipsCount; mip++) {
-                mipSize = (int)(PreFilteredSize * Math.Pow(0.5, mip));
-                roughness = mip / (float)(PreFilteredMipsCount - 1);
-                BRDFParamsBufferStruct cbParams = new BRDFParamsBufferStruct()
+            for (var mip = 0; mip < PreFilteredMipsCount; mip++)
+            {
+                var mipSize = (int)(PreFilteredSize * Math.Pow(0.5, mip));
+                var roughness = mip / (float)(PreFilteredMipsCount - 1);
+                var cbParams = new BRDFParamsBufferStruct()
                 {
                     Roughness = roughness,
                 };
-                context.UpdateSubresource(ref cbParams, BRDFParamsBuffer);
-                for (var j = startIndex; j <= endIndex; j++) {
-                    Viewport = new Viewport(0, 0, mipSize, mipSize);
+                context.UpdateSubresource(ref cbParams, _brdfParamsBuffer);
+                for (var j = startIndex; j <= endIndex; j++)
+                {
+                    _viewport = new Viewport(0, 0, mipSize, mipSize);
                     UpdateCubeFace(context, j, mip);
                 }
             }
         }
 
-        void UpdateThreaded(string path)
+        private void UpdateThreaded(string path)
         {
-            var contexts = contextList ?? new DeviceContext[] { this.GetContext };
-            CommandList[] commands = new CommandList[contexts.Length];
-            int batchSize = 6 / contexts.Length;
+            var contexts = _contextList ?? new[] { GetContext };
+            var commands = new CommandList[contexts.Length];
+            var batchSize = 6 / contexts.Length;
 
-            Task[] tasks = new Task[contexts.Length];
+            var tasks = new Task[contexts.Length];
 
-            for (var i = 0; i < contexts.Length; i++) {
+            for (var i = 0; i < contexts.Length; i++)
+            {
                 var contextIndex = i;
 
                 tasks[i] = Task.Run(() => {
                     var context = contexts[contextIndex];
 
-                    int startIndex = batchSize * contextIndex;
-                    int endIndex = Math.Min(startIndex + batchSize, 5);
-                    if (contextIndex == contexts.Length - 1) {
+                    var startIndex = batchSize * contextIndex;
+                    var endIndex = Math.Min(startIndex + batchSize, 5);
+                    if (contextIndex == contexts.Length - 1)
+                    {
                         endIndex = 5;
                     }
 
-                    if (CurrentState == RenderState.PreFilteredMap) {
+                    if (_currentState == RenderState.PreFilteredMap)
+                    {
                         UpdatePreFilteredFaces(context, startIndex, endIndex);
-                    } else {
-                        for (var j = startIndex; j <= endIndex; j++) {
+                    }
+                    else
+                    {
+                        for (var j = startIndex; j <= endIndex; j++)
+                        {
                             UpdateCubeFace(context, j);
                         }
                     }
 
-                    if (context.TypeInfo == DeviceContextType.Deferred) {
+                    if (context.TypeInfo == DeviceContextType.Deferred)
+                    {
                         commands[contextIndex] = ToDispose(context.FinishCommandList(false));
                     }
                 });
@@ -584,58 +612,70 @@ namespace AssetsManager.Loaders
             Task.WaitAll(tasks);
 
             // Execute command lists (if any)
-            for (var i = 0; i < contexts.Length; i++) {
-                if (contexts[i].TypeInfo == DeviceContextType.Deferred && commands[i] != null) {
-                    GetContext.ExecuteCommandList(commands[i], false);
-                    commands[i].Dispose();
-                    commands[i] = null;
+            for (var i = 0; i < contexts.Length; i++)
+            {
+                if (contexts[i].TypeInfo != DeviceContextType.Deferred || commands[i] == null)
+                {
+                    continue;
                 }
+                GetContext.ExecuteCommandList(commands[i], false);
+                commands[i].Dispose();
+                commands[i] = null;
             }
 
-            switch (CurrentState) {
+            switch (_currentState)
+            {
                 case RenderState.CubeMap:
-                    GetContext.GenerateMips(ConvertedCubeSRV);
-                    ConvertedCubeMap.Save(GetContext, m_Device, $"{path}CubeMap", false);
+                    GetContext.GenerateMips(_convertedCubeSrv);
+                    _convertedCubeMap.Save(GetContext, _device, $"{path}CubeMap", false);
                     break;
                 case RenderState.IrradianceMap:
-                    IrradianceCubeMap.Save(GetContext, m_Device, $"{path}IrradianceCubeMap", false);
+                    _irradianceCubeMap.Save(GetContext, _device, $"{path}IrradianceCubeMap", false);
                     break;
                 case RenderState.PreFilteredMap:
-                    PreFilteredCubeMap.Save(GetContext, m_Device, $"{path}PreFilteredCubeMap", true);
+                    _preFilteredCubeMap.Save(GetContext, _device, $"{path}PreFilteredCubeMap", true);
                     break;
+                case RenderState.IntegrateBrdf:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
         #region Dispose section
-        List<IDisposable> ToDisposeList = new List<IDisposable>();
 
-        T ToDispose<T>(T obj) where T : IDisposable
+        private List<IDisposable> _toDisposeList = new List<IDisposable>();
+
+        private T ToDispose<T>(T obj) where T : IDisposable
         {
-            ToDisposeList.Add(obj);
+            _toDisposeList.Add(obj);
             return obj;
         }
 
         public void Dispose()
         {
-            ToDisposeList.Reverse();
-            foreach (var item in ToDisposeList) {
+            _toDisposeList.Reverse();
+            foreach (var item in _toDisposeList)
+            {
                 item?.Dispose();
             }
-            ToDisposeList.Clear();
-            ToDisposeList = null;
+            _toDisposeList.Clear();
+            _toDisposeList = null;
 
-            if (contextList != null) {
-                foreach (var item in contextList) {
+            if (_contextList != null)
+            {
+                foreach (var item in _contextList)
+                {
                     item?.Dispose();
                 }
-                contextList = null;
+                _contextList = null;
             }
 
             GetContext.ClearState();
             GetContext.Flush();
             GetContext.Dispose();
-            m_Device?.Dispose();
-            SaveToWICImage.DisposeFactory();
+            _device?.Dispose();
+            SaveToWicImage.DisposeFactory();
         }
         #endregion
     }

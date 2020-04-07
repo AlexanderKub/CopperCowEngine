@@ -6,51 +6,57 @@ namespace AssetsManager.AssetsMeta
     {
         public string Name;
         public AssetTypes Type;
-        public bool IsInvalid
+        public bool IsInvalid => this.Type == AssetTypes.Invalid;
+
+        protected BaseAsset() { }
+
+        protected BaseAsset(BaseAsset source)
         {
-            get {
-                return this.Type == AssetTypes.Invalid;
-            }
+            InternalCopyValues(source);
         }
 
-        public BaseAsset() { }
-        public BaseAsset(BaseAsset source) {
+        private void InternalCopyValues(BaseAsset source)
+        {
+            Name = source.Name;
+            Type = source.Type;
             CopyValues(source);
         }
 
-        public virtual void CopyValues(BaseAsset source) { 
-            this.Name = source.Name;
-            this.Type = source.Type;
-        }
+        public abstract void CopyValues(BaseAsset source);
 
         public virtual bool ImportAsset(string path, string ext) { return true; }
 
-        public virtual void SaveAsset(BinaryWriter writer) {
+        public virtual void SaveAsset(BinaryWriter writer)
+        {
             writer.Write(Name);
             writer.Write((int)Type);
         }
 
-        public virtual bool LoadAsset(BinaryReader reader) {
-            this.Name = reader.ReadString();
-            int t = reader.ReadInt32();
-            AssetTypes type = (AssetTypes)t;
-            if ((this.Type != AssetTypes.Meta && this.Type != type) || 
-                (this.Type == AssetTypes.Meta && ((MetaAsset)this).InfoType != type)) {
-                this.Type = AssetTypes.Invalid;
-                return false;
+        public virtual bool LoadAsset(BinaryReader reader)
+        {
+            Name = reader.ReadString();
+            var t = reader.ReadInt32();
+            var type = (AssetTypes)t;
+            if ((Type == AssetTypes.Meta || this.Type == type) &&
+                (Type != AssetTypes.Meta || ((MetaAsset) this).InfoType == type))
+            {
+                return true;
             }
-            return true;
+            Type = AssetTypes.Invalid;
+            return false;
         }
 
-        public virtual bool IsSame(BaseAsset other) {
-            bool same = true;
-            same &= this.Name == other.Name;
-            same &= this.Type == other.Type;
+        public virtual bool IsSame(BaseAsset other)
+        {
+            var same = true;
+            same &= Name == other.Name;
+            same &= Type == other.Type;
             return same;
         }
 
-        public override string ToString() {
-            return this.Name;
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

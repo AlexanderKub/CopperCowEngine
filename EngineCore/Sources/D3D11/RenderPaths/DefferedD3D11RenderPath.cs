@@ -32,7 +32,7 @@ namespace EngineCore.D3D11
         {
             base.Init(renderBackend);
             InitShadersNames();
-            InitGBuffer(MSSamplesCount);
+            InitGBuffer(MsSamplesCount);
             CreateBuffers();
             ScriptEngine.TestRef = this;
         }
@@ -44,7 +44,7 @@ namespace EngineCore.D3D11
             if (FirstTranslucentRendererIndex > -1) {
                 ForwardPass(frameData);
             }
-            if (EnabledHDR) {
+            if (EnabledHdr) {
                 ScreenQuadPass();
             }
             ResetShaderResourcesViews();
@@ -63,7 +63,7 @@ namespace EngineCore.D3D11
             CurrentPass = Pass.Forward;
 
             if (frameData.PerCameraLightsList[0].Count == 0) {
-                if (EnabledHDR) {
+                if (EnabledHdr) {
                     GetContext.OutputMerger.SetRenderTargets(ReadonlyDepthStencilView, HDRTarget.View);
                 } else {
                     GetContext.OutputMerger.SetRenderTargets(ReadonlyDepthStencilView, GetDisplay.RenderTargetViewRef);
@@ -274,7 +274,7 @@ namespace EngineCore.D3D11
         {
             CurrentPass = Pass.Light;
 
-            if (EnabledHDR) {
+            if (EnabledHdr) {
                 GetContext.OutputMerger.SetRenderTargets(null, HDRTarget.View);
             } else {
                 GetContext.OutputMerger.SetRenderTargets(null, GetDisplay.RenderTargetViewRef);
@@ -308,7 +308,7 @@ namespace EngineCore.D3D11
                 return;
             }
 
-            if (EnabledHDR) {
+            if (EnabledHdr) {
                 GetContext.OutputMerger.SetRenderTargets(ReadonlyDepthStencilView, HDRTarget.View);
             } else {
                 GetContext.OutputMerger.SetRenderTargets(ReadonlyDepthStencilView, GetDisplay.RenderTargetViewRef);
@@ -650,7 +650,7 @@ namespace EngineCore.D3D11
             SpecularAOUnlitNonShadowsTarget = GetSharedItems.CreateRenderTarget("SpecularAOUnlitNonShadows",
                 GetDisplay.Width, GetDisplay.Height, Format.R8G8B8A8_UNorm, samples);
 
-            if (EnabledHDR) {
+            if (EnabledHdr) {
                 HDRTarget = GetSharedItems.CreateRenderTarget("HDR",
                     GetDisplay.Width, GetDisplay.Height, Format.R16G16B16A16_Float, samples);
             }
@@ -930,10 +930,10 @@ namespace EngineCore.D3D11
 
         private void InitShadersNames()
         {
-            LightPassPSName = EnabledMSAA ? "MSAA_LightPassPS" : "LightPassPS";
-            LightPassDirPSName = EnabledMSAA ? "MSAA_LightPassDirectionalPS" : "LightPassDirectionalPS";
-            LightPassPointPSName = EnabledMSAA ? "MSAA_LightPassPointPS" : "LightPassPointPS";
-            LightPassPointQuadPSName = EnabledMSAA ? "MSAA_LightPassPointQuadPS" : "LightPassPointQuadPS";
+            LightPassPSName = EnabledMsaa ? "MSAA_LightPassPS" : "LightPassPS";
+            LightPassDirPSName = EnabledMsaa ? "MSAA_LightPassDirectionalPS" : "LightPassDirectionalPS";
+            LightPassPointPSName = EnabledMsaa ? "MSAA_LightPassPointPS" : "LightPassPointPS";
+            LightPassPointQuadPSName = EnabledMsaa ? "MSAA_LightPassPointQuadPS" : "LightPassPointQuadPS";
             // LightPassSpotPSName = EnabledMSAA ? "MSAA_" : "";
             // LightPassSpotQuadPSName = EnabledMSAA ? "MSAA_" : "";
             // LightPassCapsulePSName = EnabledMSAA ? "MSAA_" : "";
@@ -941,7 +941,7 @@ namespace EngineCore.D3D11
             DownsamplingFirsPassCSName = "DownsamplingFirstCS";
             DownsamplingSecondPassCSName = "DownsamplingSecondCS";
 
-            ScreenQuadPSName = EnabledMSAA ? "MSAA_ScreenQuadPS" : "ScreenQuadPS";
+            ScreenQuadPSName = EnabledMsaa ? "MSAA_ScreenQuadPS" : "ScreenQuadPS";
         }
     }
     #endregion

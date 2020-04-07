@@ -25,6 +25,7 @@ namespace EngineCore
     public class Engine
     {
         internal EngineConfiguration CurrentConfig { get; private set; }
+
         public struct EngineConfiguration
         {
             public enum RenderBackendEnum
@@ -35,8 +36,8 @@ namespace EngineCore
             public enum MSAAEnabled
             {
                 Off = 0,
-                x4 = 4,
-                x8 = 8,
+                X4 = 4,
+                X8 = 8,
             }
 
             public string AppName;
@@ -49,12 +50,12 @@ namespace EngineCore
 
             // TODO: All Engine configuration fields here
 
-            static public EngineConfiguration Default = new EngineConfiguration()
+            public static EngineConfiguration Default = new EngineConfiguration()
             {
                 AppName = "CopperCowEngine",
                 RenderBackend = RenderBackendEnum.D3D11,
                 RenderPath = RenderPathEnum.Forward,
-                EnableMSAA = MSAAEnabled.x4,
+                EnableMSAA = MSAAEnabled.X4,
                 EnableHDR = false,
                 DebugMode = false,
             };
@@ -232,15 +233,18 @@ namespace EngineCore
         #endregion
 
         #region Engine info
+
+        private const string EngineName = "Copper Cow Engine";
+        private static readonly int[] Version = { 0, 0, 2 };
+
         public static string GetName()
         {
-            return "Copper Cow Engine";
+            return EngineName;
         }
 
-        private static int[] m_Version = new int[] { 0, 0, 2 };
         public static int[] GetVersion()
         {
-            return m_Version;
+            return Version;
         }
         #endregion
     }

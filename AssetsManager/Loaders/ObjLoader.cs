@@ -9,182 +9,215 @@ namespace AssetsManager.Loaders
     {
         public class FaceIndices
         {
-            public int vi;
-            public int vu;
-            public int vn;
+            public int Vi;
+            public int Vu;
+            public int Vn;
         }
 
         public class GeometryBuffer
         {
-            
-            private List<ObjectData> objects;
-            public List<Vector3> vertices;
-            public List<Vector2> uvs;
-            public List<Vector3> normals;
 
-            private ObjectData current;
+            private readonly List<ObjectData> _objects;
+            public List<Vector3> Vertices;
+            public List<Vector2> Uvs;
+            public List<Vector3> Normals;
+
+            private ObjectData _current;
             private class ObjectData
             {
-                public string name;
-                public List<GroupData> groups;
-                public List<FaceIndices> allFaces;
-                public ObjectData() {
-                    groups = new List<GroupData>();
-                    allFaces = new List<FaceIndices>();
+                public string Name;
+                public readonly List<GroupData> Groups;
+                public readonly List<FaceIndices> AllFaces;
+                public ObjectData()
+                {
+                    Groups = new List<GroupData>();
+                    AllFaces = new List<FaceIndices>();
                 }
             }
 
-            private GroupData curgr;
+            private GroupData _currentGroup;
+
             private class GroupData
             {
-                public string name;
-                public string materialName;
-                public List<FaceIndices> faces;
-                public GroupData() {
-                    faces = new List<FaceIndices>();
+                public string Name;
+                public string MaterialName;
+                public readonly List<FaceIndices> Faces;
+
+                public GroupData()
+                {
+                    Faces = new List<FaceIndices>();
                 }
-                public bool IsEmpty { get { return faces.Count == 0; } }
+
+                public bool IsEmpty => Faces.Count == 0;
             }
 
-            public GeometryBuffer() {
-                objects = new List<ObjectData>();
-                ObjectData d = new ObjectData() {
-                    name = "default"
+            public GeometryBuffer()
+            {
+                _objects = new List<ObjectData>();
+                var d = new ObjectData()
+                {
+                    Name = "default"
                 };
-                objects.Add(d);
-                current = d;
+                _objects.Add(d);
+                _current = d;
 
-                GroupData g = new GroupData() {
-                    name = "default"
+                var g = new GroupData()
+                {
+                    Name = "default"
                 };
-                d.groups.Add(g);
-                curgr = g;
+                d.Groups.Add(g);
+                _currentGroup = g;
 
-                vertices = new List<Vector3>();
-                uvs = new List<Vector2>();
-                normals = new List<Vector3>();
+                Vertices = new List<Vector3>();
+                Uvs = new List<Vector2>();
+                Normals = new List<Vector3>();
             }
 
-            public void PushObject(string name) {
-                if (IsEmpty) objects.Remove(current);
+            public void PushObject(string name)
+            {
+                if (IsEmpty) _objects.Remove(_current);
 
-                ObjectData n = new ObjectData();
-                n.name = name;
-                objects.Add(n);
-
-                GroupData g = new GroupData() {
-                    name = "default"
+                var n = new ObjectData
+                {
+                    Name = name
                 };
-                n.groups.Add(g);
+                _objects.Add(n);
 
-                curgr = g;
-                current = n;
-            }
-
-            public void PushGroup(string name) {
-                if (curgr.IsEmpty) current.groups.Remove(curgr);
-                GroupData g = new GroupData {
-                    name = name
+                var g = new GroupData()
+                {
+                    Name = "default"
                 };
-                current.groups.Add(g);
-                curgr = g;
+                n.Groups.Add(g);
+
+                _currentGroup = g;
+                _current = n;
             }
 
-            public void PushMaterialName(string name) {
-                if (!curgr.IsEmpty) PushGroup(name);
-                if (curgr.name == "default") curgr.name = name;
-                curgr.materialName = name;
+            public void PushGroup(string name)
+            {
+                if (_currentGroup.IsEmpty) _current.Groups.Remove(_currentGroup);
+                var g = new GroupData
+                {
+                    Name = name
+                };
+                _current.Groups.Add(g);
+                _currentGroup = g;
             }
 
-            public void PushVertex(Vector3 v) {
-                vertices.Add(v);
+            public void PushMaterialName(string name)
+            {
+                if (!_currentGroup.IsEmpty)
+                {
+                    PushGroup(name);
+                }
+                if (_currentGroup.Name == "default")
+                {
+                    _currentGroup.Name = name;
+                }
+                _currentGroup.MaterialName = name;
             }
 
-            public void PushUV(Vector2 v) {
+            public void PushVertex(Vector3 v)
+            {
+                Vertices.Add(v);
+            }
+
+            public void PushUv(Vector2 v)
+            {
                 v.Y = 1 - v.Y;
-                uvs.Add(v);
+                Uvs.Add(v);
             }
 
-            public void PushNormal(Vector3 v) {
-                normals.Add(v);
+            public void PushNormal(Vector3 v)
+            {
+                Normals.Add(v);
             }
 
-            public void PushFace(FaceIndices f) {
-                curgr.faces.Add(f);
-                current.allFaces.Add(f);
+            public void PushFace(FaceIndices f)
+            {
+                _currentGroup.Faces.Add(f);
+                _current.AllFaces.Add(f);
             }
 
-            public int NumObjects { get { return objects.Count; } }
-            public bool IsEmpty { get { return vertices.Count == 0; } }
-            public bool HasUVs { get { return uvs.Count > 0; } }
-            public bool HasNormals { get { return normals.Count > 0; } }
+            public int NumObjects => _objects.Count;
+            public bool IsEmpty => Vertices.Count == 0;
+            public bool HasUVs => Uvs.Count > 0;
+            public bool HasNormals => Normals.Count > 0;
 
-            public ModelGeometry GetGeometry() {
-                List<Vector3> tvertices = new List<Vector3>();
-                Dictionary<string, int> vertsDictionary = new Dictionary<string, int>();
-                List<Vector2> tuvs = new List<Vector2>();
-                List<Vector3> tnormals = new List<Vector3>();
-                List<int> ttris = new List<int>();
-                
-                ObjectData od = objects[0];
+            public ModelGeometry GetGeometry()
+            {
+                var tmpVertices = new List<Vector3>();
+                var verticesDictionary = new Dictionary<string, int>();
+                var tmpUVs = new List<Vector2>();
+                var tmpNormals = new List<Vector3>();
+                var tmpTriangles = new List<int>();
 
-                string newKey;
-                int k = 0;
-                int vNum;
-                foreach (FaceIndices fi in od.allFaces) {
-                    newKey = fi.vi + "|" + fi.vn + "|" + fi.vu;
-                    if (!vertsDictionary.TryGetValue(newKey, out vNum)) {
-                        vertsDictionary.Add(newKey, k);
+                var od = _objects[0];
+
+                var k = 0;
+                foreach (var fi in od.AllFaces)
+                {
+                    var newKey = fi.Vi + "|" + fi.Vn + "|" + fi.Vu;
+                    if (!verticesDictionary.TryGetValue(newKey, out var vNum))
+                    {
+                        verticesDictionary.Add(newKey, k);
                         vNum = k;
-                        tvertices.Add(vertices[fi.vi]);
-                        if (HasNormals) {
-                            tnormals.Add(normals[fi.vn]);
+                        tmpVertices.Add(Vertices[fi.Vi]);
+                        if (HasNormals)
+                        {
+                            tmpNormals.Add(Normals[fi.Vn]);
                         }
-                        if (HasUVs) {
-                            tuvs.Add(uvs[fi.vu]);
+                        if (HasUVs)
+                        {
+                            tmpUVs.Add(Uvs[fi.Vu]);
                         }
                         k++;
                     }
-                    ttris.Add(vNum);
+                    tmpTriangles.Add(vNum);
                 }
-                
-                ModelGeometry Model = new ModelGeometry(
-                    tvertices.ToArray(),
+
+                var model = new ModelGeometry(
+                    tmpVertices.ToArray(),
                     null,
-                    HasUVs ? tuvs.ToArray() : null, 
-                    ttris.ToArray(),
+                    HasUVs ? tmpUVs.ToArray() : null,
+                    tmpTriangles.ToArray(),
                     null,
-                    HasNormals? tnormals.ToArray() : null
+                    HasNormals ? tmpNormals.ToArray() : null
                 );
 
-                tvertices.Clear();
-                vertsDictionary.Clear();
-                tuvs.Clear();
-                tnormals.Clear();
-                ttris.Clear();
+                tmpVertices.Clear();
+                verticesDictionary.Clear();
+                tmpUVs.Clear();
+                tmpNormals.Clear();
+                tmpTriangles.Clear();
 
-                return Model;
+                return model;
             }
         }
-        
-        static public Dictionary<string, AssetsManager.Loaders.ModelGeometry> CachedModels = new Dictionary<string, ModelGeometry>();
-        static public ModelGeometry Load(string objPath) {
-            if(CachedModels.ContainsKey(objPath)) {
+
+        public static Dictionary<string, ModelGeometry> CachedModels = new Dictionary<string, ModelGeometry>();
+
+        public static ModelGeometry Load(string objPath)
+        {
+            if (CachedModels.ContainsKey(objPath))
+            {
                 return CachedModels[objPath];
             }
 
-            string l;
-            GeometryBuffer gBuffer = new GeometryBuffer();
-            using (StreamReader sr = new StreamReader(objPath)) {
-                while ((l = sr.ReadLine()) != null) {
-                    ProcessOBJLine(gBuffer, l);
+            var geometryBuffer = new GeometryBuffer();
+            using (var sr = new StreamReader(objPath))
+            {
+                string l;
+                while ((l = sr.ReadLine()) != null)
+                {
+                    ProcessObjLine(geometryBuffer, l);
                 }
             }
-            ModelGeometry MG = gBuffer.GetGeometry();
-            CachedModels.Add(objPath, MG);
+            var modelGeometry = geometryBuffer.GetGeometry();
+            CachedModels.Add(objPath, modelGeometry);
             //Engine.Log("ModelGeometry.Count = " + MG.Count.ToString());
 
-            return MG;
+            return modelGeometry;
         }
 
         private const string O = "o";
@@ -196,83 +229,103 @@ namespace AssetsManager.Loaders
         private const string MTL = "mtllib";
         private const string UML = "usemtl";
 
-        static private int[] rightQuadsWay = new int[6] {
+        private static readonly int[] RightQuadsWay = {
             1, 2, 3,
             1, 3, 4,
         };
-        static private int[] rightTrisWay = new int[3] {
+
+        private static readonly int[] RightTrianglesWay = {
             1, 2, 3,
         };
 
-        static private void ProcessOBJLine(GeometryBuffer gBuffer, string line) {
-            string l = line;
-            int iSchrp = l.IndexOf("#");
-            if (iSchrp != -1)
-                l = l.Substring(0, iSchrp);
-            l = l.Trim().Replace("  ", " ");
-            string[] p = l.Split(" ".ToCharArray());
+        private static void ProcessObjLine(GeometryBuffer geometryBuffer, string line)
+        {
+            var l = line;
+            var indexOfSharp = l.IndexOf("#", StringComparison.Ordinal);
+            if (indexOfSharp != -1)
+            {
+                l = l.Substring(0, indexOfSharp);
+            }
 
-            switch (p[0]) {
+            l = l.Trim().Replace("  ", " ");
+            var p = l.Split(" ".ToCharArray());
+
+            switch (p[0])
+            {
                 case O:
-                    gBuffer.PushObject(p[1].Trim());
+                    geometryBuffer.PushObject(p[1].Trim());
                     break;
                 case G:
-                    gBuffer.PushGroup(p[1].Trim());
+                    geometryBuffer.PushGroup(p[1].Trim());
                     break;
                 case V:
-                    gBuffer.PushVertex(new Vector3(Cf(p[1]), Cf(p[2]), Cf(p[3])));
+                    geometryBuffer.PushVertex(new Vector3(Cf(p[1]), Cf(p[2]), Cf(p[3])));
                     break;
                 case VT:
-                    gBuffer.PushUV(new Vector2(Cf(p[1]), Cf(p[2])));
+                    geometryBuffer.PushUv(new Vector2(Cf(p[1]), Cf(p[2])));
                     break;
                 case VN:
-                    gBuffer.PushNormal(new Vector3(Cf(p[1]), Cf(p[2]), Cf(p[3])));
+                    geometryBuffer.PushNormal(new Vector3(Cf(p[1]), Cf(p[2]), Cf(p[3])));
                     break;
                 case F:
                     string[] c;
                     FaceIndices fi;
-                    if (p.Length - 1 == 3) {
+                    if (p.Length - 1 == 3)
+                    {
                         //For Triangles
-                        for (int j = 0; j < 3; j++) {
-                            c = p[rightTrisWay[j]].Trim().Split("/".ToCharArray());
-                            fi = new FaceIndices();
-                            fi.vi = Ci(c[0]) - 1;
+                        for (var j = 0; j < 3; j++)
+                        {
+                            c = p[RightTrianglesWay[j]].Trim().Split("/".ToCharArray());
+                            fi = new FaceIndices
+                            {
+                                Vi = Ci(c[0]) - 1
+                            };
                             if (c.Length > 1 && c[1] != string.Empty)
-                                fi.vu = Ci(c[1]) - 1;
+                            {
+                                fi.Vu = Ci(c[1]) - 1;
+                            }
                             if (c.Length > 2 && c[2] != string.Empty)
-                                fi.vn = Ci(c[2]) - 1;
-                            gBuffer.PushFace(fi);
-                        }
-                    } else {
-                        //For Quads
-                        for (int j = 0; j < 6; j++) {
-                            c = p[rightQuadsWay[j]].Trim().Split("/".ToCharArray());
-                            fi = new FaceIndices();
-                            fi.vi = Ci(c[0]) - 1;
-                            if (c.Length > 1 && c[1] != string.Empty)
-                                fi.vu = Ci(c[1]) - 1;
-                            if (c.Length > 2 && c[2] != string.Empty)
-                                fi.vn = Ci(c[2]) - 1;
-                            gBuffer.PushFace(fi);
+                            {
+                                fi.Vn = Ci(c[2]) - 1;
+                            }
+                            geometryBuffer.PushFace(fi);
                         }
                     }
-                    break;
-                default:
+                    else
+                    {
+                        //For Quads
+                        for (var j = 0; j < 6; j++)
+                        {
+                            c = p[RightQuadsWay[j]].Trim().Split("/".ToCharArray());
+                            fi = new FaceIndices
+                            {
+                                Vi = Ci(c[0]) - 1
+                            };
+                            if (c.Length > 1 && c[1] != string.Empty)
+                            {
+                                fi.Vu = Ci(c[1]) - 1;
+                            }
+                            if (c.Length > 2 && c[2] != string.Empty)
+                            {
+                                fi.Vn = Ci(c[2]) - 1;
+                            }
+                            geometryBuffer.PushFace(fi);
+                        }
+                    }
                     break;
             }
         }
 
-        private static System.Globalization.CultureInfo CultInfo = 
-            new System.Globalization.CultureInfo("en-US");
+        private static readonly System.Globalization.CultureInfo CultInfo = new System.Globalization.CultureInfo("en-US");
 
-        private static float Cf(string v) {
+        private static float Cf(string v)
+        {
             return Convert.ToSingle(v.Trim(), CultInfo);
         }
 
-        private static int Ci(string v) {
-            if (string.IsNullOrEmpty(v))
-                return 1;
-            return Convert.ToInt32(v.Trim(), CultInfo);
+        private static int Ci(string v)
+        {
+            return string.IsNullOrEmpty(v) ? 1 : Convert.ToInt32(v.Trim(), CultInfo);
         }
     }
 }

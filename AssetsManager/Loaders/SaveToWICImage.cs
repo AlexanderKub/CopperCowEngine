@@ -4,29 +4,16 @@ using SharpDX.DXGI;
 using SharpDX.WIC;
 using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Device = SharpDX.Direct3D11.Device;
 
 namespace AssetsManager.Loaders
 {
-    internal static class SaveToWICImage
+    // TODO: D3D11 specific code
+    internal static class SaveToWicImage
     {
         private static ImagingFactory2 _factory;
-        private static ImagingFactory2 Factory {
-            get {
-                if (_factory == null) {
-                    _factory = new ImagingFactory2();
-                }
-                return _factory;
-            }
-        }
 
-        private static string[] CubePostfixes = new string[] {
-            "ft", "bk", "up", "dn", "rt", "lf",
-        };
+        private static ImagingFactory2 Factory => _factory ?? (_factory = new ImagingFactory2());
 
         public static void Save(this Texture2D texture, DeviceContext context, Device device, string path, bool withMips)
         {
@@ -45,24 +32,31 @@ namespace AssetsManager.Loaders
             });
             context.CopyResource(texture, textureCopy);
 
-            if (texture.Description.ArraySize == 1) {
-                if (textureCopy.Description.Format == Format.R16G16_Float) {
-                    DataBox dataBox = context.MapSubresource(
+            if (texture.Description.ArraySize == 1)
+            {
+                if (textureCopy.Description.Format == Format.R16G16_Float)
+                {
+                    context.MapSubresource(
                         textureCopy,
                         0, 0,
                         MapMode.Read,
                         SharpDX.Direct3D11.MapFlags.None,
-                        out DataStream dataStream);
-                    
-                    AssetsMeta.Texture2DAsset asset2D = new AssetsMeta.Texture2DAsset();
-                    asset2D.Name = path;
-                    asset2D.Data.Width = textureCopy.Description.Width;
-                    asset2D.Data.Height = textureCopy.Description.Height;
-                    asset2D.Data.ColorSpace = ColorSpaceEnum.Linear;
-                    asset2D.Data.ChannelsCount = ChannelsCountEnum.Two;
-                    asset2D.Data.BytesPerChannel = BytesPerChannelEnum.Two;
-                    asset2D.Data.buffer = ReadFully(dataStream);
-                    AssetsManagerInstance.GetManager().FSWorker.CreateAssetFile(asset2D, true);
+                        out var dataStream);
+
+                    var asset2D = new AssetsMeta.Texture2DAsset
+                    {
+                        Name = path,
+                        Data =
+                        {
+                            Width = textureCopy.Description.Width,
+                            Height = textureCopy.Description.Height,
+                            ColorSpace = ColorSpaceEnum.Linear,
+                            ChannelsCount = ChannelsCountEnum.Two,
+                            BytesPerChannel = BytesPerChannelEnum.Two,
+                            Buffer = ReadFully(dataStream)
+                        }
+                    };
+                    AssetsManagerInstance.GetManager().FileSystemWorker.CreateAssetFile(asset2D, true);
                     context.UnmapSubresource(textureCopy, 0);
                     textureCopy.Dispose();
                     return;
@@ -72,49 +66,58 @@ namespace AssetsManager.Loaders
                 return;
             }
 
-            AssetsMeta.TextureCubeAsset asset = new AssetsMeta.TextureCubeAsset();
-            asset.Name = path;
-            asset.Data.Width = textureCopy.Description.Width;
-            asset.Data.Height = textureCopy.Description.Height;
-            asset.Data.ColorSpace = ColorSpaceEnum.Linear;
-            asset.Data.ChannelsCount = 4;
-            asset.Data.BytesPerChannel = 2;
-            asset.Data.MipLevels = withMips ? textureCopy.Description.MipLevels : 1;
-            asset.Data.buffer = new byte[6][][];
+            AssetsMeta.TextureCubeAsset asset = new AssetsMeta.TextureCubeAsset
+            {
+                Name = path,
+                Data =
+                {
+                    Width = textureCopy.Description.Width,
+                    Height = textureCopy.Description.Height,
+                    ColorSpace = ColorSpaceEnum.Linear,
+                    ChannelsCount = 4,
+                    BytesPerChannel = 2,
+                    MipLevels = withMips ? textureCopy.Description.MipLevels : 1,
+                    Buffer = new byte[6][][]
+                }
+            };
 
-            for (int i = 0; i < 6; i++) {
-                asset.Data.buffer[i] = new byte[asset.Data.MipLevels][];
-                for (int mip = 0; mip < asset.Data.MipLevels; mip++) {
-                    DataBox dataBox = context.MapSubresource(
+            for (var i = 0; i < 6; i++)
+            {
+                asset.Data.Buffer[i] = new byte[asset.Data.MipLevels][];
+                for (var mip = 0; mip < asset.Data.MipLevels; mip++)
+                {
+                    var dataBox = context.MapSubresource(
                         textureCopy,
                         mip,
                         i,
                         MapMode.Read,
                         SharpDX.Direct3D11.MapFlags.None,
-                        out DataStream dataStream);
+                        out var dataStream);
 
-                    byte[] allMipBytes = ReadFully(dataStream);
+                    var allMipBytes = ReadFully(dataStream);
                     dataStream.Dispose();
 
-                    int mipSize = (int)(asset.Data.Width * Math.Pow(0.5, mip));
-                    int pitch = mipSize * asset.Data.ChannelsCount * asset.Data.BytesPerChannel;
-                    int n = mipSize * pitch;
+                    var mipSize = (int)(asset.Data.Width * Math.Pow(0.5, mip));
+                    var pitch = mipSize * asset.Data.ChannelsCount * asset.Data.BytesPerChannel;
+                    var n = mipSize * pitch;
 
-                    asset.Data.buffer[i][mip] = new byte[n];
+                    asset.Data.Buffer[i][mip] = new byte[n];
 
-                    for (int j = 0; j < mipSize; j++) {
-                        for (int k = 0; k < pitch; k++) {
-                            asset.Data.buffer[i][mip][j * pitch + k] = allMipBytes[j * dataBox.RowPitch + k];
+                    for (var j = 0; j < mipSize; j++)
+                    {
+                        for (var k = 0; k < pitch; k++)
+                        {
+                            asset.Data.Buffer[i][mip][j * pitch + k] = allMipBytes[j * dataBox.RowPitch + k];
                         }
                     }
 
-                    context.UnmapSubresource(textureCopy, textureCopy.CalculateSubResourceIndex(mip, i, out int m));
+                    context.UnmapSubresource(textureCopy, textureCopy.CalculateSubResourceIndex(mip, i, out _));
 
                     // Dont work cause wrong dataBox.RowPitch on mip levels issue.
                     // asset.Data.buffer[i][mip] = ReadFully(dataStream);
                 }
             }
-            AssetsManagerInstance.GetManager().FSWorker.CreateAssetFile(asset, true);
+            AssetsManagerInstance.GetManager().FileSystemWorker.CreateAssetFile(asset, true);
 
             // DEBUG RO PNG
             /*if (textureCopy.Description.MipLevels != 5) {
@@ -124,7 +127,7 @@ namespace AssetsManager.Loaders
 
             for (int mip = 0; mip < textureCopy.Description.MipLevels; mip++) {
                 for (int i = 0; i < texture.Description.ArraySize; i++) {
-                    InternalSaveTexture($"{path}_{CubePostfixes[i]}_mip{mip}.png", i, mip, Factory, textureCopy, context);
+                    InternalSaveTexture($"{path}_{CubePostfixes[i]}_mip{mip}.png", i, mip, factory, textureCopy, context);
                 }
             }*/
 
@@ -133,52 +136,61 @@ namespace AssetsManager.Loaders
 
         private static byte[] ReadFully(Stream input)
         {
-            using (MemoryStream ms = new MemoryStream()) {
+            using (var ms = new MemoryStream())
+            {
                 input.CopyTo(ms);
                 return ms.ToArray();
             }
         }
 
-        private static void InternalSaveTexture(string path, int arraySlice, int mipSlice, ImagingFactory2 Factory, Texture2D textureCopy, DeviceContext context)
+        private static void InternalSaveTexture(string path, int arraySlice, int mipSlice, ImagingFactory factory, Texture2D textureCopy, DeviceContext context)
         {
-            DataStream dataStream;
             var dataBox = context.MapSubresource(
                 textureCopy,
                 mipSlice,
                 arraySlice,
                 MapMode.Read,
                 SharpDX.Direct3D11.MapFlags.None,
-                out dataStream);
+                out var dataStream);
 
-            DataRectangle dataRectangle = new DataRectangle
+            var dataRectangle = new DataRectangle
             {
                 DataPointer = dataStream.DataPointer,
                 Pitch = dataBox.RowPitch
             };
 
-            Guid m_PixelFormat = PixelFormat.Format64bppRGBAHalf;
+            Guid pixelFormatGuid;
 
-            if (textureCopy.Description.Format == Format.R16G16_Float) {
-                m_PixelFormat = PixelFormat.Format32bppGrayFloat;
+            switch (textureCopy.Description.Format)
+            {
+                case Format.R16G16_Float:
+                    pixelFormatGuid = PixelFormat.Format32bppGrayFloat;
+                    break;
+                case Format.R8G8B8A8_UNorm:
+                    pixelFormatGuid = PixelFormat.Format32bppBGRA;
+                    break;
+                default:
+                    pixelFormatGuid = PixelFormat.Format64bppRGBAHalf;
+                    break;
             }
 
-            if (textureCopy.Description.Format == Format.R8G8B8A8_UNorm) {
-                m_PixelFormat = PixelFormat.Format32bppBGRA;
-            }
-
-            int mipSize = (int)(textureCopy.Description.Width * Math.Pow(0.5, mipSlice));
+            var mipSize = (int)(textureCopy.Description.Width * Math.Pow(0.5, mipSlice));
 
             var bitmap = new Bitmap(
-                Factory,
+                factory,
                 mipSize,
                 mipSize,
-                m_PixelFormat,
+                pixelFormatGuid,
                 dataRectangle);
 
-            using (var s = new FileStream(path, FileMode.OpenOrCreate)) {//CREATE
+            using (var s = new FileStream(path, FileMode.OpenOrCreate))
+            {
+                //CREATE
                 s.Position = 0;
-                using (var bitmapEncoder = new PngBitmapEncoder(Factory, s)) {
-                    using (var bitmapFrameEncode = new BitmapFrameEncode(bitmapEncoder)) {
+                using (var bitmapEncoder = new PngBitmapEncoder(factory, s))
+                {
+                    using (var bitmapFrameEncode = new BitmapFrameEncode(bitmapEncoder))
+                    {
                         bitmapFrameEncode.Initialize();
                         bitmapFrameEncode.SetSize(bitmap.Size.Width, bitmap.Size.Height);
                         var pixelFormat = PixelFormat.FormatDontCare;

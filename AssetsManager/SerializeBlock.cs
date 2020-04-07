@@ -2,34 +2,34 @@
 
 namespace AssetsManager
 {
-    class SerializeBlock
+    internal class SerializeBlock
     {
         public static byte[] GetBytes<T>(T str) {
-            int size = Marshal.SizeOf(str);
-            byte[] arr = new byte[size];
-            GCHandle h = default(GCHandle);
+            var size = Marshal.SizeOf(str);
+            var bytesArray = new byte[size];
+            var handle = default(GCHandle);
 
             try {
-                h = GCHandle.Alloc(arr, GCHandleType.Pinned);
-                Marshal.StructureToPtr<T>(str, h.AddrOfPinnedObject(), false);
+                handle = GCHandle.Alloc(bytesArray, GCHandleType.Pinned);
+                Marshal.StructureToPtr<T>(str, handle.AddrOfPinnedObject(), false);
             } finally {
-                if (h.IsAllocated) {
-                    h.Free();
+                if (handle.IsAllocated) {
+                    handle.Free();
                 }
             }
-            return arr;
+            return bytesArray;
         }
 
         public static T FromBytes<T>(byte[] arr) where T : struct {
-            T str = default(T);
-            GCHandle h = default(GCHandle);
+            T str;
+            var handle = default(GCHandle);
 
             try {
-                h = GCHandle.Alloc(arr, GCHandleType.Pinned);
-                str = Marshal.PtrToStructure<T>(h.AddrOfPinnedObject());
+                handle = GCHandle.Alloc(arr, GCHandleType.Pinned);
+                str = Marshal.PtrToStructure<T>(handle.AddrOfPinnedObject());
             } finally {
-                if (h.IsAllocated) {
-                    h.Free();
+                if (handle.IsAllocated) {
+                    handle.Free();
                 }
             }
             return str;

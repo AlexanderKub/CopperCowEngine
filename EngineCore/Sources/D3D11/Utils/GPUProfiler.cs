@@ -34,9 +34,9 @@ namespace EngineCore.D3D11.Utils
             long timestampEnd;
             QueryDataTimestampDisjoint disjointData;
 
-            while (!context.GetData(queryTimeStampStart, AsynchronousFlags.None, out timestampStart)) ;
-            while (!context.GetData(queryTimeStampEnd, AsynchronousFlags.None, out timestampEnd)) ;
-            while (!context.GetData(queryTimeStampDisjoint, AsynchronousFlags.None, out disjointData)) ;
+            while (!context.GetData(queryTimeStampStart, AsynchronousFlags.None, out timestampStart)) { }
+            while (!context.GetData(queryTimeStampEnd, AsynchronousFlags.None, out timestampEnd)) { }
+            while (!context.GetData(queryTimeStampDisjoint, AsynchronousFlags.None, out disjointData)) { }
 
             if (disjointData.Disjoint) {
                 return -1;

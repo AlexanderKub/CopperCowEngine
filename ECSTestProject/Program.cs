@@ -1,21 +1,86 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssetsManager;
 using EngineCore;
-using EngineCore.ECS;
 using static EngineCore.Engine;
 using EngineCore.ShaderGraph;
 using ThreadsQueuing;
+using CopperCowEngine.ECS;
+using CopperCowEngine.ECS.Builtin;
+using CopperCowEngine.ECS.Builtin.Components;
+using SharpDX;
 
 namespace ECSTestProject
 {
-    class Program
+    public class TestEcsASystem : ComponentSystem<Required<LocalToWorld>>
     {
-        static void Main(string[] args)
+        protected override void Update()
         {
+            foreach (var e in Iterator)
+            {
+                var matrix = e.Sibling<LocalToWorld>().Value;
+                //Console.WriteLine(matrix.ToString());
+            }
+        }
+    }
+
+    public class TranslationSystem : ComponentSystem<Required<Translation>>
+    {
+        //bool removed = false;
+
+        protected override void Update()
+        {
+            foreach (var e in Iterator)
+            {
+                ref var translation = ref e.Sibling<Translation>();
+                translation.Value += Vector3.Up;
+
+                /*if (!removed)
+                {
+                    removed = true;
+                    Context.RemoveComponent<Translation>(e.Entity);
+                }*/
+            }
+        }
+    }
+
+    internal class Program
+    {
+        private static void Main(string[] args)
+        {
+            /*var context = new EngineEcsContext();
+
+            context.CreateSystem<TranslationSystem>();
+
+            context.CreateSystem<TestEcsASystem>();
+
+            for (var i = 0; i < 10000; i++)
+            {
+                context.CreateEntity(new LocalToWorld()
+                {
+                    Value = Matrix.Identity,
+                }, new Translation()
+                {
+                    Value = Vector3.Up,
+                });
+            }
+
+            var stopwatch = new Stopwatch();
+
+            for (var i = 0; i < 10; i++)
+            {
+                stopwatch.Restart();
+                context.Update();
+                Console.WriteLine($"{stopwatch.ElapsedMilliseconds}ms");
+            }
+
+            Console.ReadKey();
+            return;*/
+
             var AM = AssetsManagerInstance.GetManager();
 
             #region PreRenderUtils
@@ -31,8 +96,8 @@ namespace ECSTestProject
                 //AM.ImportShaderAsset(@"Commons\IBL_AssetsPreRender.hlsl", "IBL_PR_IntegrateQuadVS", "VS_IntegrateQuad", true);
 
 
-                AssetsManagerInstance.GetManager().CubeMapPrerender("Mt-Washington-Cave-Room_Ref.hdr", "House");
-                //AssetsManagerInstance.GetManager().CubeMapPrerender("Tokyo_BigSight_3k.hdr", "House");
+                //AssetsManagerInstance.GetManager().CubeMapPrerender("Mt-Washington-Cave-Room_Ref.hdr", "House");
+                AssetsManagerInstance.GetManager().CubeMapPrerender("C:\\Repos\\CopperCowEngine\\RawContent\\Tokyo_BigSight_3k.hdr", "House");
                 //AssetsManagerInstance.GetManager().CubeMapPrerender("moonless_golf_2k.hdr", "House");
                 //AssetsManagerInstance.GetManager().BRDFIntegrate("StandardBRDFxLUT");
 
@@ -62,7 +127,7 @@ namespace ECSTestProject
                 RenderPath = RenderPathEnum.Deffered,
                 //RenderPath = RenderPathEnum.Forward,
                 EnableHDR = true,
-                //EnableMSAA = EngineConfiguration.MSAAEnabled.x4,
+                EnableMSAA = EngineConfiguration.MSAAEnabled.X4,
                 DebugMode = true,
             };
 

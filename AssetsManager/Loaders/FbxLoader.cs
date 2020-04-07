@@ -1,53 +1,54 @@
 ﻿using SharpDX;
-using FbxNative;
-using FbxNativeLoader = FbxNative.FbxLoader;
 
 namespace AssetsManager.Loaders
 {
-    class FbxLoader {
-        private static FbxNativeLoader NativeLoader;
-        public static ModelGeometry[] Load(string path) {
-            if (NativeLoader == null) {
-                NativeLoader = new FbxNativeLoader();
+    internal class FbxLoader
+    {
+        private static FbxNative.FbxLoader _nativeLoader;
+
+        public static ModelGeometry[] Load(string path)
+        {
+            if (_nativeLoader == null)
+            {
+                _nativeLoader = new FbxNative.FbxLoader();
             }
 
-            Scene scene = NativeLoader.LoadScene(path);
-            ModelGeometry[] result = new ModelGeometry[scene.Meshes.Count];
-            Mesh mesh;
+            var scene = _nativeLoader.LoadScene(path);
+            var result = new ModelGeometry[scene.Meshes.Count];
 
-            for (int k = 0; k < result.Length; k++)
+            for (var k = 0; k < result.Length; k++)
             {
-                mesh = scene.Meshes[k];
-                //TODO: scene childs, mats and so on
-                int vertCount = mesh.VertexCount;
-                Vector3[] verts = new Vector3[vertCount];
-                Vector3[] norms = new Vector3[vertCount];
-                Vector2[] uvs = new Vector2[vertCount];
-                Vector4[] colrs = new Vector4[vertCount];
+                var mesh = scene.Meshes[k];
+
+                //TODO: scene children, mats and so on
+                var vertexCount = mesh.VertexCount;
+                var vertices = new Vector3[vertexCount];
+                var normals = new Vector3[vertexCount];
+                var uvs = new Vector2[vertexCount];
+                var colors = new Vector4[vertexCount];
 
                 int i;
-                MeshVertex mv;
-                for (i = 0; i < vertCount; i++)
+                for (i = 0; i < vertexCount; i++)
                 {
-                    mv = mesh.Vertices[i];
-                    verts[i] = mv.Position;
-                    norms[i] = mv.Normal;
-                    uvs[i] = mv.TexCoord0;
-                    colrs[i] = mv.Color0.ToVector4();
+                    var meshVertex = mesh.Vertices[i];
+                    vertices[i] = meshVertex.Position;
+                    normals[i] = meshVertex.Normal;
+                    uvs[i] = meshVertex.TexCoord0;
+                    colors[i] = meshVertex.Color0.ToVector4();
                 }
 
-                int[] indxs = new int[mesh.IndexCount];
-                int j = 0;
+                var indices = new int[mesh.IndexCount];
+                var j = 0;
                 for (i = 0; i < mesh.TriangleCount; i++)
                 {
-                    indxs[j] = mesh.Triangles[i].Index0;
-                    indxs[j + 1] = mesh.Triangles[i].Index1;
-                    indxs[j + 2] = mesh.Triangles[i].Index2;
+                    indices[j] = mesh.Triangles[i].Index0;
+                    indices[j + 1] = mesh.Triangles[i].Index1;
+                    indices[j + 2] = mesh.Triangles[i].Index2;
                     j += 3;
                 }
-                result[k] = new ModelGeometry(verts, colrs, uvs, indxs, null, norms);
+                result[k] = new ModelGeometry(vertices, colors, uvs, indices, null, normals);
             }
-            
+
             return result;
         }
     }

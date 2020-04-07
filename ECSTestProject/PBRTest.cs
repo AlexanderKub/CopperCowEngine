@@ -12,7 +12,7 @@ namespace ECSTestProject
 {
     public class PBRTest : Engine
     {
-        private TestSystem testSystem;
+        private TestEcsSystem testSystem;
         enum MeshTypeEnum {
             Sphere,
             Cow,
@@ -21,7 +21,7 @@ namespace ECSTestProject
 
         protected override void OnStart()
         {
-            testSystem = ECSWorld.AddSystem<TestSystem>();
+            testSystem = ECSWorld.AddSystem<TestEcsSystem>();
 
             Entity entity;
             Light light;

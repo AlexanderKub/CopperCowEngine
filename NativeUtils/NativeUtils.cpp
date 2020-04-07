@@ -10,7 +10,6 @@ NativeUtilsNS::NativeUtils::NativeUtils()
 }
 
 NativeUtilsNS::ImageData^ NativeUtilsNS::NativeUtils::LoadHDRImage(String^ filePath) {
-	Console::WriteLine(filePath);
 	const char* fileName = (const char*)(Marshal::StringToHGlobalAnsi(filePath)).ToPointer();
 
 	stbi_set_flip_vertically_on_load(false);

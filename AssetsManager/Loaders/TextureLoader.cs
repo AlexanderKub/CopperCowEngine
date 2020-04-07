@@ -1,6 +1,7 @@
 ﻿using AssetsManager.AssetsMeta;
 using SharpDX.WIC;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AssetsManager.Loaders
 {
@@ -26,52 +27,51 @@ namespace AssetsManager.Loaders
 
     internal class TextureLoader
     {
+        // TODO: D3D11 specific code
         private static ImagingFactory2 _factory;
-        private static ImagingFactory2 Factory
-        {
-            get {
-                if (_factory == null) {
-                    _factory = new ImagingFactory2();
-                }
-                return _factory;
-            }
-        }
+        private static ImagingFactory2 Factory => _factory ?? (_factory = new ImagingFactory2());
 
-        private static BitmapSource LoadBitmap(string filename, out bool IsSRgb) {
+        private static BitmapSource LoadBitmap(string filename, out bool isSRgb)
+        {
             var bitmapDecoder = new BitmapDecoder(
                 Factory,
                 filename,
                 DecodeOptions.CacheOnDemand
             );
 
-            BitmapFrameDecode bitmapFrameDecode = bitmapDecoder.GetFrame(0);
+            var bitmapFrameDecode = bitmapDecoder.GetFrame(0);
             var metaReader = bitmapFrameDecode.MetadataQueryReader;
 
-            if (metaReader == null) {
-                IsSRgb = false;
-            } else {
-                var list = metaReader.QueryPaths;
-                Dictionary<string, object> test = new Dictionary<string, object>();
-                foreach (var item in list) {
-                    test.Add(item, metaReader.GetMetadataByName(item));
-                }
-
-                if (metaReader.TryGetMetadataByName("/sRGB/RenderingIntent", out object t).Success) {
-                    if ((ushort)t == 1) {
-                        IsSRgb = true;
-                    }
-                }
-
-                if (metaReader.TryGetMetadataByName("/app1/ifd/exif/{ushort=40961}", out t).Success) {
-                    if ((ushort)t == 1) {
-                        IsSRgb = true;
-                    }
-                }
-                
-                IsSRgb = false;
+            if (metaReader == null)
+            {
+                isSRgb = false;
             }
-            
-            if (IsSRgb) {
+            else
+            {
+                var list = metaReader.QueryPaths;
+                var test = list.ToDictionary(item => item, item => metaReader.GetMetadataByName(item));
+
+                if (metaReader.TryGetMetadataByName("/sRGB/RenderingIntent", out var t).Success)
+                {
+                    if ((ushort)t == 1)
+                    {
+                        isSRgb = true;
+                    }
+                }
+
+                if (metaReader.TryGetMetadataByName("/app1/ifd/exif/{ushort=40961}", out t).Success)
+                {
+                    if ((ushort)t == 1)
+                    {
+                        isSRgb = true;
+                    }
+                }
+
+                isSRgb = false;
+            }
+
+            if (isSRgb)
+            {
                 System.Console.WriteLine(filename + " SRGB!");
             }
 
@@ -88,75 +88,74 @@ namespace AssetsManager.Loaders
             return formatConverter;
         }
 
-        static public TextureAssetData LoadTexture(string path, bool forceSRgb) {
-            BitmapSource bit = LoadBitmap(path, out bool IsSRgb);
-            int stride = bit.Size.Width * 4;
-            byte[] data = new byte[bit.Size.Height * stride];
+        public static TextureAssetData LoadTexture(string path, bool forceSRgb)
+        {
+            var bit = LoadBitmap(path, out var isSRgb);
+            var stride = bit.Size.Width * 4;
+            var data = new byte[bit.Size.Height * stride];
             bit.CopyPixels(data, stride);
 
-            return new TextureAssetData() {
+            return new TextureAssetData()
+            {
                 Width = bit.Size.Width,
                 Height = bit.Size.Height,
                 ChannelsCount = ChannelsCountEnum.Four,
                 BytesPerChannel = BytesPerChannelEnum.One,
-                ColorSpace = (forceSRgb || IsSRgb) ? ColorSpaceEnum.Gamma : ColorSpaceEnum.Linear,
-                buffer = data,
+                ColorSpace = (forceSRgb || isSRgb) ? ColorSpaceEnum.Gamma : ColorSpaceEnum.Linear,
+                Buffer = data,
             };
         }
 
-        private static string[] CubePostfixes = new string[] {
+        private static readonly string[] CubePostfixes = new string[] {
             //"ft", "bk", "dn", "up", "lf", "rt",
             "ft", "bk","up", "dn", "rt", "lf",
         };
-        static public TextureCubeAssetData LoadCubeTexture(string path) {
-            string[] splitName = path.Split('.');
+        public static TextureCubeAssetData LoadCubeTexture(string path)
+        {
+            var splitName = path.Split('.');
 
-            BitmapSource bit;
-            int stride, w, h;
-            w = h = -1;
+            int h;
+            var w = h = -1;
 
-            List<byte[][]> buffers = new List<byte[][]>();
+            var buffers = new List<byte[][]>();
 
-            for (int i = 0; i < 6; i++) {
-                string p = splitName[0] + "_" + CubePostfixes[i] + "." + splitName[1];
+            for (var i = 0; i < 6; i++)
+            {
+                var p = splitName[0] + "_" + CubePostfixes[i] + "." + splitName[1];
 
-                bit = LoadBitmap(p, out bool isSRgb);
-                if (w == -1) {
+                var bit = LoadBitmap(p, out var isSRgb);
+                if (w == -1)
+                {
                     w = bit.Size.Width;
                     h = bit.Size.Height;
                 }
-                stride = bit.Size.Width * 4;
+                var stride = bit.Size.Width * 4;
 
-                byte[][] data = new byte[1][];
+                var data = new byte[1][];
                 data[0] = new byte[bit.Size.Height * stride];
                 bit.CopyPixels(data[0], stride);
                 buffers.Add(data);
             }
 
-            return new TextureCubeAssetData() {
+            return new TextureCubeAssetData()
+            {
                 Width = w,
                 Height = h,
                 ChannelsCount = 4,
                 BytesPerChannel = 1,
                 ColorSpace = ColorSpaceEnum.Gamma,
-                buffer = buffers.ToArray(),
+                Buffer = buffers.ToArray(),
             };
         }
 
-        static private NativeUtilsNS.NativeUtils m_NativeUtilsRef;
-        static private NativeUtilsNS.NativeUtils NativeUtilsRef {
-            get {
-                if (m_NativeUtilsRef == null) {
-                    m_NativeUtilsRef = new NativeUtilsNS.NativeUtils();
-                }
-                return m_NativeUtilsRef;
-            }
-        }
+        private static NativeUtilsNS.NativeUtils _nativeUtilsRef;
 
-        static public float[] LoadHDRTexture(string path, out int width, out int height, out int pixelSize)
+        private static NativeUtilsNS.NativeUtils NativeUtilsRef => _nativeUtilsRef ?? (_nativeUtilsRef = new NativeUtilsNS.NativeUtils());
+
+        public static float[] LoadHdrTexture(string path, out int width, out int height, out int pixelSize)
         {
-            NativeUtilsNS.ImageData imageData = NativeUtilsRef.LoadHDRImage(path);
-            float[] imageFloats = imageData.Data.ToArray();
+            var imageData = NativeUtilsRef.LoadHDRImage(path);
+            var imageFloats = imageData.Data.ToArray();
             width = imageData.Width;
             height = imageData.Height;
             pixelSize = sizeof(float) * 3;

@@ -12,10 +12,10 @@ namespace ECSTestProject
 {
     public class Game : Engine
     {
-        private TestSystem testSystem;
+        private TestEcsSystem testSystem;
         protected override void OnStart()
         {
-            testSystem = ECSWorld.AddSystem<TestSystem>();
+            testSystem = ECSWorld.AddSystem<TestEcsSystem>();
 
             Entity entity;
             Transform transform;

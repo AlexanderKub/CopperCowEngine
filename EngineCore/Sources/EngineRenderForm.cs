@@ -2,8 +2,10 @@
 using System.Windows.Forms;
 using SharpDX.Windows;
 
-namespace EngineCore {
-    public class EngineRenderForm : RenderForm {
+namespace EngineCore
+{
+    public class EngineRenderForm : RenderForm
+    {
 
         //public event Action<Keys> OnSpecialKeyPressed;
         //protected override bool ProcessKeyEventArgs(ref Message m) {

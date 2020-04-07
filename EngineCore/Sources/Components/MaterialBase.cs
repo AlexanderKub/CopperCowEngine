@@ -429,9 +429,9 @@ namespace EngineCore.ShaderGraph
         {
             public readonly string NodeName;
 
-            public ShaderGraphInstructionAttribute(string Name)
+            public ShaderGraphInstructionAttribute(string name)
             {
-                this.NodeName = Name;
+                this.NodeName = name;
             }
         }
 

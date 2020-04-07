@@ -1,7 +1,5 @@
-﻿using EngineCore;
-using EngineCore.D3D11;
+﻿using EngineCore.D3D11;
 using SharpDX;
-using SharpDX.Direct3D11;
 
 namespace EngineCore
 {

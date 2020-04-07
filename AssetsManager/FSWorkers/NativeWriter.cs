@@ -7,32 +7,40 @@ namespace AssetsManager.FSWorkers
 {
     internal class NativeWriter
     {
-        public bool CreateAssetFile(BaseAsset asset) {
+        public bool CreateAssetFile(BaseAsset asset)
+        {
             return CreateAssetFile(asset, false);
         }
 
-        public bool CreateAssetFile(BaseAsset asset, bool rewrite) {
+        public bool CreateAssetFile(BaseAsset asset, bool rewrite)
+        {
             CreateAssetFilesTree();
-            if (asset.Type == AssetTypes.Shader) {
-                Console.WriteLine("Create asset: {0} type: {1} {2}", asset.Name, 
+            if (asset.Type == AssetTypes.Shader)
+            {
+                Console.WriteLine("Create asset: {0} type: {1} {2}", asset.Name,
                     ((ShaderAsset)asset).ShaderType.ToString(), asset.Type.ToString());
-            } else {
+            }
+            else
+            {
                 Console.WriteLine("Create asset: {0} type: {1}", asset.Name, asset.Type.ToString());
             }
 
-            string path = NativeFSWorker.GetAssetPath(asset);
-            if (!rewrite) {
-                string actualName = asset.Name;
-                int postfix = 0;
-                while (File.Exists(path)) {
+            var path = NativeFileSystemWorker.GetAssetPath(asset);
+            var actualName = asset.Name;
+            if (!rewrite)
+            {
+                var postfix = 0;
+                while (File.Exists(path))
+                {
                     actualName = asset.Name + "_" + (++postfix);
-                    path = NativeFSWorker.GetAssetPath(asset, actualName);
+                    path = NativeFileSystemWorker.GetAssetPath(asset, actualName);
                 }
                 asset.Name = actualName;
             }
 
-            using (FileStream stream = new FileStream(path, FileMode.Create))
-            using (BinaryWriter writer = new BinaryWriter(stream)) {
+            using (var stream = new FileStream(path, FileMode.Create))
+            using (var writer = new BinaryWriter(stream))
+            {
                 /*using (MemoryStream ms = new MemoryStream()) {
                     using (GZipStream compressStream = new GZipStream(ms, CompressionMode.Compress))
                     using (BinaryWriter compressWriter = new BinaryWriter(compressStream)) {
@@ -46,19 +54,24 @@ namespace AssetsManager.FSWorkers
             return true;
         }
 
-        private bool CreateAssetFilesTree() {
-            for (int i = 0; i < Enum.GetNames(typeof(AssetTypes)).Length; i++) {
+        private static bool CreateAssetFilesTree()
+        {
+            for (var i = 0; i < Enum.GetNames(typeof(AssetTypes)).Length; i++)
+            {
                 CreateAssetTypeDirectory((AssetTypes)i);
             }
             return true;
         }
 
-        private bool CreateAssetTypeDirectory(AssetTypes type) {
-            string path = NativeFSWorker.GetAssetTypePath(type);
-            if (!Directory.Exists(path)) {
-                Directory.CreateDirectory(path);
-                Console.WriteLine("Create directory: {0}", path);
+        private static bool CreateAssetTypeDirectory(AssetTypes type)
+        {
+            var path = NativeFileSystemWorker.GetAssetTypePath(type);
+            if (Directory.Exists(path))
+            {
+                return true;
             }
+            Directory.CreateDirectory(path);
+            Console.WriteLine("Create directory: {0}", path);
             return true;
         }
     }

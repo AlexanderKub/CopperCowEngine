@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5EF39CDF-FDF1-4BAC-B720-E82864A0BD56}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CopperCowEngine.ECS.Builtin</RootNamespace>
+    <AssemblyName>CopperCowEngine.ECS.Builtin</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="SharpDX">
+      <HintPath>..\CommonLibs\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics">
+      <HintPath>..\CommonLibs\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Components\Camera.cs" />
+    <Compile Include="Components\CameraScreenAspect.cs" />
+    <Compile Include="Components\LocalToParent.cs" />
+    <Compile Include="Components\LocalToWorld.cs" />
+    <Compile Include="Components\Material.cs" />
+    <Compile Include="Components\Mesh.cs" />
+    <Compile Include="Components\Parent.cs" />
+    <Compile Include="Components\Rotation.cs" />
+    <Compile Include="Components\Scale.cs" />
+    <Compile Include="Components\Translation.cs" />
+    <Compile Include="EngineEcsContext.cs" />
+    <Compile Include="Extensions\StandardFrameDataEcsExtension.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Singletons\EngineHolder.cs" />
+    <Compile Include="Singletons\FrameDataHolder.cs" />
+    <Compile Include="Singletons\InputSingleton.cs" />
+    <Compile Include="Systems\CameraScreenAspectSystem.cs" />
+    <Compile Include="Systems\LocalToParentSystem.cs" />
+    <Compile Include="Systems\RenderingSystem.cs" />
+    <Compile Include="Systems\CameraSystem.cs" />
+    <Compile Include="Systems\TrsToLocalToParentSystem.cs" />
+    <Compile Include="Systems\TrsToLocalToWorldSystem.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CopperCowEngine.Core\CopperCowEngine.Core.csproj">
+      <Project>{61818851-D238-408F-A579-D530A5C364DC}</Project>
+      <Name>CopperCowEngine.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CopperCowEngine.Rendering\CopperCowEngine.Rendering.csproj">
+      <Project>{B6BF5B3E-023F-4EF2-87EA-94873509ACB9}</Project>
+      <Name>CopperCowEngine.Rendering</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine.ECS\CopperCowEngine.ECS.csproj">
+      <Project>{060632ee-fa0a-4247-8504-3afaae5630f5}</Project>
+      <Name>CopperCowEngine.ECS</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

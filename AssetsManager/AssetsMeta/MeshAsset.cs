@@ -9,13 +9,13 @@ namespace AssetsManager.AssetsMeta
     {
         public Vector4 Position;
         public Vector4 Color;
-        public Vector4 UV0;
-        public Vector4 UV1;
+        public Vector4 Uv0;
+        public Vector4 Uv1;
         public Vector4 Normal;
         public Vector4 Tangent;
     };
 
-    public class MeshAsset: BaseAsset
+    public class MeshAsset : BaseAsset
     {
         public VertexStruct[] Vertices;
         public int[] Indexes;
@@ -24,8 +24,11 @@ namespace AssetsManager.AssetsMeta
         public Vector3 BoundingMinimum;
         public Vector3 BoundingMaximum;
 
-        public MeshAsset() {
-            this.Type = AssetTypes.Mesh;
+        private MeshAsset[] _subAssets;
+
+        public MeshAsset()
+        {
+            Type = AssetTypes.Mesh;
         }
 
         public bool ImportAsset(string path, string ext, float fileScale)
@@ -34,87 +37,105 @@ namespace AssetsManager.AssetsMeta
             return ImportAsset(path, ext);
         }
 
-        public override bool ImportAsset(string path, string ext) {
-            ModelGeometry[] MG = new ModelGeometry[1];
+        public override void CopyValues(BaseAsset source)
+        {
+        }
 
-            if (ext == "obj") {
-                MG[0] = ObjLoader.Load(path);
-            } else if (ext == "fbx") {
-                MG = FbxLoader.Load(path);
-                if (MG.Length > 1)
+        public override bool ImportAsset(string path, string ext)
+        {
+            var modelGeometries = new ModelGeometry[1];
+
+            switch (ext)
+            {
+                case "obj":
+                    modelGeometries[0] = ObjLoader.Load(path);
+                    break;
+                case "fbx":
                 {
-                    subAssets = new MeshAsset[MG.Length - 1];
-                    for (int i = 1; i < MG.Length; i++)
+                    modelGeometries = FbxLoader.Load(path);
+                    if (modelGeometries.Length > 1)
                     {
-                        subAssets[i - 1] = new MeshAsset()
+                        _subAssets = new MeshAsset[modelGeometries.Length - 1];
+                        for (int i = 1; i < modelGeometries.Length; i++)
                         {
-                            Name = this.Name + "_" + i,
-                            FileScale = FileScale,
-                            Pivot = Vector3.Zero,
-                            Vertices = MG[i].Points,
-                            Indexes = MG[i].Indexes,
-                            BoundingMinimum = MG[i].BoundingMinimum,
-                            BoundingMaximum = MG[i].BoundingMaximum,
-                        };
+                            _subAssets[i - 1] = new MeshAsset()
+                            {
+                                Name = this.Name + "_" + i,
+                                FileScale = FileScale,
+                                Pivot = Vector3.Zero,
+                                Vertices = modelGeometries[i].Points,
+                                Indexes = modelGeometries[i].Indexes,
+                                BoundingMinimum = modelGeometries[i].BoundingMinimum,
+                                BoundingMaximum = modelGeometries[i].BoundingMaximum,
+                            };
+                        }
                     }
+
+                    break;
                 }
-            } else {
-                Console.WriteLine("Unknown mesh extension: {0}", ext);
-                return false;
+                default:
+                    Console.WriteLine("Unknown mesh extension: {0}", ext);
+                    return false;
             }
 
             Pivot = Vector3.Zero;
-            Vertices = MG[0].Points;
-            Indexes = MG[0].Indexes;
-            BoundingMinimum = MG[0].BoundingMinimum;
-            BoundingMaximum = MG[0].BoundingMaximum;
+            Vertices = modelGeometries[0].Points;
+            Indexes = modelGeometries[0].Indexes;
+            BoundingMinimum = modelGeometries[0].BoundingMinimum;
+            BoundingMaximum = modelGeometries[0].BoundingMaximum;
             return true;
         }
 
-        private MeshAsset[] subAssets;
-        public override void SaveAsset(BinaryWriter writer) {
+        public override void SaveAsset(BinaryWriter writer)
+        {
             base.SaveAsset(writer);
             int i;
             writer.Write(FileScale);
             writer.Write(SerializeBlock.GetBytes(Pivot));
             writer.Write(Vertices.Length);
-            for (i = 0; i < Vertices.Length; i++) {
-                byte[] bytes = SerializeBlock.GetBytes(Vertices[i]);
+            for (i = 0; i < Vertices.Length; i++)
+            {
+                var bytes = SerializeBlock.GetBytes(Vertices[i]);
                 writer.Write(bytes);
             }
             writer.Write(Indexes.Length);
-            for (i = 0; i < Indexes.Length; i++) {
+            for (i = 0; i < Indexes.Length; i++)
+            {
                 writer.Write(Indexes[i]);
             }
             writer.Write(SerializeBlock.GetBytes(BoundingMinimum));
             writer.Write(SerializeBlock.GetBytes(BoundingMaximum));
-            if (subAssets == null)
+            if (_subAssets == null)
             {
                 return;
             }
-            foreach (MeshAsset subAsset in subAssets)
+            foreach (var subAsset in _subAssets)
             {
-                AssetsManagerInstance.GetManager().FSWorker.CreateAssetFile(subAsset, true);
+                AssetsManagerInstance.GetManager().FileSystemWorker.CreateAssetFile(subAsset, true);
             }
         }
 
-        public override bool LoadAsset(BinaryReader reader) {
-            if (!base.LoadAsset(reader)) {
+        public override bool LoadAsset(BinaryReader reader)
+        {
+            if (!base.LoadAsset(reader))
+            {
                 return false;
             }
-            int i, n;
+            int i;
             FileScale = reader.ReadSingle();
             Pivot = SerializeBlock.FromBytes<Vector3>(reader.ReadBytes(12));
-            n = reader.ReadInt32();
-            this.Vertices = new VertexStruct[n];
-            for (i = 0; i < n; i++) {
-                byte[] arr = reader.ReadBytes(96);
-                this.Vertices[i] = SerializeBlock.FromBytes<VertexStruct>(arr);
+            var n = reader.ReadInt32();
+            Vertices = new VertexStruct[n];
+            for (i = 0; i < n; i++)
+            {
+                var arr = reader.ReadBytes(96);
+                Vertices[i] = SerializeBlock.FromBytes<VertexStruct>(arr);
             }
             n = reader.ReadInt32();
-            this.Indexes = new int[n];
-            for (i = 0; i < n; i++) {
-                this.Indexes[i] = reader.ReadInt32();
+            Indexes = new int[n];
+            for (i = 0; i < n; i++)
+            {
+                Indexes[i] = reader.ReadInt32();
             }
             BoundingMinimum = SerializeBlock.FromBytes<Vector3>(reader.ReadBytes(12));
             BoundingMaximum = SerializeBlock.FromBytes<Vector3>(reader.ReadBytes(12));

@@ -7,25 +7,20 @@ namespace AssetsManager.Loaders
     {
         public int[] Indexes;
         public int[] IndexesWithAdj;
-        public Vector3[] Verticies;
+        public Vector3[] Vertices;
         public Vector4[] Colors;
         public Vector2[] UVs;
         public Vector3[] Normals;
         public Vector3 Pivot;
         public float FileScale = 1.0f;
 
-        private Vector3 m_BoundingMinimum;
-        private Vector3 m_BoundingMaximum;
-        public Vector3 BoundingMinimum {
-            get {
-                return (m_BoundingMinimum - Pivot) * FileScale;
-            } 
-        }
-        public Vector3 BoundingMaximum {
-            get {
-                return (m_BoundingMaximum - Pivot) * FileScale;
-            }
-        }
+        private Vector3 _boundingMinimum;
+
+        private Vector3 _boundingMaximum;
+
+        public Vector3 BoundingMinimum => (_boundingMinimum - Pivot) * FileScale;
+
+        public Vector3 BoundingMaximum => (_boundingMaximum - Pivot) * FileScale;
 
         public struct PositionsColorsStruct
         {
@@ -33,16 +28,20 @@ namespace AssetsManager.Loaders
             public Vector4 Color;
         };
 
-        private VertexStruct[] m_Points;
+        private VertexStruct[] _points;
+
         public VertexStruct[] Points
         {
-            get {
-                if (m_Points == null) {
+            get
+            {
+                if (_points == null)
+                {
                     return null;
                 }
-                VertexStruct[] tmp = new VertexStruct[m_Points.Length];
-                for (int i = 0; i < tmp.Length; i++) {
-                    tmp[i] = m_Points[i];
+                var tmp = new VertexStruct[_points.Length];
+                for (var i = 0; i < tmp.Length; i++)
+                {
+                    tmp[i] = _points[i];
                     tmp[i].Position -= new Vector4(Pivot, 0);
                     tmp[i].Position *= FileScale;
                 }
@@ -50,86 +49,83 @@ namespace AssetsManager.Loaders
             }
         }
 
-        public PositionsColorsStruct[] SVPoints { get; private set; }
+        public PositionsColorsStruct[] SvPoints { get; private set; }
 
-        public int Count
+        public int Count => Indexes.Length;
+
+        public ModelGeometry(float fileScale, Vector3 pivot, VertexStruct[] vertices, int[] indices, Vector3 boundMin, Vector3 boundMax)
         {
-            get {
-                return Indexes.Length;
-            }
-        }
-
-        public ModelGeometry(float fileScale, Vector3 pivot, VertexStruct[] verts, int[] indxs, Vector3 boundMin, Vector3 boundMax) {
             FileScale = fileScale;
             Pivot = pivot;
-            m_Points = verts;
-            Indexes = indxs;
-            m_BoundingMinimum = boundMin;
-            m_BoundingMaximum = boundMax;
+            _points = vertices;
+            Indexes = indices;
+            _boundingMinimum = boundMin;
+            _boundingMaximum = boundMax;
         }
 
-        public ModelGeometry(Vector3[] vrtxs, Vector4[] colors, Vector2[] uvs, int[] indxs, 
-            int[] indxsWithAdj, Vector3[] normals) {
+        public ModelGeometry(Vector3[] vertices, Vector4[] colors, Vector2[] uvs, int[] indices,
+            int[] indicesWithAdj, Vector3[] normals)
+        {
 
-            InternalInit(vrtxs, colors, uvs, indxs, IndexesWithAdj, normals);
+            InternalInit(vertices, colors, uvs, indices, IndexesWithAdj, normals);
         }
 
-        private void InternalInit(Vector3[] vrtxs, Vector4[] colors, Vector2[] uvs, int[] indxs,
-            int[] indxsWithAdj, Vector3[] normals) {
-
-            Vector3 normal;
-            Verticies = vrtxs;
-            Indexes = indxs;
-            IndexesWithAdj = indxsWithAdj;
+        private void InternalInit(Vector3[] vertices, Vector4[] colors, Vector2[] uvs, int[] indices,
+            int[] indicesWithAdj, Vector3[] normals)
+        {
+            Vertices = vertices;
+            Indexes = indices;
+            IndexesWithAdj = indicesWithAdj;
             Colors = colors;
             UVs = uvs;
             Normals = normals;
 
-            int n = vrtxs.Length;
-            m_Points = new VertexStruct[n];
-            SVPoints = new PositionsColorsStruct[n];
-            
-            m_BoundingMinimum = Vector3.One * float.MaxValue;
-            m_BoundingMaximum = Vector3.One * float.MinValue;
+            var n = vertices.Length;
+            _points = new VertexStruct[n];
+            SvPoints = new PositionsColorsStruct[n];
 
-            for (int i = 0; i < n; i++) {
-                normal = (normals == null ? Vector3.Zero : normals[i]);
-                CalculateTangentBinormal(normal, out Vector3 tangent, out Vector3 binormal);
-                m_Points[i] = new VertexStruct() {
-                    Position = new Vector4(vrtxs[i], 1),
-                    Color = (colors == null ? Vector4.One : colors[i]),
-                    UV0 = new Vector4(uvs == null ? Vector2.Zero : uvs[i], 0, 0),
-                    UV1 = Vector4.Zero,
+            _boundingMinimum = Vector3.One * float.MaxValue;
+            _boundingMaximum = Vector3.One * float.MinValue;
+
+            for (var i = 0; i < n; i++)
+            {
+                var normal = normals?[i] ?? Vector3.Zero;
+                CalculateTangentBinormal(normal, out var tangent, out _);
+                _points[i] = new VertexStruct()
+                {
+                    Position = new Vector4(vertices[i], 1),
+                    Color = colors?[i] ?? Vector4.One,
+                    Uv0 = new Vector4(uvs?[i] ?? Vector2.Zero, 0, 0),
+                    Uv1 = Vector4.Zero,
                     Normal = new Vector4(normal, 0),
                     Tangent = new Vector4(tangent, 0),
                 };
 
-                m_BoundingMinimum = Vector3.Min(m_BoundingMinimum, vrtxs[i]);
-                m_BoundingMaximum = Vector3.Max(m_BoundingMaximum, vrtxs[i]);
+                _boundingMinimum = Vector3.Min(_boundingMinimum, vertices[i]);
+                _boundingMaximum = Vector3.Max(_boundingMaximum, vertices[i]);
 
-                SVPoints[i] = new PositionsColorsStruct() {
-                    Pos = m_Points[i].Position,
-                    Color = m_Points[i].Color,
+                SvPoints[i] = new PositionsColorsStruct()
+                {
+                    Pos = _points[i].Position,
+                    Color = _points[i].Color,
                 };
             }
         }
 
-        private void CalculateTangentBinormal(Vector3 Normal, out Vector3 Tangent, out Vector3 Binormal) {
-            Vector3 crossOne = Vector3.Cross(Normal, Vector3.ForwardLH);
-            Vector3 crossTwo = Vector3.Cross(Normal, Vector3.Up);
+        private static void CalculateTangentBinormal(Vector3 normal, out Vector3 tangent, out Vector3 binormal)
+        {
+            var crossOne = Vector3.Cross(normal, Vector3.ForwardLH);
+            var crossTwo = Vector3.Cross(normal, Vector3.Up);
 
-            if (crossOne.Length() > crossTwo.Length()) {
-                Tangent = crossOne;
-            } else {
-                Tangent = crossTwo;
-            }
-            Tangent.Normalize();
+            tangent = crossOne.Length() > crossTwo.Length() ? crossOne : crossTwo;
+            tangent.Normalize();
 
-            Binormal = Vector3.Cross(Normal, Tangent);
-            Binormal.Normalize();
+            binormal = Vector3.Cross(normal, tangent);
+            binormal.Normalize();
         }
 
-        private static Vector3 ToVector3(Vector4 inVector) {
+        private static Vector3 ToVector3(Vector4 inVector)
+        {
             return new Vector3(inVector.X, inVector.Y, inVector.Z);
         }
     }

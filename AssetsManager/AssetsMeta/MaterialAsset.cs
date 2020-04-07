@@ -1,9 +1,10 @@
-﻿using SharpDX;
+﻿using System;
+using SharpDX;
 using System.IO;
 
 namespace AssetsManager.AssetsMeta
 {
-    public class MaterialAsset: BaseAsset
+    public class MaterialAsset : BaseAsset
     {
         public Vector3 AlbedoColor = Vector3.One;
         public float AlphaValue = 1.0f;
@@ -18,37 +19,40 @@ namespace AssetsManager.AssetsMeta
         public string MetallicMapAsset = string.Empty;
         public string OcclusionMapAsset = string.Empty;
 
-        public MaterialAsset() {
-            this.Type = AssetTypes.Material;
+        public MaterialAsset()
+        {
+            Type = AssetTypes.Material;
         }
 
-        public MaterialAsset(MaterialAsset source) {
-            CopyValues(source);
+        public override void CopyValues(BaseAsset source)
+        {
+            if (!(source is MaterialAsset materialAsset))
+            {
+                return;
+            }
+
+            AlbedoColor = materialAsset.AlbedoColor;
+            AlphaValue = materialAsset.AlphaValue;
+            RoughnessValue = materialAsset.RoughnessValue;
+            MetallicValue = materialAsset.MetallicValue;
+            Tile = materialAsset.Tile;
+            Shift = materialAsset.Shift;
+            AlbedoMapAsset = materialAsset.AlbedoMapAsset;
+            AlbedoMapAsset = materialAsset.AlbedoMapAsset;
+            NormalMapAsset = materialAsset.NormalMapAsset;
+            RoughnessMapAsset = materialAsset.RoughnessMapAsset;
+            MetallicMapAsset = materialAsset.MetallicMapAsset;
+            OcclusionMapAsset = materialAsset.OcclusionMapAsset;
         }
 
-        public override void CopyValues(BaseAsset source) {
-            base.CopyValues(source);
-            MaterialAsset ma = source as MaterialAsset;
-            AlbedoColor = ma.AlbedoColor;
-            AlphaValue = ma.AlphaValue;
-            RoughnessValue = ma.RoughnessValue;
-            MetallicValue = ma.MetallicValue;
-            Tile = ma.Tile;
-            Shift = ma.Shift;
-            AlbedoMapAsset = ma.AlbedoMapAsset;
-            AlbedoMapAsset = ma.AlbedoMapAsset;
-            NormalMapAsset = ma.NormalMapAsset;
-            RoughnessMapAsset = ma.RoughnessMapAsset;
-            MetallicMapAsset = ma.MetallicMapAsset;
-            OcclusionMapAsset = ma.OcclusionMapAsset;
-        }
-
-        public override bool ImportAsset(string path, string ext) {
+        public override bool ImportAsset(string path, string ext)
+        {
             //Create not import
             return true;
         }
 
-        public override void SaveAsset(BinaryWriter writer) {
+        public override void SaveAsset(BinaryWriter writer)
+        {
             base.SaveAsset(writer);
             writer.Write(SerializeBlock.GetBytes(AlbedoColor));
             writer.Write(AlphaValue);
@@ -63,8 +67,10 @@ namespace AssetsManager.AssetsMeta
             writer.Write(OcclusionMapAsset);
         }
 
-        public override bool LoadAsset(BinaryReader reader) {
-            if (!base.LoadAsset(reader)) {
+        public override bool LoadAsset(BinaryReader reader)
+        {
+            if (!base.LoadAsset(reader))
+            {
                 return false;
             }
             AlbedoColor = SerializeBlock.FromBytes<Vector3>(reader.ReadBytes(12));
@@ -81,21 +87,26 @@ namespace AssetsManager.AssetsMeta
             return true;
         }
 
-        public override bool IsSame(BaseAsset other) {
-            bool same = true;
-            MaterialAsset otherMA = other as MaterialAsset;
-            same &= this.AlbedoColor == otherMA.AlbedoColor;
-            same &= this.AlphaValue == otherMA.AlphaValue;
-            same &= this.RoughnessValue == otherMA.RoughnessValue;
-            same &= this.MetallicValue == otherMA.MetallicValue;
-            same &= this.Tile == otherMA.Tile;
-            same &= this.Shift == otherMA.Shift;
-            same &= this.AlbedoMapAsset == otherMA.AlbedoMapAsset;
-            same &= this.AlbedoMapAsset == otherMA.AlbedoMapAsset;
-            same &= this.NormalMapAsset == otherMA.NormalMapAsset;
-            same &= this.RoughnessMapAsset == otherMA.RoughnessMapAsset;
-            same &= this.MetallicMapAsset == otherMA.MetallicMapAsset;
-            same &= this.OcclusionMapAsset == otherMA.OcclusionMapAsset;
+        public override bool IsSame(BaseAsset other)
+        {
+            if (!(other is MaterialAsset otherAsset))
+            {
+                return false;
+            }
+
+            var same = AlbedoColor == otherAsset.AlbedoColor;
+            same &= Math.Abs(this.AlphaValue - otherAsset.AlphaValue) < float.Epsilon;
+            same &= Math.Abs(this.RoughnessValue - otherAsset.RoughnessValue) < float.Epsilon;
+            same &= Math.Abs(this.MetallicValue - otherAsset.MetallicValue) < float.Epsilon;
+            same &= Tile == otherAsset.Tile;
+            same &= Shift == otherAsset.Shift;
+            same &= AlbedoMapAsset == otherAsset.AlbedoMapAsset;
+            same &= AlbedoMapAsset == otherAsset.AlbedoMapAsset;
+            same &= NormalMapAsset == otherAsset.NormalMapAsset;
+            same &= RoughnessMapAsset == otherAsset.RoughnessMapAsset;
+            same &= MetallicMapAsset == otherAsset.MetallicMapAsset;
+            same &= OcclusionMapAsset == otherAsset.OcclusionMapAsset;
+
             return base.IsSame(other) && same;
         }
     }

@@ -8,168 +8,192 @@ namespace AssetsManager
 {
     public partial class AssetsManagerInstance
     {
-        private string m_RootPath;
-        public string RootPath {
-            get {
-                return m_RootPath;
+        private string _rootPath;
+
+        public string RootPath
+        {
+            get => _rootPath;
+            set
+            {
+                _rootPath = value;
+                NativeFileSystemWorker.RootPath = _rootPath;
             }
-            set {
-                m_RootPath = value;
-                NativeFSWorker.RootPath = m_RootPath;
-            }
         }
 
-        internal NativeFSWorker FSWorker;
-        private AssetsManagerInstance() {
-            FSWorker = new NativeFSWorker();
-            m_Instance = this;
+        internal NativeFileSystemWorker FileSystemWorker;
+        private AssetsManagerInstance()
+        {
+            FileSystemWorker = new NativeFileSystemWorker();
+            _instance = this;
         }
 
-        private static AssetsManagerInstance m_Instance;
-        public static AssetsManagerInstance GetManager() {
-            if (m_Instance == null) {
-                m_Instance = new AssetsManagerInstance();
-            }
-            return m_Instance;
+        private static AssetsManagerInstance _instance;
+        public static AssetsManagerInstance GetManager()
+        {
+            return _instance ?? (_instance = new AssetsManagerInstance());
         }
 
-        private string[] shaderExts = new string[] { "hlsl", };
-        private string[] meshExts = new string[] { "obj", "fbx", };
-        private string[] textureExts = new string[] { "jpg", "png", "bmp", };
+        private readonly string[] _shaderExtensions = new string[] { "hlsl", };
+        private readonly string[] _meshExtensions = new string[] { "obj", "fbx", };
+        private readonly string[] _textureExtensions = new string[] { "jpg", "png", "bmp", };
 
-        public bool ImportAsset(string Path, string Name) {
-            BaseAsset dummy;
-            return ImportAsset(Path, Name, false, out dummy);
+        public bool ImportAsset(string path, string name)
+        {
+            return ImportAsset(path, name, false, out var dummy);
         }
 
-        public bool ImportAsset(string Path, string Name, bool Rewrite) {
-            BaseAsset dummy;
-            return ImportAsset(Path, Name, Rewrite, out dummy);
+        public bool ImportAsset(string path, string name, bool rewrite)
+        {
+            return ImportAsset(path, name, rewrite, out var dummy);
         }
 
-        public bool ImportAsset(string Path, string Name, bool Rewrite, out BaseAsset assetRes) {
-            string[] arr = Path.Split('.');
-            string ext = arr[arr.Length - 1].ToLower();
+        public bool ImportAsset(string path, string name, bool rewrite, out BaseAsset assetRes)
+        {
+            var arr = path.Split('.');
+            var ext = arr[arr.Length - 1].ToLower();
 
             assetRes = null;
             BaseAsset asset;
-            if (shaderExts.Contains(ext)) {
-                return ImportShaderAsset(Path, Name, null, null, true, out assetRes);
-            } else if(meshExts.Contains(ext)) {
-                asset = new MeshAsset() {
-                    Name = Name,
+            if (_shaderExtensions.Contains(ext))
+            {
+                return ImportShaderAsset(path, name, null, null, true, out assetRes);
+            }
+
+            if (_meshExtensions.Contains(ext))
+            {
+                asset = new MeshAsset()
+                {
+                    Name = name,
                 };
-            } else if (textureExts.Contains(ext)) {
-                asset = new Texture2DAsset() {
-                    Name = Name,
-                    // Hack for forcing srgb image with wrong meta-data
-                    ForceSRgb = Name.Contains("Albedo"),
+            }
+            else if (_textureExtensions.Contains(ext))
+            {
+                asset = new Texture2DAsset()
+                {
+                    Name = name,
+                    // Hack for forcing SRGB image with wrong meta-data
+                    ForceSRgb = name.Contains("Albedo"),
                 };
-            } else {
+            }
+            else
+            {
                 Console.WriteLine("Unknown asset extension: {0}", ext);
                 return false;
             }
 
-            if (!asset.ImportAsset(Path, ext)) {
+            if (!asset.ImportAsset(path, ext))
+            {
                 return false;
             }
             assetRes = asset;
-            return FSWorker.CreateAssetFile(asset, Rewrite || asset.Type == AssetTypes.Shader);
+            return FileSystemWorker.CreateAssetFile(asset, rewrite || asset.Type == AssetTypes.Shader);
         }
 
-        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, bool Rewrite)
+        public bool ImportShaderAsset(string path, string name, string entryPoint, bool rewrite)
         {
-            BaseAsset dummy;
-            return ImportShaderAsset(Path, Name, EntryPoint, null, Rewrite, out dummy);
+            return ImportShaderAsset(path, name, entryPoint, null, rewrite, out var dummy);
         }
 
-        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, string Macro, bool Rewrite)
+        public bool ImportShaderAsset(string path, string name, string entryPoint, string macro, bool rewrite)
         {
-            BaseAsset dummy;
-            return ImportShaderAsset(Path, Name, EntryPoint, new Dictionary<string, object>() {
-                { Macro, 1 } }, Rewrite, out dummy);
+            return ImportShaderAsset(path, name, entryPoint, new Dictionary<string, object>() {
+                { macro, 1 } }, rewrite, out var dummy);
         }
 
-        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, string Macro, string Macro2, bool Rewrite)
+        public bool ImportShaderAsset(string path, string name, string entryPoint, string macro, string macro2, bool rewrite)
         {
-            BaseAsset dummy;
-            return ImportShaderAsset(Path, Name, EntryPoint, new Dictionary<string, object>() {
-                { Macro, 1 }, { Macro2, 1 } }, Rewrite, out dummy);
+            return ImportShaderAsset(path, name, entryPoint, new Dictionary<string, object>() {
+                { macro, 1 }, { macro2, 1 } }, rewrite, out var dummy);
         }
 
-        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, Dictionary<string, object> Macro, bool Rewrite)
+        public bool ImportShaderAsset(string path, string name, string entryPoint, Dictionary<string, object> macro, bool rewrite)
         {
-            BaseAsset dummy;
-            return ImportShaderAsset(Path, Name, EntryPoint, Macro, Rewrite, out dummy);
+            return ImportShaderAsset(path, name, entryPoint, macro, rewrite, out var dummy);
         }
 
-        public bool ImportShaderAsset(string Path, string Name, string EntryPoint, Dictionary<string,object> Macro, bool Rewrite, out BaseAsset assetRes)
+        public bool ImportShaderAsset(string path, string name, string entryPoint, Dictionary<string, object> macro, bool rewrite, out BaseAsset assetRes)
         {
-            string[] arr = Path.Split('.');
-            string ext = arr[arr.Length - 1].ToLower();
+            var arr = path.Split('.');
+            var ext = arr[arr.Length - 1].ToLower();
             assetRes = null;
 
-            if (!shaderExts.Contains(ext))
+            if (!_shaderExtensions.Contains(ext))
             {
                 return false;
             }
 
-            BaseAsset asset;
-            
-            ShaderTypeEnum ST = ShaderTypeEnum.Vertex;
-            if (Name.EndsWith("VS")) {
-                ST = ShaderTypeEnum.Vertex;
-            } else if (Name.EndsWith("PS")) {
-                ST = ShaderTypeEnum.Pixel;
-            } else if (Name.EndsWith("GS")) {
-                ST = ShaderTypeEnum.Geometry;
-            } else if (Name.EndsWith("CS")) {
-                ST = ShaderTypeEnum.Compute;
-            } else if (Name.EndsWith("HS")) {
-                ST = ShaderTypeEnum.Hull;
-            } else if (Name.EndsWith("DS")) {
-                ST = ShaderTypeEnum.Domain;
-            } else {
+            ShaderTypeEnum st;
+            if (name.EndsWith("VS"))
+            {
+                st = ShaderTypeEnum.Vertex;
+            }
+            else if (name.EndsWith("PS"))
+            {
+                st = ShaderTypeEnum.Pixel;
+            }
+            else if (name.EndsWith("GS"))
+            {
+                st = ShaderTypeEnum.Geometry;
+            }
+            else if (name.EndsWith("CS"))
+            {
+                st = ShaderTypeEnum.Compute;
+            }
+            else if (name.EndsWith("HS"))
+            {
+                st = ShaderTypeEnum.Hull;
+            }
+            else if (name.EndsWith("DS"))
+            {
+                st = ShaderTypeEnum.Domain;
+            }
+            else
+            {
                 Console.WriteLine("Unknown shader type, please add correct postfix e.g. VS");
                 return false;
             }
 
-            asset = new ShaderAsset() {
-                Name = Name,
-                ShaderType = ST,
-                EntryPoint = EntryPoint,
-                Macro = Macro,
+            BaseAsset asset = new ShaderAsset()
+            {
+                Name = name,
+                ShaderType = st,
+                EntryPoint = entryPoint,
+                Macro = macro,
             };
 
-            if (!asset.ImportAsset(Path, ext)) {
+            if (!asset.ImportAsset(path, ext))
+            {
                 return false;
             }
 
             assetRes = asset;
-            return FSWorker.CreateAssetFile(asset, Rewrite);
+            return FileSystemWorker.CreateAssetFile(asset, rewrite);
         }
 
-        public bool CreateCubeMapAsset(string Path, string Name) {
-            BaseAsset asset = new TextureCubeAsset() {
-                Name = Name,
+        public bool CreateCubeMapAsset(string path, string name)
+        {
+            BaseAsset asset = new TextureCubeAsset()
+            {
+                Name = name,
             };
-            string[] arr = Path.Split('.');
-            string ext = arr[arr.Length - 1].ToLower();
-            if (!textureExts.Contains(ext)) {
-                Console.WriteLine("Unknown asset extension: {0}", ext);
-                return false;
+
+            var arr = path.Split('.');
+            var ext = arr[arr.Length - 1].ToLower();
+            if (_textureExtensions.Contains(ext))
+            {
+                return asset.ImportAsset(path, ext) && FileSystemWorker.CreateAssetFile(asset, true);
             }
-            if (!asset.ImportAsset(Path, ext)) {
-                return false;
-            }
-            return FSWorker.CreateAssetFile(asset, true);
+
+            Console.WriteLine("Unknown asset extension: {0}", ext);
+            return false;
         }
 
-        public bool CreateMaterialAsset() {
-            BaseAsset asset = new MaterialAsset() {
+        public bool CreateMaterialAsset()
+        {
+            return FileSystemWorker.CreateAssetFile(new MaterialAsset()
+            {
                 Name = "NewMaterial",
-            };
-            return FSWorker.CreateAssetFile(asset);
+            });
         }
 
         //FOR TESTING
@@ -181,62 +205,67 @@ namespace AssetsManager
                 ShaderType = ShaderTypeEnum.Pixel,
                 Bytecode = bytecode,
             };
-            return FSWorker.CreateAssetFile(asset, true);
+            return FileSystemWorker.CreateAssetFile(asset, true);
         }
 
-        public bool SaveAssetChanging(BaseAsset asset) {
-            return FSWorker.CreateAssetFile(asset, true);
+        public bool SaveAssetChanging(BaseAsset asset)
+        {
+            return FileSystemWorker.CreateAssetFile(asset, true);
         }
 
-        public T LoadAsset<T>(string Name) where T : BaseAsset {
-            T asset = Activator.CreateInstance<T>();
-            asset.Name = Name;
-            FSWorker.LoadAssetFile(asset);
+        public T LoadAsset<T>(string name) where T : BaseAsset, new()
+        {
+            var asset = new T
+            {
+                Name = name
+            };
+            FileSystemWorker.LoadAssetFile(asset);
             return asset;
         }
 
-        public MetaAsset LoadMetaAsset(string Name, AssetTypes Type) {
-            MetaAsset asset = new MetaAsset();
-            asset.Name = Name;
-            asset.InfoType = Type;
-            FSWorker.LoadAssetFile(asset);
+        public MetaAsset LoadMetaAsset(string name, AssetTypes type)
+        {
+            var asset = new MetaAsset {Name = name, InfoType = type};
+            FileSystemWorker.LoadAssetFile(asset);
             return asset;
         }
 
-        private Dictionary<AssetTypes, List<MetaAsset>> CachedAssetsTable;
-        public Dictionary<AssetTypes, List<MetaAsset>> LoadProjectAssets() {
+        private Dictionary<AssetTypes, List<MetaAsset>> _cachedAssetsTable;
+
+        public Dictionary<AssetTypes, List<MetaAsset>> LoadProjectAssets()
+        {
             return LoadProjectAssets(true);
         }
 
-        public Dictionary<AssetTypes, List<MetaAsset>> LoadProjectAssets(bool refresh) {
-            if (!refresh && CachedAssetsTable != null) {
-                return CachedAssetsTable;
+        public Dictionary<AssetTypes, List<MetaAsset>> LoadProjectAssets(bool refresh)
+        {
+            if (!refresh && _cachedAssetsTable != null)
+            {
+                return _cachedAssetsTable;
             }
-            CachedAssetsTable = new Dictionary<AssetTypes, List<MetaAsset>>();
+            _cachedAssetsTable = new Dictionary<AssetTypes, List<MetaAsset>>();
 
-            AssetTypes type;
-            for (int i = 0; i < Enum.GetNames(typeof(AssetTypes)).Length; i++) {
-                type = (AssetTypes)i;
-                if (type == AssetTypes.Invalid || type == AssetTypes.Meta) {
+            for (var i = 0; i < Enum.GetNames(typeof(AssetTypes)).Length; i++)
+            {
+                var type = (AssetTypes)i;
+                if (type == AssetTypes.Invalid || type == AssetTypes.Meta)
+                {
                     continue;
                 }
-                List<MetaAsset> result = new List<MetaAsset>();
-                string[] names = DetectAssetsNamesByType(type);
-                foreach (string name in names) {
-                    MetaAsset asset = LoadMetaAsset(name, type);
-                    if (!asset.IsInvalid) {
-                        result.Add(asset);
-                    }
-                }
-                CachedAssetsTable.Add(type, result);
+
+                var names = DetectAssetsNamesByType(type);
+                var result = names.Select(name => LoadMetaAsset(name, type)).Where(asset => !asset.IsInvalid).ToList();
+                _cachedAssetsTable.Add(type, result);
             }
-            return CachedAssetsTable;
+            return _cachedAssetsTable;
         }
 
-        private string[] DetectAssetsNamesByType(AssetTypes type) {
-            string[] result = FSWorker.DetectAssetsNamesByType(type);
-            for (int i = 0; i < result.Length; i++) {
-                string[] arr = result[i].Split('/');
+        private IEnumerable<string> DetectAssetsNamesByType(AssetTypes type)
+        {
+            var result = FileSystemWorker.DetectAssetsNamesByType(type);
+            for (var i = 0; i < result.Length; i++)
+            {
+                var arr = result[i].Split('/');
                 arr = arr[arr.Length - 1].Split('.');
                 result[i] = arr[0];
             }
@@ -259,7 +288,7 @@ namespace AssetsManager
                 MetallicValue = 0.05f,
                 RoughnessValue = 0.95f,
             };
-            return FSWorker.CreateAssetFile(asset, true);
+            return FileSystemWorker.CreateAssetFile(asset, true);
         }
 
         public bool CreateMaterialAsset(string name, string albedoAsset, string normalAsset, string roughnessAsset, string metallicAsset)
@@ -278,18 +307,18 @@ namespace AssetsManager
                 MetallicMapAsset = metallicAsset,
                 OcclusionMapAsset = occlusionAsset,
             };
-            return FSWorker.CreateAssetFile(asset, true);
+            return FileSystemWorker.CreateAssetFile(asset, true);
         }
 
         public bool CreateMeshAsset(string path, string name, float fileScale)
         {
-            string ext = path.Split('.').Last().ToLower();
-            MeshAsset asset = new MeshAsset()
+            var ext = path.Split('.').Last().ToLower();
+            var asset = new MeshAsset()
             {
                 Name = name,
             };
-            bool r = asset.ImportAsset(path, ext, fileScale);
-            return FSWorker.CreateAssetFile(asset, true);
+            asset.ImportAsset(path, ext, fileScale);
+            return FileSystemWorker.CreateAssetFile(asset, true);
         }
     }
 
@@ -301,15 +330,15 @@ namespace AssetsManager
     {
         public void CubeMapPrerender(string path, string outputName)
         {
-            Loaders.IBLMapsPreRender cubeMapsPrerender = new Loaders.IBLMapsPreRender();
+            var cubeMapsPrerender = new Loaders.IBLMapsPreRender();
             cubeMapsPrerender.Init(path);
             cubeMapsPrerender.Render(outputName);
             cubeMapsPrerender.Dispose();
         }
 
-        public void BRDFIntegrate(string outputName)
+        public void BrdfIntegrate(string outputName)
         {
-            Loaders.IBLMapsPreRender cubeMapsPrerender = new Loaders.IBLMapsPreRender();
+            var cubeMapsPrerender = new Loaders.IBLMapsPreRender();
             cubeMapsPrerender.RenderBRDF(outputName);
             cubeMapsPrerender.Dispose();
             Console.WriteLine($"BRDFIntegrated: {outputName}");

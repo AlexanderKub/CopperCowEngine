@@ -246,7 +246,7 @@ namespace EngineCore.D3D11
     }
     #endregion
 
-    abstract internal partial class BaseD3D11RenderPath
+    internal abstract partial class BaseD3D11RenderPath
     {
         protected D3D11RenderBackend RenderBackend { get; private set; }
 
@@ -276,27 +276,34 @@ namespace EngineCore.D3D11
 
         internal BaseD3D11RenderPath() { }
 
-        protected bool EnabledMSAA { get; private set; }
-        protected int MSSamplesCount { get; private set; }
-        protected bool EnabledHDR { get; private set; }
+        protected bool EnabledMsaa { get; private set; }
+
+        protected int MsSamplesCount { get; private set; }
+
+        protected bool EnabledHdr { get; private set; }
 
         public virtual void Init(D3D11RenderBackend renderBackend)
         {
             ToDisposeList = new List<IDisposable>();
             RenderBackend = renderBackend;
-            EnabledMSAA = renderBackend.SampleCount > 1;
-            MSSamplesCount = 1;
-            if (EnabledMSAA) {
+            EnabledMsaa = renderBackend.SampleCount > 1;
+            MsSamplesCount = 1;
+            if (EnabledMsaa) {
                 switch (renderBackend.EngineRef.CurrentConfig.EnableMSAA) {
-                    case Engine.EngineConfiguration.MSAAEnabled.x4:
-                        MSSamplesCount = 4;
+                    case Engine.EngineConfiguration.MSAAEnabled.X4:
+                        MsSamplesCount = 4;
                         break;
-                    case Engine.EngineConfiguration.MSAAEnabled.x8:
-                        MSSamplesCount = 8;
+                    case Engine.EngineConfiguration.MSAAEnabled.X8:
+                        MsSamplesCount = 8;
                         break;
+                    case Engine.EngineConfiguration.MSAAEnabled.Off:
+                        MsSamplesCount = 1;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
-            EnabledHDR = RenderBackend.EngineRef.CurrentConfig.EnableHDR;
+            EnabledHdr = RenderBackend.EngineRef.CurrentConfig.EnableHDR;
         }
 
         public virtual void Draw(StandardFrameData frameData) { }

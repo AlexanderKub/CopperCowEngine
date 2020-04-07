@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Editor.MVVM
 {
-    abstract public class BaseModelView : INotifyPropertyChanged
+    public abstract class BaseModelView : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         protected void NotifyPropertyChanged(string propertyName) {

@@ -31,7 +31,7 @@ namespace EngineCore.D3D11
         private int ShadowAtlasSize = 2048;//8192;
         protected virtual void InitTargets(int samples)
         {
-            if (EnabledHDR)
+            if (EnabledHdr)
             {
                 ScreenQuadTarget = GetSharedItems.CreateRenderTarget("ScreenQuadHDR",
                     GetDisplay.Width, GetDisplay.Height, Format.R16G16B16A16_Float, samples);
@@ -118,10 +118,10 @@ namespace EngineCore.D3D11
             base.Init(renderBackend);
             int samples = 1;
             switch (renderBackend.EngineRef.CurrentConfig.EnableMSAA) {
-                case Engine.EngineConfiguration.MSAAEnabled.x4:
+                case Engine.EngineConfiguration.MSAAEnabled.X4:
                     samples = 4;
                     break;
-                case Engine.EngineConfiguration.MSAAEnabled.x8:
+                case Engine.EngineConfiguration.MSAAEnabled.X8:
                     samples = 8;
                     break;
             }
@@ -131,10 +131,10 @@ namespace EngineCore.D3D11
 
         public override void Draw(StandardFrameData frameData)
         {
-            ShadowMapsPass(frameData);
+            //ShadowMapsPass(frameData);
             DepthPrePass(frameData);
             ColourPass(frameData);
-            ScreenQuadPass(frameData);
+            //ScreenQuadPass(frameData);
         }
 
         protected enum Pass
@@ -316,7 +316,7 @@ namespace EngineCore.D3D11
                         if (m_CachedMaterial.MetaMaterial.blendMode == ShaderGraph.MetaMaterial.BlendMode.Masked)
                         {
                             GetContext.OutputMerger.SetTargets(GetDisplay.DepthStencilViewRef, GetDisplay.RenderTargetViewRef);
-                            if (EnabledMSAA) {
+                            if (EnabledMsaa) {
                                 SetBlendState(BlendStates.DepthOnlyAlphaToCoverage);
                             } else {
                                 SetBlendState(BlendStates.DepthOnlyAlphaTest);
@@ -430,7 +430,7 @@ namespace EngineCore.D3D11
             SetVertexShader("CommonVS");
             GetContext.InputAssembler.InputLayout = GetSharedItems.StandardInputLayout;
 
-            if (EnabledHDR)
+            if (EnabledHdr)
             {
             } else {
             }
@@ -440,9 +440,9 @@ namespace EngineCore.D3D11
             string MaterialName = "";
             int MaterialQueue = -999999;
 
-            m_ShadowLightsDataBuffer[0].LightViewProjectionMatrix = frameData.LightsList[0].ViewProjection;
-            m_ShadowLightsDataBuffer[0].LeftTop = Vector2.Zero;
-            m_ShadowLightsDataBuffer[0].RightBottom = Vector2.One;
+            //m_ShadowLightsDataBuffer[0].LightViewProjectionMatrix = frameData.LightsList[0].ViewProjection;
+            //m_ShadowLightsDataBuffer[0].LeftTop = Vector2.Zero;
+            //m_ShadowLightsDataBuffer[0].RightBottom = Vector2.One;
             GetContext.UpdateSubresource(m_ShadowLightsDataBuffer, ShadowLightsDataBuffer);
             StandardFrameData.RendererData rendererData;
             foreach (var index in frameData.PerCameraRenderersList[0])
