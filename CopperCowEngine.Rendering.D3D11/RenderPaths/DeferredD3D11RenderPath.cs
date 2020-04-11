@@ -1,17 +1,21 @@
-﻿using SharpDX;
-using SharpDX.Direct3D;
+﻿using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
 using System.Linq;
+using System.Numerics;
 using CopperCowEngine.AssetsManagement.Loaders;
 using CopperCowEngine.Rendering.D3D11.Loaders;
 using CopperCowEngine.Rendering.D3D11.Shared;
 using CopperCowEngine.Rendering.D3D11.Utils;
 using CopperCowEngine.Rendering.Data;
 using CopperCowEngine.Rendering.ShaderGraph;
+using SharpDX;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using InputElement = SharpDX.Direct3D11.InputElement;
+using Quaternion = System.Numerics.Quaternion;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
 namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 {
@@ -58,7 +62,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             ResetShaderResourcesViews();
         }
 
-        private enum Pass
+        private enum Pass : byte
         {
             Geometry,
             Light,
@@ -96,11 +100,13 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                     materialName = rendererData.MaterialName;
                     SetMaterial(materialName, true);
                 }
+                
+                Matrix4x4.Invert(rendererData.TransformMatrix, out var worldInverse);
 
                 _perObjectConstantBufferValue = new CommonStructs.ConstBufferPerObjectDeferredStruct()
                 {
                     World = rendererData.TransformMatrix,
-                    WorldInverse = Matrix.Transpose(Matrix.Invert(rendererData.TransformMatrix)),
+                    WorldInverse = Matrix4x4.Transpose(worldInverse),
                 };
                 D3DUtils.WriteToDynamicBuffer(GetContext, _perObjectConstantBuffer, _perObjectConstantBufferValue);
 
@@ -213,13 +219,16 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             SetInputLayout(GetSharedItems.StandardInputLayout);
 
             SetVertexShader("FillGBufferVS");
+            
+            Matrix4x4.Invert(frameData.CamerasList[0].Projection, out var projectionInverse);
+            Matrix4x4.Invert(frameData.CamerasList[0].View, out var viewInverse);
 
             _perFrameConstantBufferValue = new CommonStructs.ConstBufferPerFrameDeferredStruct()
             {
                 View = frameData.CamerasList[0].View,
-                InverseView = Matrix.Invert(frameData.CamerasList[0].View),
+                InverseView = viewInverse,
                 Projection = frameData.CamerasList[0].Projection,
-                InverseProjection = Matrix.Invert(frameData.CamerasList[0].Projection),
+                InverseProjection = projectionInverse,
                 CameraPosition = frameData.CamerasList[0].Position,
                 PerspectiveValues = new Vector4(
                     1 / frameData.CamerasList[0].Projection.M11,
@@ -257,10 +266,11 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                     }
                 }
 
+                Matrix4x4.Invert(rendererData.TransformMatrix, out var worldInvert);
                 _perObjectConstantBufferValue = new CommonStructs.ConstBufferPerObjectDeferredStruct()
                 {
                     World = rendererData.TransformMatrix,
-                    WorldInverse = Matrix.Transpose(Matrix.Invert(rendererData.TransformMatrix)),
+                    WorldInverse = Matrix4x4.Transpose(worldInvert),
                 };
                 D3DUtils.WriteToDynamicBuffer(GetContext, _perObjectConstantBuffer, _perObjectConstantBufferValue);
 
@@ -329,7 +339,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             {
                 _perObjectConstantBufferValue = new CommonStructs.ConstBufferPerObjectDeferredStruct()
                 {
-                    World = Matrix.Scaling(lightData.Radius * 2 * 6) * Matrix.Translation(lightData.Position),
+                    World = Matrix4x4.CreateScale(lightData.Radius * 2 * 6) * Matrix4x4.CreateTranslation(lightData.Position),
                 };
                 D3DUtils.WriteToDynamicBuffer(GetContext, _perObjectConstantBuffer, _perObjectConstantBufferValue);
 
@@ -420,8 +430,8 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         {
             SetDomainShader("PointLightVolumeDS");
             // FinalMatrix = LightRangeScale * LightPositionTranslation * ViewTranslation * Projection 
-            _domainShaderConstantBufferValue.LightMatrix = Matrix.Scaling(lightData.Radius * 1.25f) *
-                                                           Matrix.Translation(lightData.Position) * cameraData.ViewProjection;
+            _domainShaderConstantBufferValue.LightMatrix = Matrix4x4.CreateScale(lightData.Radius * 1.25f) *
+                                                           Matrix4x4.CreateTranslation(lightData.Position) * cameraData.ViewProjection;
             D3DUtils.WriteToDynamicBuffer(GetContext, _domainShaderConstantBuffer, _domainShaderConstantBufferValue);
 
             //TODO: Provide right params set to pixel shader
@@ -434,8 +444,8 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             SetDomainShader("CapsuleLightVolumeDS");
             // FinalMatrix = LightRangeScale * LightPositionTranslation * ViewTranslation * Projection 
             _domainShaderConstantBufferValue.LightMatrix =
-                Matrix.LookAtLH(Vector3.Zero, lightData.Direction, Vector3.Up) *
-                Matrix.Translation(lightData.Position) * cameraData.ViewProjection;
+                Matrix4x4.CreateLookAt(Vector3.Zero, lightData.Direction, Vector3.UnitY) *
+                Matrix4x4.CreateTranslation(lightData.Position) * cameraData.ViewProjection;
             // HalfSegmentLen
             _domainShaderConstantBufferValue.LightParam1 = 2.5f;
             // CapsuleRadius
@@ -451,11 +461,11 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         {
             SetDomainShader("SpotLightVolumeDS");
             // FinalMatrix = Scale * Rotate * Translate * View * Projection
-            double x = (lightData.Radius * 2 * Math.Tan(MathUtil.Pi / 6)) / Math.Sqrt(0.5);
+            var x = (lightData.Radius * 2 * Math.Tan(MathUtil.Pi / 6)) / Math.Sqrt(0.5);
             _domainShaderConstantBufferValue.LightMatrix =
-                Matrix.Scaling(new Vector3((float)x, (float)x, lightData.Radius * 2 * 2)) *
-                Matrix.LookAtLH(Vector3.Zero, lightData.Direction, Vector3.Up) *
-                Matrix.Translation(lightData.Position) * cameraData.ViewProjection;
+                Matrix4x4.CreateScale(new Vector3((float)x, (float)x, lightData.Radius * 2 * 2)) *
+                Matrix4x4.CreateLookAt(Vector3.Zero, lightData.Direction, Vector3.UnitY) *
+                Matrix4x4.CreateTranslation(lightData.Position) * cameraData.ViewProjection;
             // SinAngle
             _domainShaderConstantBufferValue.LightParam1 = 0.5f;
             // CosAngle
@@ -597,8 +607,8 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             }
         }
 
-        private static readonly Matrix SkySphereMatrix = Matrix.Scaling(Vector3.One * 5000f) *
-                                                         Matrix.RotationQuaternion(Quaternion.RotationYawPitchRoll(0, MathUtil.Pi * 0.5f, 0));
+        private static readonly Matrix4x4 SkySphereMatrix = Matrix4x4.CreateScale(Vector3.One * 5000f) *
+                                                         Matrix4x4.CreateFromYawPitchRoll(0, MathUtil.Pi * 0.5f, 0);
         private void DrawSkySphere(Vector3 cameraPosition)
         {
             SetMesh("SkyDomeMesh");
@@ -623,10 +633,12 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                 OptionsMask1 = CommonStructs.FloatMaskValue(false, false, false, true),
             };
 
+            Matrix4x4.Invert(SkySphereMatrix * Matrix4x4.CreateTranslation(cameraPosition), out var worldInvert);
+
             _perObjectConstantBufferValue = new CommonStructs.ConstBufferPerObjectDeferredStruct()
             {
-                World = SkySphereMatrix * Matrix.Translation(cameraPosition),
-                WorldInverse = Matrix.Transpose(Matrix.Invert(SkySphereMatrix * Matrix.Translation(cameraPosition))),
+                World = SkySphereMatrix * Matrix4x4.CreateTranslation(cameraPosition),
+                WorldInverse = Matrix4x4.Transpose(worldInvert),
             };
             D3DUtils.WriteToDynamicBuffer(GetContext, _perObjectConstantBuffer, _perObjectConstantBufferValue);
             D3DUtils.WriteToDynamicBuffer(GetContext, _perMaterialConstantBuffer, _perMaterialConstantBufferValue);

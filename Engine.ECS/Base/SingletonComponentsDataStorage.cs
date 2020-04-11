@@ -23,6 +23,7 @@ namespace CopperCowEngine.ECS.Base
                 index = _singletonComponents.Count - 1;
             }
 
+            // ReSharper disable once UseNegatedPatternMatching
             var array = _singletonComponents[index] as SingletonComponentDataArray<T>;
 #if DEBUG
             if (array == null)
@@ -33,13 +34,25 @@ namespace CopperCowEngine.ECS.Base
             return ref array.Data[0];
         }
 
-        private class SingletonComponentData
+        private class SingletonComponentData : IEquatable<SingletonComponentData>
         {
             public readonly Type Type;
 
             protected SingletonComponentData(Type type)
             {
                 Type = type;
+            }
+
+            public override bool Equals(object other) => Equals(other as SingletonComponentData);
+
+            public bool Equals(SingletonComponentData other)
+            {
+                return Type == other?.Type;
+            }
+
+            public override int GetHashCode()
+            {
+                return Type.GetHashCode();
             }
         }
 

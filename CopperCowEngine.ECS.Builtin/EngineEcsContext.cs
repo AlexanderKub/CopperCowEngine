@@ -1,9 +1,10 @@
-﻿using CopperCowEngine.Core;
+﻿using System.Numerics;
+using System.Windows.Forms;
+using CopperCowEngine.Core;
 using CopperCowEngine.ECS.Builtin.Components;
 using CopperCowEngine.ECS.Builtin.Singletons;
 using CopperCowEngine.ECS.Builtin.Systems;
 using CopperCowEngine.Rendering.Loaders;
-using SharpDX;
 
 namespace CopperCowEngine.ECS.Builtin
 {
@@ -13,6 +14,8 @@ namespace CopperCowEngine.ECS.Builtin
         {
             GetSingletonComponent<EngineHolder>().Engine = engine;
 
+            CreateSystem<InputSystem>();
+            CreateSystem<FreeControlSystem>();
             CreateSystem<TrsToLocalToWorldSystem>();
             CreateSystem<TrsToLocalToParentSystem>();
             CreateSystem<LocalToParentSystem>();
@@ -22,6 +25,9 @@ namespace CopperCowEngine.ECS.Builtin
 
             ref var input = ref GetSingletonComponent<InputSingleton>();
             input.Init();
+            
+            engine.Input.OnKeyDown += input.KeyDown;
+            engine.Input.OnKeyUp += input.KeyUp;
         }
 
         public Entity CreateRenderedEntity(MeshInfo mesh, MaterialInfo material, 
@@ -104,6 +110,28 @@ namespace CopperCowEngine.ECS.Builtin
 
             return CreateEntity(new LocalToWorld(), translation, rotationData, cameraSetupData , 
                 new CameraProjection(), new CameraViewProjection(), new CameraScreenAspect());
+        }
+        
+        protected override void Dispose(bool disposing)
+        {
+            var engine = GetSingletonComponent<EngineHolder>().Engine;
+
+            engine.Input.OnKeyDown -= KeyDown;
+            engine.Input.OnKeyUp -= KeyUp;
+
+            base.Dispose(disposing);
+        }
+
+        private void KeyDown(Keys keys)
+        {
+            ref var input = ref GetSingletonComponent<InputSingleton>();
+            input.KeyDown(keys);
+        }
+
+        private void KeyUp(Keys keys)
+        {
+            ref var input = ref GetSingletonComponent<InputSingleton>();
+            input.KeyUp(keys);
         }
     }
 }

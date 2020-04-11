@@ -40,14 +40,9 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="SharpDX">
-      <HintPath>..\CommonLibs\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Mathematics">
-      <HintPath>..\CommonLibs\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="libfbxsdk.lib" />

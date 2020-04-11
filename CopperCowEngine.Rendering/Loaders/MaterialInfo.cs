@@ -1,6 +1,6 @@
 ﻿namespace CopperCowEngine.Rendering.Loaders
 {
-    public enum PrimitivesMesh
+    public enum PrimitivesMesh : byte
     {
         Cube,
         Sphere,

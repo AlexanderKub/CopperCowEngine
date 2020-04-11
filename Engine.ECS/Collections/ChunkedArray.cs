@@ -1,24 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace CopperCowEngine.ECS.Collections
 {
-    internal class ChunkedArray<T> where T : struct
+    internal class ChunkedArray<T> where T : struct, IEquatable<T>
     {
-        public readonly int ChunkCapacity;
+        public int ChunkCapacity { get; }
 
         public int Count { get; private set; }
 
-        private readonly List<Chunk> _chunks;
-
-        // private readonly Queue<int> _freeIndices;
+        private Chunk[] _chunks;
 
         public ChunkedArray(int chunkCapacity)
         {
             ChunkCapacity = chunkCapacity;
 
-            _chunks = new List<Chunk>() { new Chunk(chunkCapacity) };
-            // _freeIndices = new Queue<int>();
+            _chunks = new [] { new Chunk(chunkCapacity) };
             Count = 0;
         }
 
@@ -31,9 +27,11 @@ namespace CopperCowEngine.ECS.Collections
         {
             var (chunk, index) = CalculateChunkIndex(Count);
 
-            if (chunk >= _chunks.Count)
+            if (chunk >= _chunks.Length)
             {
-                _chunks.Add(new Chunk(ChunkCapacity));
+                var size = _chunks.Length;
+                Array.Resize(ref _chunks, size + 1);
+                _chunks[size] = new Chunk(ChunkCapacity);
             }
 
             _chunks[chunk].Items[index] = item;
@@ -45,7 +43,7 @@ namespace CopperCowEngine.ECS.Collections
         {
             var (chunk, index) = CalculateChunkIndex(itemIndex);
 #if DEBUG
-            if (itemIndex >= Count || chunk >= _chunks.Count)
+            if (itemIndex >= Count || chunk >= _chunks.Length)
             {
                 throw new NullReferenceException();
             }
@@ -57,7 +55,7 @@ namespace CopperCowEngine.ECS.Collections
         {
             for (var i = 0; i < Count; i++)
             {
-                if (!Equals(in item, ref GetAt(i)))
+                if (!item.Equals(GetAt(i)))
                 {
                     continue;
                 }
@@ -69,12 +67,31 @@ namespace CopperCowEngine.ECS.Collections
             return false;
         }
 
-        public virtual bool Equals(in T item, ref T other)
+        private struct Chunk : IEquatable<Chunk>
         {
-            return item.Equals(other);
+            public T[] Items { get; }
+
+            public Chunk(int capacity)
+            {
+                Items = new T[capacity];
+            }
+
+            public override bool Equals(object obj) => obj != null && Equals((Chunk) obj);
+
+            public bool Equals(Chunk other)
+            {
+                return Items.Length == other.Items.Length;
+            }
+
+            public override int GetHashCode()
+            {
+                return Items.Length.GetHashCode();
+            }
         }
 
         /*
+        // private readonly Queue<int> _freeIndices;
+        // _freeIndices = new Queue<int>();
         public void RemoveAt(int itemIndex)
         {
             var (chunk, index) = CalculateChunkIndex(itemIndex);
@@ -88,91 +105,5 @@ namespace CopperCowEngine.ECS.Collections
             Count--;
         }
         */
-
-        private class Chunk
-        {
-            public readonly T[] Items;
-
-            public Chunk(int capacity)
-            {
-                Items = new T[capacity];
-            }
-        }
-    }
-    
-    internal class ChunkedManagedArray<T> where T : class
-    {
-        public readonly int ChunkCapacity;
-
-        public int Count { get; private set; }
-
-        private readonly List<Chunk> _chunks;
-
-        public ChunkedManagedArray(int chunkCapacity)
-        {
-            ChunkCapacity = chunkCapacity;
-            _chunks = new List<Chunk>() { new Chunk(chunkCapacity) };
-            Count = 0;
-        }
-
-        private (int chunk, int itemIndex) CalculateChunkIndex(int index)
-        {
-            return (index / ChunkCapacity, index % ChunkCapacity);
-        }
-
-        public int Add(T item)
-        {
-            var (chunk, index) = CalculateChunkIndex(Count);
-            if (chunk >= _chunks.Count)
-            {
-                _chunks.Add(new Chunk(ChunkCapacity));
-            }
-            _chunks[chunk].Items[index] = item;
-
-            return Count++;
-        }
-
-        public T GetAt(int itemIndex)
-        {
-            var (chunk, index) = CalculateChunkIndex(itemIndex);
-#if DEBUG
-            if (itemIndex >= Count || chunk >= _chunks.Count)
-            {
-                throw new NullReferenceException();
-            }
-#endif
-            return _chunks[chunk].Items[index];
-        }
-
-        public bool TryFind(T item, out int index)
-        {
-            for (var i = 0; i < Count; i++)
-            {
-                if (!Equals(item, GetAt(i)))
-                {
-                    continue;
-                }
-                index = i;
-                return true;
-            }
-
-            index = -1;
-            return false;
-        }
-
-        public virtual bool Equals(T item, T other)
-        {
-            return item.Equals(other);
-        }
-
-        private class Chunk
-        {
-            public readonly T[] Items;
-
-            public Chunk(int capacity)
-            {
-                Items = new T[capacity];
-            }
-        }
     }
 }

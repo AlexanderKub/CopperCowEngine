@@ -1,4 +1,4 @@
-﻿using SharpDX;
+﻿using System.Numerics;
 
 namespace CopperCowEngine.Rendering.Data
 {
@@ -12,8 +12,8 @@ namespace CopperCowEngine.Rendering.Data
 
         public string MeshName;
 
-        public Matrix PreviousTransformMatrix;
+        public Matrix4x4 PreviousTransformMatrix;
 
-        public Matrix TransformMatrix;
+        public Matrix4x4 TransformMatrix;
     }
 }

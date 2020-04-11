@@ -1,8 +1,5 @@
 ﻿using CopperCowEngine.Core;
 using CopperCowEngine.ECS.Builtin.Components;
-using CopperCowEngine.ECS.Builtin.Singletons;
-using CopperCowEngine.Rendering.Data;
-using SharpDX;
 
 namespace CopperCowEngine.ECS.Builtin.Systems
 {

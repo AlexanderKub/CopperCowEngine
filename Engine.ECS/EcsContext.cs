@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CopperCowEngine.ECS.Base;
 using CopperCowEngine.ECS.DataChunks;
 
 namespace CopperCowEngine.ECS
 {
-    public partial class EcsContext
+    public partial class EcsContext : IDisposable
     {
         internal readonly EntitiesStorage EntitiesStorage;
 
@@ -24,8 +25,10 @@ namespace CopperCowEngine.ECS
         public void AddComponent<T>(Entity entity, T data) where T : struct, IComponentData
         {
             var (oldArchetypeIndex, indexInOldArchetype) = EntitiesStorage.GetEntityArchetypeWithIndex(entity);
+            // TODO: -1 out index
+            var componentTypeId = DataChunkStorage.TypesStorage.TryRegisterType(typeof(T), out var componentSize);
 
-            var newArchetype = DataChunkStorage.ArchetypesStorage.GetAt(oldArchetypeIndex).Extend<T>();
+            var newArchetype = DataChunkStorage.ArchetypesStorage.GetAt(oldArchetypeIndex).Extend(componentSize, componentTypeId);
             var newArchetypeIndex = DataChunkStorage.TryRegisterArchetype(newArchetype);
 
             var indexInArchetype = DataChunkStorage.UpdateEntity(entity, indexInOldArchetype, oldArchetypeIndex, newArchetypeIndex);
@@ -50,14 +53,18 @@ namespace CopperCowEngine.ECS
         {
             var archetypeIndex = EntitiesStorage.GetEntityArchetypeIndex(entity);
 
-            return DataChunkArchetype.Compatibility(in DataChunkStorage.ArchetypesStorage.GetAt(archetypeIndex), typeof(T));
+            var componentTypeId = DataChunkStorage.TypesStorage.TryRegisterType(typeof(T));
+
+            return DataChunkArchetype.Compatibility(in DataChunkStorage.ArchetypesStorage.GetAt(archetypeIndex), componentTypeId);
         }
 
         public void RemoveComponent<T>(Entity entity) where T : struct, IComponentData
         {
             var (oldArchetypeIndex, indexInOldArchetype) = EntitiesStorage.GetEntityArchetypeWithIndex(entity);
 
-            var newArchetype = DataChunkStorage.ArchetypesStorage.GetAt(oldArchetypeIndex).Reduce<T>();
+            var componentTypeId = DataChunkStorage.TypesStorage.TryRegisterType(typeof(T), out var componentSize);
+
+            var newArchetype = DataChunkStorage.ArchetypesStorage.GetAt(oldArchetypeIndex).Reduce(componentSize, componentTypeId);
             var newArchetypeIndex = DataChunkStorage.TryRegisterArchetype(newArchetype);
 
             var indexInArchetype = DataChunkStorage.UpdateEntity(entity, indexInOldArchetype, oldArchetypeIndex, newArchetypeIndex);
@@ -97,6 +104,16 @@ namespace CopperCowEngine.ECS
             {
                 system.InternalUpdate();
             }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            // TODO: Dispose allocations
         }
     }
 }

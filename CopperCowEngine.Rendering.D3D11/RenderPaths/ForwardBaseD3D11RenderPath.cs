@@ -1,5 +1,4 @@
 ﻿using System;
-using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -12,6 +11,10 @@ using CopperCowEngine.Rendering.Data;
 using CopperCowEngine.Rendering.Loaders;
 using CopperCowEngine.Rendering.ShaderGraph;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using System.Numerics;
+using SharpDX;
+using Vector2 = System.Numerics.Vector2;
+using Vector4 = System.Numerics.Vector4;
 
 namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 {
@@ -128,7 +131,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             //ScreenQuadPass(frameData);
         }
 
-        protected enum Pass
+        protected enum Pass : byte
         {
             ShadowMapsPass,
             DepthPrePass,
@@ -245,11 +248,14 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             SetNullPixelShader();
             GetContext.InputAssembler.InputLayout = GetSharedItems.StandardInputLayout;
 
+            Matrix4x4.Invert(frameData.CamerasList[0].Projection, out var projectionInverse);
+            Matrix4x4.Invert(frameData.CamerasList[0].View, out var viewInverse);
+
             _perFrameConstBuffer = new CommonStructs.ConstBufferPerFrameStruct()
             {
                 Projection = frameData.CamerasList[0].Projection,
-                ProjectionInv = Matrix.Invert(frameData.CamerasList[0].Projection),
-                ViewInv = Matrix.Invert(frameData.CamerasList[0].View),
+                ProjectionInv = projectionInverse,
+                ViewInv = viewInverse,
                 PreviousView = frameData.CamerasList[0].PreviousView,
                 CameraPos = frameData.CamerasList[0].Position,
                 CameraForward = new Vector4(frameData.CamerasList[0].Forward, 1),

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CopperCowEngine.ECS.Builtin.Components;
 
 namespace CopperCowEngine.ECS.Builtin.Systems

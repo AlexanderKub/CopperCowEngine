@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace CopperCowEngine.ECS.DataChunks
 {
@@ -6,14 +7,17 @@ namespace CopperCowEngine.ECS.DataChunks
     {
         private readonly DataChunkArchetype _archetype;
 
+        private readonly IReadOnlyList<ComponentType> _componentTypes;
+
         public DataChunk[] Chunks;
 
         public int Count => Chunks.Length;
 
-        public DataChunkChain(in DataChunkArchetype archetype)
+        public DataChunkChain(in DataChunkArchetype archetype, IReadOnlyList<ComponentType> componentTypes)
         {
             _archetype = archetype;
-            Chunks = new[] { new DataChunk(archetype) };
+            _componentTypes = componentTypes;
+            Chunks = new[] { new DataChunk(archetype, componentTypes) };
         }
 
         private int CalculateIndexInArchetype(int chunkIndex, int indexInChunk)
@@ -26,28 +30,30 @@ namespace CopperCowEngine.ECS.DataChunks
             return (index / _archetype.ChunkCapacity, index % _archetype.ChunkCapacity);
         }
 
-        public ref T GetDataByIndex<T>(int index) where T : struct, IComponentData
+        public ref T GetDataByIndex<T>(int index, int componentTypeId) where T : struct, IComponentData
         {
             var (chunkIndex, entityIndex) = SplitIndexInArchetype(index);
+            var dataArrayIndex = _archetype.ComponentTypes.IndexOf(componentTypeId);
 #if DEBUG
             if (Chunks.Length <= chunkIndex)
             {
                 throw new NullReferenceException();
             }
 #endif
-            return ref Chunks[chunkIndex].GetDataByIndex<T>(entityIndex);
+            return ref Chunks[chunkIndex].GetDataByIndex<T>(entityIndex, dataArrayIndex);
         }
 
-        public object GetBoxedDataByIndex(int index, Type type)
+        public object GetBoxedDataByIndex(int index, int componentTypeId)
         {
             var (chunkIndex, entityIndex) = SplitIndexInArchetype(index);
+            var dataArrayIndex = _archetype.ComponentTypes.IndexOf(componentTypeId);
 #if DEBUG
             if (Chunks.Length <= chunkIndex)
             {
                 throw new NullReferenceException();
             }
 #endif
-            return Chunks[chunkIndex].GetBoxedDataByIndex(entityIndex, type);
+            return Chunks[chunkIndex].GetBoxedDataByIndex(entityIndex, dataArrayIndex);
         }
 
         public int GetEntityIdByIndex(int index)
@@ -62,28 +68,30 @@ namespace CopperCowEngine.ECS.DataChunks
             return Chunks[chunkIndex].GetEntityIdByIndex(entityIndex);
         }
 
-        public void SetBoxedDataByIndex(int index, Type type, object data)
+        public void SetBoxedDataByIndex(int index, int componentTypeId, object data)
         {
             var (chunkIndex, entityIndex) = SplitIndexInArchetype(index);
+            var dataArrayIndex = _archetype.ComponentTypes.IndexOf(componentTypeId);
 #if DEBUG
             if (Chunks.Length <= chunkIndex)
             {
                 throw new NullReferenceException();
             }
 #endif
-            Chunks[chunkIndex].SetBoxedDataByIndex(entityIndex, type, data);
+            Chunks[chunkIndex].SetBoxedDataByIndex(entityIndex, dataArrayIndex, data);
         }
 
-        public void SetDataByIndex<T>(int index, T data) where T : struct, IComponentData
+        public void SetDataByIndex<T>(int index, int componentTypeId, T data) where T : struct, IComponentData
         {
             var (chunkIndex, entityIndex) = SplitIndexInArchetype(index);
+            var dataArrayIndex = _archetype.ComponentTypes.IndexOf(componentTypeId);
 #if DEBUG
             if (Chunks.Length <= chunkIndex)
             {
                 throw new NullReferenceException();
             }
 #endif
-            Chunks[chunkIndex].SetDataByIndex(entityIndex, data);
+            Chunks[chunkIndex].SetDataByIndex(entityIndex, dataArrayIndex, data);
         }
 
         public int Add(int id)
@@ -102,7 +110,7 @@ namespace CopperCowEngine.ECS.DataChunks
 
             var oldCount = Chunks.Length;
             Array.Resize(ref Chunks, oldCount + 1);
-            Chunks[oldCount] = new DataChunk(_archetype);
+            Chunks[oldCount] = new DataChunk(_archetype, _componentTypes);
 
             ref var newChunk = ref Chunks[oldCount];
 

@@ -3,8 +3,7 @@
 #include <fbxsdk\scene\geometry\fbxnode.h>
 #include <fbxsdk\scene\geometry\fbxmesh.h>
 
-using namespace SharpDX;
-using namespace SharpDX::Mathematics;
+using namespace System::Numerics;
 using namespace Runtime::InteropServices;
 
 
@@ -12,20 +11,20 @@ using namespace Runtime::InteropServices;
 Some helpers :
 -----------------------------------------------------------------------------*/
 
-Matrix FbxAMatrix2Matrix(FbxAMatrix& matrix)
+Matrix4x4 FbxAMatrix2Matrix(FbxAMatrix& matrix)
 {
 	double *m = matrix;
-	return Matrix((float)m[0], (float)m[1], (float)m[2], (float)m[3],
+	return Matrix4x4((float)m[0], (float)m[1], (float)m[2], (float)m[3],
 		(float)m[4], (float)m[5], (float)m[6], (float)m[7],
 		(float)m[8], (float)m[9], (float)m[10], (float)m[11],
 		(float)m[12], (float)m[13], (float)m[14], (float)m[15]);
 }
 
 
-Matrix FbxMatrix2Matrix(FbxMatrix& matrix)
+Matrix4x4 FbxMatrix2Matrix(FbxMatrix& matrix)
 {
 	double *m = matrix;
-	return Matrix((float)m[0], (float)m[1], (float)m[2], (float)m[3],
+	return Matrix4x4((float)m[0], (float)m[1], (float)m[2], (float)m[3],
 		(float)m[4], (float)m[5], (float)m[6], (float)m[7],
 		(float)m[8], (float)m[9], (float)m[10], (float)m[11],
 		(float)m[12], (float)m[13], (float)m[14], (float)m[15]);
@@ -48,9 +47,9 @@ Vector3	FbxVector4ToVector(FbxVector4 v)
 }
 
 
-Color	FbxColorToColor(FbxColor c)
+Vector4	FbxColorToColor(FbxColor c)
 {
-	return Color((float)c.mRed, (float)c.mGreen, (float)c.mBlue, (float)c.mAlpha);
+	return Vector4((float)c.mRed, (float)c.mGreen, (float)c.mBlue, (float)c.mAlpha);
 }
 
 
@@ -174,7 +173,7 @@ void FbxNative::FbxLoader::IterateChildren(FbxNode *fbxNode, FbxScene *fbxScene,
 	FbxAMatrix	transform = fbxNode->GetScene()->GetAnimationEvaluator()->GetNodeLocalTransform(fbxNode);
 	//FbxAMatrix	transform	=	fbxNode->EvaluateLocalTransform();
 	node->Transform = FbxAMatrix2Matrix(transform);
-	node->BindPose = Matrix::Identity;
+	node->BindPose = Matrix4x4::Identity;
 
 	GetCustomProperties(node, fbxNode);
 
@@ -362,9 +361,9 @@ void FbxNative::FbxLoader::HandleMesh(Scene ^scene, Node ^node, FbxNode *fbxNode
 		fbxGConv->Triangulate(fbxMesh, true);
 	}
 
-	Matrix^ meshTransform = Matrix::Identity;
+	Matrix4x4^ meshTransform = Matrix4x4::Identity;
 	int n = fbxMesh->GetControlPointsCount();
-	array<Int4>		^skinIndices = gcnew array<Int4>(n);
+	array<Vector4>		^skinIndices = gcnew array<Vector4>(n);
 	//array<Int4>		^skinIndices = nullptr;
 	array<Vector4>	^skinWeights = gcnew array<Vector4>(n);
 	//array<Int4>		^skinWeights = nullptr;
@@ -396,10 +395,10 @@ void FbxNative::FbxLoader::HandleMesh(Scene ^scene, Node ^node, FbxNode *fbxNode
 
 			MeshVertex v;
 
-			Vector4 transfPos = Vector3::Transform(FbxVector4ToVector(p), *meshTransform);
+			Vector4 transfPos = Vector4::Transform(FbxVector4ToVector(p), *meshTransform);
 
-			v.Color0 = Color::White;
-			v.Position = Vector3(transfPos[0], transfPos[1], transfPos[2]);
+			v.Color0 = Vector4::One;
+			v.Position = Vector3(transfPos.X, transfPos.Y, transfPos.Z);
 
 			GetNormalForVertex(&v, fbxMesh, vertexIdCount, id);
 			GetTextureForVertex(&v, fbxMesh, vertexIdCount, id);
@@ -548,7 +547,7 @@ Animation stuff :
 /*
 **	Fusion::Fbx::FbxLoader::HandleAnimation
 */
-void FbxNative::FbxLoader::HandleSkinning(Mesh ^nodeMesh, FbxNative::Scene ^scene, FbxNative::Node ^node, FbxNode *fbxNode, Matrix^ meshTransform, array<Int4> ^skinIndices, array<Vector4>	^skinWeights)
+void FbxNative::FbxLoader::HandleSkinning(Mesh ^nodeMesh, FbxNative::Scene ^scene, FbxNative::Node ^node, FbxNode *fbxNode, Matrix4x4^ meshTransform, array<Vector4> ^skinIndices, array<Vector4> ^skinWeights)
 {
 	FbxMesh		*fbxMesh = fbxNode->GetMesh();
 
@@ -612,12 +611,31 @@ void FbxNative::FbxLoader::HandleSkinning(Mesh ^nodeMesh, FbxNative::Scene ^scen
 							continue;
 						}
 
-						Int4 skinIndex = skinIndices[index];
-						skinIndex[vertexWeightsCounter[index]] = GetFbxNodeIndex(scene, fbxLinkNode);
-						skinIndices[index] = skinIndex;
-
+						Vector4 skinIndex = skinIndices[index];
 						Vector4 skinWeight = skinWeights[index];
-						skinWeight[vertexWeightsCounter[index]++] = (float)weight;
+
+						switch (vertexWeightsCounter[index])
+						{
+						case 0:
+							skinIndex.X = GetFbxNodeIndex(scene, fbxLinkNode);
+							skinWeight.X = (float)weight;
+							break;
+						case 1:
+							skinIndex.Y = GetFbxNodeIndex(scene, fbxLinkNode);
+							skinWeight.Y = (float)weight;
+							break;
+						case 2:
+							skinIndex.Z = GetFbxNodeIndex(scene, fbxLinkNode);
+							skinWeight.Z = (float)weight;
+							break;
+						default:
+							skinIndex.W = GetFbxNodeIndex(scene, fbxLinkNode);
+							skinWeight.W = (float)weight;
+							break;
+						}
+
+						vertexWeightsCounter[index]++;
+						skinIndices[index] = skinIndex;
 						skinWeights[index] = skinWeight;
 					}
 				}
@@ -678,7 +696,7 @@ void FbxNative::FbxLoader::GetColorForVertex(MeshVertex *vertex, FbxMesh *fbxMes
 
 	}
 	else {
-		vertex->Color0 = Color(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex->Color0 = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 		//throw gcnew Exception(gcnew String("Unsupported color mapping mode"));
 	}
 

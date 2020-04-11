@@ -202,7 +202,7 @@ namespace CopperCowEngine.AssetsManagement
         }
 
         //FOR TESTING
-        public bool CreateShaderGraphAsset(string name, SharpDX.D3DCompiler.ShaderBytecode bytecode)
+        /*public bool CreateShaderGraphAsset(string name, SharpDX.D3DCompiler.ShaderBytecode bytecode)
         {
             BaseAsset asset = new ShaderAsset()
             {
@@ -211,7 +211,7 @@ namespace CopperCowEngine.AssetsManagement
                 Bytecode = bytecode,
             };
             return FileSystemWorker.CreateAssetFile(asset, true);
-        }
+        }*/
 
         public bool SaveAssetChanging(BaseAsset asset)
         {

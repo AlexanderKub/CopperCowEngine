@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using SharpDX;
+using System.Numerics;
 
 namespace CopperCowEngine.Rendering.Loaders
 {

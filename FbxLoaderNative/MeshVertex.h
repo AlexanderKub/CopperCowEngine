@@ -1,6 +1,6 @@
 #pragma once
 
-using namespace SharpDX;
+using namespace System::Numerics;
 
 namespace FbxNative {
 
@@ -40,17 +40,17 @@ namespace FbxNative {
 		/// <summary>
 		/// Primary vertex color.
 		/// </summary>
-		Color		Color0;
+		Vector4		Color0; // Color
 
 		/// <summary>
 		/// Secondary vertex color.
 		/// </summary>
-		Color		Color1;
+		Vector4		Color1; // Color
 
 		/// <summary>
 		/// Four component skin vertices.
 		/// </summary>
-		Int4		SkinIndices;
+		Vector4		SkinIndices; //Int4
 
 		/// <summary>
 		/// Four component skin weights.

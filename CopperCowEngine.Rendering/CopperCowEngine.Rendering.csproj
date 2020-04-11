@@ -22,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>true</UseVSHostingProcess>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,17 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SharpDX, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Desktop, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpDX.Desktop.4.0.1\lib\net45\SharpDX.Desktop.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Mathematics">
-      <HintPath>..\CommonLibs\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -53,11 +46,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseRenderBackend.cs" />
+    <Compile Include="Geometry\BoundingBox.cs" />
+    <Compile Include="Geometry\BoundingFrustum.cs" />
     <Compile Include="Data\CameraData.cs" />
     <Compile Include="Data\MaterialPropertyBlock.cs" />
-    <Compile Include="EngineRenderForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Geometry\BoundingSphere.cs" />
+    <Compile Include="Geometry\ContainmentType.cs" />
+    <Compile Include="Geometry\MatrixUtils.cs" />
+    <Compile Include="Geometry\OrientedBoundingBox.cs" />
+    <Compile Include="Geometry\PlaneHelper.cs" />
+    <Compile Include="Geometry\PlaneIntersectionType.cs" />
+    <Compile Include="Geometry\Ray.cs" />
     <Compile Include="IRenderBackend.cs" />
     <Compile Include="Data\LightData.cs" />
     <Compile Include="Data\MaterialData.cs" />

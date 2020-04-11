@@ -1,7 +1,7 @@
-﻿using SharpDX;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using CopperCowEngine.Rendering.Loaders;
 
 namespace CopperCowEngine.AssetsManagement.Loaders

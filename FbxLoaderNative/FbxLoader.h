@@ -19,7 +19,7 @@ namespace FbxNative {
 
 		void IterateChildren(FbxNode *fbxNode, FbxScene *fbxScene, Scene ^scene, int parentIndex, int depth);
 		void HandleMesh(Scene ^scene, Node ^node, FbxNode *fbxNode);
-		void HandleSkinning(Mesh ^nodeMesh, Scene ^scene, Node ^node, FbxNode *fbxNode, Matrix^ meshTransform, array<Int4> ^skinIndices, array<Vector4>	^skinWeights);
+		void HandleSkinning(Mesh ^nodeMesh, Scene ^scene, Node ^node, FbxNode *fbxNode, Matrix4x4^ meshTransform, array<Vector4> ^skinIndices, array<Vector4>	^skinWeights);
 		void HandleCamera(Scene ^scene, Node ^node, FbxNode *fbxNode);
 		void HandleLight(Scene ^scene, Node ^node, FbxNode *fbxNode);
 		void HandleMaterial(MeshSubset ^sg, FbxSurfaceMaterial *material);

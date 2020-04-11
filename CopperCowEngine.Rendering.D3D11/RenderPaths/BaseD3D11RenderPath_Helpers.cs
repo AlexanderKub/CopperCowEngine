@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CopperCowEngine.Rendering.D3D11.Loaders;
+﻿using CopperCowEngine.Rendering.D3D11.Loaders;
 using CopperCowEngine.Rendering.D3D11.Shared;
 using SharpDX.Direct3D11;
 

@@ -1,6 +1,6 @@
 ﻿namespace CopperCowEngine.AssetsManagement.AssetsMeta
 {
-    public enum AssetTypes
+    public enum AssetTypes : byte
     {
         Invalid,
         Mesh,

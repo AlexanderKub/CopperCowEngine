@@ -2,7 +2,8 @@
 
 namespace CopperCowEngine.ECS
 {
-    public sealed class ComponentsSlice
+    // TODO: Need profiling
+    public readonly struct ComponentsSlice
     {
         private readonly EcsContext _context;
 
@@ -30,12 +31,18 @@ namespace CopperCowEngine.ECS
         {
             ref var archetype = ref _context.DataChunkStorage.ArchetypesStorage.GetAt(_archetypePosition);
 
-            return DataChunkArchetype.Compatibility(in archetype, typeof(T));
+            var componentTypeId = _context.DataChunkStorage.TypesStorage.TryRegisterType(typeof(T));
+
+            return DataChunkArchetype.Compatibility(in archetype, componentTypeId);
         }
 
         public ref T Sibling<T>() where T : struct, IComponentData
         {
-            return ref Chunk.GetDataByIndex<T>(_entityPosition);
+            var componentTypeId = _context.DataChunkStorage.TypesStorage.TryRegisterType(typeof(T));
+
+            var dataArrayIndex = _context.DataChunkStorage.ArchetypesStorage.GetAt(_archetypePosition).ComponentTypes.IndexOf(componentTypeId);
+
+            return ref Chunk.GetDataByIndex<T>(_entityPosition, dataArrayIndex);
         }
     }
 }

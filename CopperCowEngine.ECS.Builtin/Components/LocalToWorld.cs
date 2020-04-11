@@ -2,6 +2,6 @@
 {
     public struct LocalToWorld : IComponentData
     {
-        public SharpDX.Matrix Value;
+        public System.Numerics.Matrix4x4 Value;
     }
 }

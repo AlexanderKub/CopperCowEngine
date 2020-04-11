@@ -1,6 +1,6 @@
 ﻿namespace CopperCowEngine.Rendering
 {
-    public enum ShaderType
+    public enum ShaderType : byte
     {
         Vertex,
         Pixel,

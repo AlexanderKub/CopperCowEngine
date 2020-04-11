@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpDX.Direct3D11;
 
 namespace CopperCowEngine.Rendering.D3D11.Shared
 {
-    public enum DepthStencilStateType
+    public enum DepthStencilStateType : byte
     {
         Greater,
         Less,

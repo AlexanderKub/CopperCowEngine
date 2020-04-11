@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
+using System.Windows.Forms;
 using CopperCowEngine.Rendering.Loaders;
 
 namespace CopperCowEngine.Rendering
 {
     public abstract class BaseRenderBackend : IRenderBackend
     {
+        // TODO: Protected EventTriggers
         public abstract event Action OnDrawCall;
 
         public abstract event Action OnFrameRenderStart;
@@ -14,11 +17,15 @@ namespace CopperCowEngine.Rendering
 
         public abstract event Action<ScreenProperties> OnScreenPropertiesChanged;
 
+        public abstract event Action<Keys, bool> OnInputKey;
+
+        public abstract event Action<Vector2> OnMousePositionChange;
+
         public abstract ScreenProperties ScreenProps { get; protected set; }
 
         public abstract bool IsInitialized { get; protected set; }
 
-        public abstract bool IsExitRequest { get; protected set; }
+        public abstract bool IsQuitRequest { get; protected set; }
 
         public FrameData CurrentFrameData { get; protected set; }
 
@@ -33,7 +40,7 @@ namespace CopperCowEngine.Rendering
 
         public abstract void Deinitialize();
 
-        public abstract void ExitRequest();
+        public abstract void QuitRequest();
 
         public virtual void Initialize(RenderingConfiguration config, params object[] parameters)
         {

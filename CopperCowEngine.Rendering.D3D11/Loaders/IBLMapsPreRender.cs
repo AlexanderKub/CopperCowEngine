@@ -73,7 +73,7 @@ namespace CopperCowEngine.Rendering.D3D11.Loaders
         private const int Threads = 2;
         private int _outputResolution = OutputMapSize;
 
-        private enum RenderState
+        private enum RenderState : byte
         {
             CubeMap,
             IrradianceMap,

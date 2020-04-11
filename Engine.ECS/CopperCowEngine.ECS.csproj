@@ -43,6 +43,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <UseVSHostingProcess>true</UseVSHostingProcess>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -87,10 +88,11 @@
     <Compile Include="Collections\ChunkedArray.cs" />
     <Compile Include="ComponentsSlice.cs" />
     <Compile Include="Base\SingletonComponentsDataStorage.cs" />
+    <Compile Include="ComponentSystem_Generics.cs" />
     <Compile Include="ComponentSystem.cs" />
-    <Compile Include="DataChunks\ArchetypesStorage.cs" />
+    <Compile Include="DataChunks\DataChunkArchetypesStorage.cs" />
     <Compile Include="DataChunks\ComponentType.cs" />
-    <Compile Include="DataChunks\TypesStorage.cs" />
+    <Compile Include="DataChunks\ComponentTypesStorage.cs" />
     <Compile Include="DebugDataChunks.cs" />
     <Compile Include="EcsContext.cs" />
     <Compile Include="Base\EntitiesStorage.cs" />
@@ -105,9 +107,16 @@
     <Compile Include="DataChunks\DataChunkStorage.cs" />
     <Compile Include="DataChunks\IDataArray.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnmanagedDataChunks\DataChunk.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CopperCowEngine.Unsafe\CopperCowEngine.Unsafe.csproj">
+      <Project>{3f41455b-0ff9-4cc1-a5fc-9ba7f4f9cd7d}</Project>
+      <Name>CopperCowEngine.Unsafe</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

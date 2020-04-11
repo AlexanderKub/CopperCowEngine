@@ -1,6 +1,6 @@
 ﻿using System;
-using SharpDX;
 using System.IO;
+using System.Numerics;
 
 namespace CopperCowEngine.AssetsManagement.AssetsMeta
 {

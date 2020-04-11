@@ -1,6 +1,6 @@
-﻿using SharpDX;
-using System;
+﻿using System;
 using System.IO;
+using System.Numerics;
 using CopperCowEngine.AssetsManagement.Loaders;
 using CopperCowEngine.Rendering.Loaders;
 

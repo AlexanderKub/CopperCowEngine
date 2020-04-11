@@ -81,7 +81,6 @@ namespace EngineCore.ECS.Systems
                 transform.Position += Vector3.Normalize(transform.Direction) * DeltaTime * speed;
             }
             #endregion
-
             camera.PreviousView = camera.View;
             camera.PreviousViewProjection = camera.ViewProjection;
             camera.View = Matrix.LookAtLH(

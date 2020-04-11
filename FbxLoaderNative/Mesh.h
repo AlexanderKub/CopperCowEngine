@@ -5,8 +5,6 @@
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace SharpDX;
-
 
 namespace FbxNative {
 

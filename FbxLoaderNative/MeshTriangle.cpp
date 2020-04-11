@@ -7,7 +7,7 @@ Vector3 FbxNative::MeshTriangle::ComputeNormal(Mesh^ mesh)
 	Vector3 p0 = mesh->Vertices[Index0].Position;
 	Vector3 p1 = mesh->Vertices[Index1].Position;
 	Vector3 p2 = mesh->Vertices[Index2].Position;
-	Vector3 n = Vector3::Normalize(Vector3::Cross(p1 - p0, p2 - p0));
+	Vector3 n = Vector3::Normalize(Vector3::Cross(Vector3::Subtract(p1, p0), Vector3::Subtract(p2, p0)));
 	return	n;
 }
 

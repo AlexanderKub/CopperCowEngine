@@ -1,5 +1,4 @@
 ﻿using CopperCowEngine.Core;
-using CopperCowEngine.ECS.Builtin.Components;
 
 namespace CopperCowEngine.ECS.Builtin.Singletons
 {

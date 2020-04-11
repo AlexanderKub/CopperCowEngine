@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SharpDX;
+using System.Numerics;
 
 namespace CopperCowEngine.ECS.Builtin.Components
 {
@@ -21,20 +17,20 @@ namespace CopperCowEngine.ECS.Builtin.Components
         {
             NearClippingPlane = 0.001f,
             FarClippingPlane = 10000f,
-            Fov = MathUtil.PiOverTwo,
+            Fov = (float)(Math.PI * 0.5),
             AspectRatio = 1,
         };
     }
 
     public struct CameraProjection : IComponentData
     {
-        public Matrix Value;
+        public Matrix4x4 Value;
     }
 
     public struct CameraViewProjection : IComponentData
     {
-        public Matrix View;
+        public Matrix4x4 View;
 
-        public Matrix ViewProjection;
+        public Matrix4x4 ViewProjection;
     }
 }

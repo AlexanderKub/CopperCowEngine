@@ -34,14 +34,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SharpDX, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Mathematics, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpDX.Mathematics.4.0.1\lib\net45\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -78,6 +73,10 @@
     <ProjectReference Include="..\CopperCowEngine.Rendering\CopperCowEngine.Rendering.csproj">
       <Project>{b6bf5b3e-023f-4ef2-87ea-94873509acb9}</Project>
       <Name>CopperCowEngine.Rendering</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CopperCowEngine.Unsafe\CopperCowEngine.Unsafe.csproj">
+      <Project>{3f41455b-0ff9-4cc1-a5fc-9ba7f4f9cd7d}</Project>
+      <Name>CopperCowEngine.Unsafe</Name>
     </ProjectReference>
     <ProjectReference Include="..\Engine.ECS\CopperCowEngine.ECS.csproj">
       <Project>{060632ee-fa0a-4247-8504-3afaae5630f5}</Project>

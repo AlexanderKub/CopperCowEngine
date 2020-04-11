@@ -1,24 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Numerics;
 using System.Windows.Forms;
-using SharpDX;
+using CopperCowEngine.Core;
 
 namespace CopperCowEngine.ECS.Builtin.Singletons
 {
-    public enum Buttons
+    public enum Buttons : byte
     {
         Left,
         Right,
         Up,
         Down,
         LeftShift,
+        Esc,
     }
 
-    public enum Axis
+    public enum Axis : byte
     {
         Vertical,
         Horizontal,
@@ -28,8 +26,7 @@ namespace CopperCowEngine.ECS.Builtin.Singletons
 
     public struct InputSingleton : ISingletonComponentData
     {
-        public float MouseXOffset;
-        public float MouseYOffset;
+        public Vector2 MouseOffset;
 
         private static readonly ReadOnlyDictionary<Keys, Buttons> ButtonsBinding = new ReadOnlyDictionary<Keys, Buttons>(
             new Dictionary<Keys, Buttons>() {
@@ -38,6 +35,7 @@ namespace CopperCowEngine.ECS.Builtin.Singletons
                 { Keys.W, Buttons.Up },
                 { Keys.S, Buttons.Down },
                 { Keys.ShiftKey, Buttons.LeftShift },
+                { Keys.Escape, Buttons.Esc}
             }
         );
 
@@ -50,11 +48,10 @@ namespace CopperCowEngine.ECS.Builtin.Singletons
 
         public void UpdateMousePosition(Vector2 offset)
         {
-            MouseXOffset = offset.X;
-            MouseYOffset = offset.Y;
+            MouseOffset = offset;
         }
 
-        public void KeyDown(Keys key)
+        internal void KeyDown(Keys key)
         {
             if (!ButtonsBinding.ContainsKey(key))
             {
@@ -69,7 +66,7 @@ namespace CopperCowEngine.ECS.Builtin.Singletons
             }
         }
 
-        public void KeyUp(Keys key)
+        internal void KeyUp(Keys key)
         {
             if (!ButtonsBinding.ContainsKey(key))
             {

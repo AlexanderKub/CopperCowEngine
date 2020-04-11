@@ -1,5 +1,5 @@
-﻿using CopperCowEngine.Rendering.Loaders;
-using SharpDX;
+﻿using System.Numerics;
+using CopperCowEngine.Rendering.Loaders;
 
 namespace CopperCowEngine.AssetsManagement.Loaders
 {
@@ -35,7 +35,7 @@ namespace CopperCowEngine.AssetsManagement.Loaders
                     vertices[i] = meshVertex.Position;
                     normals[i] = meshVertex.Normal;
                     uvs[i] = meshVertex.TexCoord0;
-                    colors[i] = meshVertex.Color0.ToVector4();
+                    colors[i] = meshVertex.Color0;
                 }
 
                 var indices = new int[mesh.IndexCount];

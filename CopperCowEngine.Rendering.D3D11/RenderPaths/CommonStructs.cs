@@ -1,7 +1,8 @@
-﻿using SharpDX;
+﻿//using SharpDX;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,10 +13,10 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         // DEPRECATED
         public struct ConstBufferPerObjectStruct
         {
-            public Matrix PreviousWorldViewProjMatrix;
-            public Matrix WorldViewProjMatrix;
-            public Matrix WorldViewMatrix;
-            public Matrix WorldMatrix;
+            public Matrix4x4 PreviousWorldViewProjMatrix;
+            public Matrix4x4 WorldViewProjMatrix;
+            public Matrix4x4 WorldViewMatrix;
+            public Matrix4x4 WorldMatrix;
 
             public Vector2 TextureTiling;
             public Vector2 TextureShift;
@@ -39,10 +40,10 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 
         public struct ConstBufferPerFrameStruct
         {
-            public Matrix Projection;
-            public Matrix ProjectionInv;
-            public Matrix ViewInv;
-            public Matrix PreviousView;
+            public Matrix4x4 Projection;
+            public Matrix4x4 ProjectionInv;
+            public Matrix4x4 ViewInv;
+            public Matrix4x4 PreviousView;
             public Vector4 CameraForward;
             public Vector3 CameraPos;
             public float AlphaTest;
@@ -64,13 +65,13 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 
         public struct ConstBufferShadowDepthStruct
         {
-            public Matrix WorldMatrix;
-            public Matrix ViewProjectionMatrix;
+            public Matrix4x4 WorldMatrix;
+            public Matrix4x4 ViewProjectionMatrix;
         }
 
         public struct ConstBufferShadowMapLightStruct
         {
-            public Matrix LightViewProjectionMatrix;
+            public Matrix4x4 LightViewProjectionMatrix;
             public Vector2 LeftTop;
             public Vector2 RightBottom;
         }
@@ -78,10 +79,10 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         // NEW
         public struct ConstBufferPerFrameDeferredStruct
         {
-            public Matrix View;
-            public Matrix InverseView;
-            public Matrix Projection;
-            public Matrix InverseProjection;
+            public Matrix4x4 View;
+            public Matrix4x4 InverseView;
+            public Matrix4x4 Projection;
+            public Matrix4x4 InverseProjection;
             public Vector3 CameraPosition;
             public float Fps;
             public Vector4 PerspectiveValues;
@@ -89,8 +90,8 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 
         public struct ConstBufferPerObjectDeferredStruct
         {
-            public Matrix World;
-            public Matrix WorldInverse;
+            public Matrix4x4 World;
+            public Matrix4x4 WorldInverse;
         }
 
         public struct ConstBufferPerMaterialDeferredStruct
@@ -134,7 +135,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 
         public struct ConstBufferLightVolumeDomainShader
         {
-            public Matrix LightMatrix;
+            public Matrix4x4 LightMatrix;
             public float LightParam1;
             public float LightParam2;
             private Vector2 _filler;

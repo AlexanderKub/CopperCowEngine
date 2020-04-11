@@ -1,4 +1,4 @@
-﻿using SharpDX;
+﻿using System.Numerics;
 
 namespace CopperCowEngine.Rendering.Data
 {

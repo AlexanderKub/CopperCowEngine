@@ -2,7 +2,6 @@
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace SharpDX;
 
 #include "Node.h"
 #include "Mesh.h"

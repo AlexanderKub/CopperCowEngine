@@ -22,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>true</UseVSHostingProcess>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,14 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SharpDX">
-      <HintPath>..\CommonLibs\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Mathematics">
-      <HintPath>..\CommonLibs\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -51,6 +47,7 @@
   <ItemGroup>
     <Compile Include="Components\Camera.cs" />
     <Compile Include="Components\CameraScreenAspect.cs" />
+    <Compile Include="Components\FreeControl.cs" />
     <Compile Include="Components\LocalToParent.cs" />
     <Compile Include="Components\LocalToWorld.cs" />
     <Compile Include="Components\Material.cs" />
@@ -66,7 +63,9 @@
     <Compile Include="Singletons\FrameDataHolder.cs" />
     <Compile Include="Singletons\InputSingleton.cs" />
     <Compile Include="Systems\CameraScreenAspectSystem.cs" />
+    <Compile Include="Systems\FreeControlSystem.cs" />
     <Compile Include="Systems\LocalToParentSystem.cs" />
+    <Compile Include="Systems\InputSystem.cs" />
     <Compile Include="Systems\RenderingSystem.cs" />
     <Compile Include="Systems\CameraSystem.cs" />
     <Compile Include="Systems\TrsToLocalToParentSystem.cs" />

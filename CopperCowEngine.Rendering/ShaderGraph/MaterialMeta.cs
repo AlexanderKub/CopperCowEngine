@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CopperCowEngine.Rendering.ShaderGraph
+﻿namespace CopperCowEngine.Rendering.ShaderGraph
 {
     public sealed class MaterialMeta
     {
@@ -24,12 +18,12 @@ namespace CopperCowEngine.Rendering.ShaderGraph
 
         public static MaterialMeta Standard = new MaterialMeta();
 
-        public enum MaterialDomainType
+        public enum MaterialDomainType : byte
         {
             Surface,
         }
 
-        public enum BlendModeType
+        public enum BlendModeType : uint
         {
             Opaque = 100000,
             Masked = 200000,
@@ -38,13 +32,13 @@ namespace CopperCowEngine.Rendering.ShaderGraph
             Modulate = 500000,
         }
 
-        public enum ShadingModeType
+        public enum ShadingModeType : uint
         {
             Unlit = 10000,
             Default = 20000,
         }
 
-        public enum CullModeType
+        public enum CullModeType : uint
         {
             Front = 1000,
             Back = 2000,

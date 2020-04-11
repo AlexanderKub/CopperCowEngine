@@ -1,8 +1,9 @@
-﻿using SharpDX;
+﻿using System.Numerics;
+using CopperCowEngine.Rendering.Geometry;
 
 namespace CopperCowEngine.Rendering.Data
 {
-    public enum LightType
+    public enum LightType : byte
     {
         Directional, Point, Spot, Capsule,
     }
@@ -27,6 +28,6 @@ namespace CopperCowEngine.Rendering.Data
 
         public LightType Type;
 
-        public Matrix ViewProjection;
+        public Matrix4x4 ViewProjection;
     }
 }

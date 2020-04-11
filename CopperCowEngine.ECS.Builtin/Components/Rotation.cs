@@ -2,6 +2,6 @@
 {
     public struct Rotation : IComponentData
     {
-        public SharpDX.Quaternion Value;
+        public System.Numerics.Quaternion Value;
     }
 }

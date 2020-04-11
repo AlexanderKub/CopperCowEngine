@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using CopperCowEngine.ECS.Base;
-using CopperCowEngine.ECS.DataChunks;
 
 namespace CopperCowEngine.ECS
 {
@@ -194,7 +187,7 @@ namespace CopperCowEngine.ECS
 
         private ArchetypeIndexTuple AddToArchetypeAndGetIndex(Entity entity, params Type[] types)
         {
-            var newArchetype = new DataChunkArchetype(types);
+            var newArchetype = DataChunkStorage.GetArchetype(types);
 
             var archetypeIndex = DataChunkStorage.TryRegisterArchetype(in newArchetype);
 

@@ -2,6 +2,6 @@
 {
     public struct Translation : IComponentData
     {
-        public SharpDX.Vector3 Value;
+        public System.Numerics.Vector3 Value;
     }
 }

@@ -1,51 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CopperCowEngine.ECS
 {
-    public abstract class ComponentSystem<R> : ComponentSystem where R : Required
-    {
-        internal sealed override void Init(EcsContext context)
-        {
-            base.InternalInit(context, typeof(R).GetGenericArguments(), null, null);
-        }
-
-        internal sealed override void InternalUpdate()
-        {
-            Update();
-        }
-        protected abstract void Update();
-    }
-
-    public abstract class ComponentSystem<R, O> : ComponentSystem where R : Required where O : Optional
-    {
-        internal sealed override void Init(EcsContext context)
-        {
-            base.InternalInit(context, typeof(R).GetGenericArguments(), typeof(O).GetGenericArguments(), null);
-        }
-
-        internal sealed override void InternalUpdate()
-        {
-            Update();
-        }
-        protected abstract void Update();
-    }
-
-    public abstract class ComponentSystem<R, O, E> : ComponentSystem where R : Required where O : Optional where E : Excepted
-    {
-        internal sealed override void Init(EcsContext context)
-        {
-            base.InternalInit(context, typeof(R).GetGenericArguments(), typeof(O).GetGenericArguments(), typeof(E).GetGenericArguments());
-        }
-
-        internal sealed override void InternalUpdate()
-        {
-            Update();
-        }
-        protected abstract void Update();
-    }
-
     public abstract class ComponentSystem
     {
         protected EntitiesIterator Iterator { get; private set; }
@@ -55,6 +14,12 @@ namespace CopperCowEngine.ECS
         protected internal virtual void InternalInit(EcsContext context, Type[] required, Type[] optional, Type[] excepted)
         {
             Context = context;
+
+            if (required == null && optional == null && excepted == null)
+            {
+                Iterator = null;
+                return;
+            }
 
             Iterator = new EntitiesIterator(Context, required, optional, excepted);
         }
@@ -67,16 +32,18 @@ namespace CopperCowEngine.ECS
         {
             private readonly EcsContext _context;
 
-            private readonly Type[] _required;
-            private readonly Type[] _optional;
-            private readonly Type[] _excepted;
+            private readonly int[] _required;
+            private readonly int[] _optional;
+            private readonly int[] _excepted;
 
-            public EntitiesIterator(EcsContext context, Type[] required, Type[] optional, Type[] excepted)
+            public EntitiesIterator(EcsContext context, IEnumerable<Type> required, IEnumerable<Type> optional, IEnumerable<Type> excepted)
             {
                 _context = context;
-                _required = required;
-                _optional = optional;
-                _excepted = excepted;
+
+                // TODO: Refactoring
+                _required = required?.Select(t => context.DataChunkStorage.TypesStorage.TryRegisterType(t)).ToArray();
+                _optional = optional?.Select(t => context.DataChunkStorage.TypesStorage.TryRegisterType(t)).ToArray();
+                _excepted = excepted?.Select(t => context.DataChunkStorage.TypesStorage.TryRegisterType(t)).ToArray();
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -94,9 +61,9 @@ namespace CopperCowEngine.ECS
         {
             private readonly EcsContext _context;
 
-            private readonly Type[] _required;
-            private readonly Type[] _optional;
-            private readonly Type[] _excepted;
+            private readonly int[] _required;
+            private readonly int[] _optional;
+            private readonly int[] _excepted;
 
             private int _archetypePosition;
 
@@ -123,7 +90,7 @@ namespace CopperCowEngine.ECS
 
             object IEnumerator.Current => Current;
 
-            public EntityIEnumerator(EcsContext context, Type[] required, Type[] optional, Type[] excepted)
+            public EntityIEnumerator(EcsContext context, int[] required, int[] optional, int[] excepted)
             {
                 _context = context;
                 _required = required;

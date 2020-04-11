@@ -4,14 +4,14 @@ using System.Runtime.InteropServices;
 
 namespace CopperCowEngine.ECS.DataChunks
 {
-    internal struct DataChunkArchetype : IEquatable<DataChunkArchetype>
+    internal readonly struct DataChunkArchetype : IEquatable<DataChunkArchetype>
     {
-
         public ImmutableArray<int> ComponentTypes { get; }
 
         public int ChunkCapacity { get; }
 
-        public DataChunkArchetype(int dataSize, params int[] componentTypesIds) : this(dataSize, ImmutableArray.Create(componentTypesIds)) { }
+        public DataChunkArchetype(int dataSize, params int[] componentTypesIds) 
+            : this(dataSize, ImmutableArray.Create(componentTypesIds)) { }
 
         public DataChunkArchetype(int dataSize, ImmutableArray<int> componentTypes)
         {
@@ -21,7 +21,8 @@ namespace CopperCowEngine.ECS.DataChunks
 
             var size = sizeof(int) + dataSize;
             
-            // Backed fields + Array service memory (https://stackoverflow.com/questions/1589669/overhead-of-a-net-array) + Types array
+            // Backed fields + Array service memory
+            // (https://stackoverflow.com/questions/1589669/overhead-of-a-net-array) + Types array
             // Possible wrong calculation
             var serviceMemory = sizeof(int) * (2 + n) + 24 * (n + 3);
             ChunkCapacity = (DataChunk.ChunkSize - serviceMemory) / size;
@@ -38,15 +39,15 @@ namespace CopperCowEngine.ECS.DataChunks
                 new DataChunkArchetype(componentTypeSize, ComponentTypes.Insert(0, componentTypeId).Sort());
         }
 
-        public DataChunkArchetype Reduce<T>() where T : struct, IComponentData
+        public DataChunkArchetype Reduce(int componentTypeSize, int componentTypeId)
         {
             if (ComponentTypes.Length == 1)
             {
                 return Null;
             }
 
-            var type = typeof(T);
-            return !Types.Contains(type) ? this : new DataChunkArchetype(Types.Remove(type));
+            return !ComponentTypes.Contains(componentTypeId) ? this :
+                new DataChunkArchetype(componentTypeSize, ComponentTypes.Remove(componentTypeId).Sort());
         }
 
         public bool Compatibility(in DataChunkArchetype other)
@@ -96,6 +97,8 @@ namespace CopperCowEngine.ECS.DataChunks
             return true;
         }
 
+        public override bool Equals(object obj) => obj != null && Equals((DataChunkArchetype) obj);
+
         public bool Equals(DataChunkArchetype other)
         {
             if (ComponentTypes == null || other.ComponentTypes == null)
@@ -120,6 +123,11 @@ namespace CopperCowEngine.ECS.DataChunks
             return true;
         }
 
+        public override int GetHashCode()
+        {
+            return ComponentTypes.GetHashCode();
+        }
+
         public static DataChunkArchetype Null { get; } = new DataChunkArchetype();
 
         public static bool Compatibility(in DataChunkArchetype archetype, params int[] other)
@@ -140,141 +148,5 @@ namespace CopperCowEngine.ECS.DataChunks
 
             return true;
         }
-
-        //public ImmutableArray<Type> Types { get; }
-
-        /*public DataChunkArchetype(params Type[] types) : this(ImmutableArray.Create(types)) { }
-
-        public DataChunkArchetype(ImmutableArray<Type> types)
-        {
-            Types = types;
-
-            var n = types.Length;
-            var size = sizeof(int);
-
-            for (var i = 0; i < n; i++)
-            {
-                size += Marshal.SizeOf(types[i]);
-            }
-            
-            // Backed fields + Array service memory (https://stackoverflow.com/questions/1589669/overhead-of-a-net-array) + Types array
-            // Possible wrong calculation
-            var serviceMemory = sizeof(int) * 2 + 24 * (n + 3) + 24 * n;
-            ChunkCapacity = (DataChunk.ChunkSize - serviceMemory) / size;
-        }*/
-
-        /*public DataChunkArchetype Extend<T>() where T : struct, IComponentData
-        {
-            if (Types == null)
-            {
-                return new DataChunkArchetype(typeof(T));
-            }
-
-            var type = typeof(T);
-            return Types.Contains(type) ? this : new DataChunkArchetype(Types.Insert(0, type));
-        }
-
-        public DataChunkArchetype Reduce<T>() where T : struct, IComponentData
-        {
-            if (Types.Length == 1)
-            {
-                return Null;
-            }
-
-            var type = typeof(T);
-            return !Types.Contains(type) ? this : new DataChunkArchetype(Types.Remove(type));
-        }
-
-        public bool Compatibility(in DataChunkArchetype other)
-        {
-            if (Types == null || other.Types == null)
-            {
-                return Types == other.Types;
-            }
-
-            // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var type in other.Types)
-            {
-                if (!Types.Contains(type))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public bool Filter(Type[] required, Type[] optional, Type[] excepted)
-        {
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var type in required)
-            {
-                if (!Types.Contains(type))
-                {
-                    return false;
-                }
-            }
-
-            if (excepted == null)
-            {
-                return true;
-            }
-
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var type in excepted)
-            {
-                if (Types.Contains(type))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public bool Equals(DataChunkArchetype other)
-        {
-            if (Types == null || other.Types == null)
-            {
-                return Types == other.Types;
-            }
-
-            if (Types.Length != other.Types.Length)
-            {
-                return false;
-            }
-
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            for (var i = 0; i < Types.Length; i++)
-            {
-                if (Types[i] != other.Types[i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public static DataChunkArchetype Null { get; } = new DataChunkArchetype();
-
-        public static bool Compatibility(in DataChunkArchetype archetype, params Type[] other)
-        {
-            if (archetype.Types == null)
-            {
-                return false;
-            }
-
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var type in other)
-            {
-                if (!archetype.Types.Contains(type))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }*/
     }
 }

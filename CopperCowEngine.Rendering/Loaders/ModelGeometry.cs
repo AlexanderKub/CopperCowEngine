@@ -1,4 +1,4 @@
-﻿using SharpDX;
+﻿using System.Numerics;
 
 namespace CopperCowEngine.Rendering.Loaders
 {
@@ -113,14 +113,14 @@ namespace CopperCowEngine.Rendering.Loaders
 
         private static void CalculateTangentBinormal(Vector3 normal, out Vector3 tangent, out Vector3 binormal)
         {
-            var crossOne = Vector3.Cross(normal, Vector3.ForwardLH);
-            var crossTwo = Vector3.Cross(normal, Vector3.Up);
+            var crossOne = Vector3.Cross(normal, Vector3.UnitZ);
+            var crossTwo = Vector3.Cross(normal, Vector3.UnitY);
 
             tangent = crossOne.Length() > crossTwo.Length() ? crossOne : crossTwo;
-            tangent.Normalize();
+            tangent = Vector3.Normalize(tangent);
 
             binormal = Vector3.Cross(normal, tangent);
-            binormal.Normalize();
+            binormal = Vector3.Normalize(binormal);
         }
 
         private static Vector3 ToVector3(Vector4 inVector)

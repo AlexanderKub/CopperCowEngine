@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Threading;
 using System.Windows.Forms;
 using SharpDX.Direct3D11;
@@ -37,15 +38,11 @@ namespace CopperCowEngine.Rendering.D3D11
 
         public override bool IsInitialized { get; protected set; }
 
-        public override bool IsExitRequest { get; protected set; }
+        public override bool IsQuitRequest { get; protected set; }
 
         public override RenderingConfiguration Configuration { get; protected set; }
 
         public override ScreenProperties ScreenProps { get; protected set; }
-        
-        internal Action<char> EngineOnCharPressed;
-
-        private KeyPressEventHandler _keyPressEventHandler;
 
         internal int SampleCount;
 
@@ -108,12 +105,7 @@ namespace CopperCowEngine.Rendering.D3D11
                 Surface = surface,
             };
 
-            _keyPressEventHandler = (o, args) => 
-            {
-                EngineOnCharPressed?.Invoke(args.KeyChar);
-            };
-
-            surface.KeyPress += _keyPressEventHandler;
+            RegisterInputHandling();
 
             InitializeViews();
         }
@@ -168,9 +160,9 @@ namespace CopperCowEngine.Rendering.D3D11
             ScreenProps.AspectRatio = DisplayRef.Width / (float)DisplayRef.Height;
         }
 
-        public override void ExitRequest()
+        public override void QuitRequest()
         {
-            IsExitRequest = true;
+            IsQuitRequest = true;
 
             if (IsSingleFormMode)
             {
@@ -207,7 +199,7 @@ namespace CopperCowEngine.Rendering.D3D11
             {
                 while (loop.NextFrame())
                 {
-                    if (IsExitRequest)
+                    if (IsQuitRequest)
                     {
                         if (IsSingleFormMode)
                         {
@@ -310,10 +302,8 @@ namespace CopperCowEngine.Rendering.D3D11
             DisplayRef.OnRender -= OnRenderFrame;
             DisplayRef.OnInitRenderTarget -= OnInitRenderTarget;
 
-            if (IsSingleFormMode)
-            {
-                Surface.KeyPress -= _keyPressEventHandler;
-            }
+            UnRegisterInputHandling();
+
             DisplayRef.OnResize -= OnDisplayResize;
 
             //_consoleRenderer?.Dispose();

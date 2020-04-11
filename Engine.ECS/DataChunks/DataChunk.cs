@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using CopperCowEngine.Unsafe.Collections;
 
 namespace CopperCowEngine.ECS.DataChunks
 {
-    internal struct DataChunk : IEquatable<DataChunk>
+    internal struct DataChunk
     {
         public const int ChunkSize = 16 * 1024;
-
-        private readonly DataChunkArchetype _archetype;
 
         private readonly IDataArray[] _dataArrays;
 
@@ -18,10 +18,9 @@ namespace CopperCowEngine.ECS.DataChunks
 
         public bool Full => Count == Capacity;
 
-        public DataChunk(in DataChunkArchetype archetype)
+        public DataChunk(in DataChunkArchetype archetype, IReadOnlyList<ComponentType> componentTypes)
         {
-            _archetype = archetype;
-            var n = archetype.Types.Length;
+            var n = archetype.ComponentTypes.Length;
 
             Count = 0;
             Capacity = archetype.ChunkCapacity;
@@ -35,7 +34,7 @@ namespace CopperCowEngine.ECS.DataChunks
             _dataArrays = new IDataArray[n];
             for (var i = 0; i < n; i++)
             {
-                var genericType = typeof(DataArray<>).MakeGenericType(archetype.Types[i]);
+                var genericType = typeof(DataArray<>).MakeGenericType(componentTypes[i].BackedType);
                 _dataArrays[i] = (IDataArray)Activator.CreateInstance(genericType, Capacity);
             }
         }
@@ -45,9 +44,8 @@ namespace CopperCowEngine.ECS.DataChunks
             return _ids[index];
         }
 
-        public ref T GetDataByIndex<T>(int index) where T : struct, IComponentData
+        public ref T GetDataByIndex<T>(int index, int dataArrayIndex) where T : struct, IComponentData
         {
-            var dataArrayIndex = _archetype.Types.IndexOf(typeof(T));
 #if DEBUG
             if (dataArrayIndex < 0)
             {
@@ -57,9 +55,8 @@ namespace CopperCowEngine.ECS.DataChunks
             return ref ((DataArray<T>)_dataArrays[dataArrayIndex])[index];
         }
 
-        public object GetBoxedDataByIndex(int index, Type type)
+        public object GetBoxedDataByIndex(int index, int dataArrayIndex)
         {
-            var dataArrayIndex = _archetype.Types.IndexOf(type);
 #if DEBUG
             if (dataArrayIndex < 0)
             {
@@ -69,9 +66,8 @@ namespace CopperCowEngine.ECS.DataChunks
             return _dataArrays[dataArrayIndex].GetBoxedData(index);
         }
 
-        public void SetBoxedDataByIndex(int index, Type type, object data)
+        public void SetBoxedDataByIndex(int index, int dataArrayIndex, object data)
         {
-            var dataArrayIndex = _archetype.Types.IndexOf(type);
 #if DEBUG
             if (dataArrayIndex < 0)
             {
@@ -81,9 +77,8 @@ namespace CopperCowEngine.ECS.DataChunks
             _dataArrays[dataArrayIndex].SetBoxedData(index, data);
         }
 
-        public void SetDataByIndex<T>(int index, T data) where T : struct, IComponentData
+        public void SetDataByIndex<T>(int index, int dataArrayIndex, T data) where T : struct, IComponentData
         {
-            var dataArrayIndex = _archetype.Types.IndexOf(typeof(T));
 #if DEBUG
             if (dataArrayIndex < 0)
             {
@@ -111,18 +106,13 @@ namespace CopperCowEngine.ECS.DataChunks
             _ids[index] = _ids[Count];
             _ids[Count] = -1;
 
-            for (var i = 0; i < _archetype.Types.Length; i++)
+            foreach (var dataArray in _dataArrays)
             {
-                _dataArrays[i].RemoveElement(index, Count);
+                dataArray.RemoveElement(index, Count);
             }
 
             // Return moved entity ID for setting new index in archetype
             return _ids[index];
-        }
-
-        public bool Equals(DataChunk other)
-        {
-            return _archetype.Equals(other._archetype);
         }
     }
 }

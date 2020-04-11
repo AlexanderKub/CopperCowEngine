@@ -1,7 +1,7 @@
 #pragma once
 
 using namespace System;
-using namespace SharpDX;
+using namespace System::Numerics;
 
 namespace FbxNative {
 
@@ -29,13 +29,13 @@ namespace FbxNative {
 		/// <summary>
 		/// Node transform
 		/// </summary>
-		property Matrix Transform;
+		property Matrix4x4 Transform;
 
 		/// <summary>
 		/// Global matrix of "bind-posed" node.
 		/// For nodes that do not affect skinning this value is always Matrix.Identity.
 		/// </summary>
-		property Matrix BindPose;
+		property Matrix4x4 BindPose;
 
 		/// <summary>
 		/// Tag object. This value will not be serialized.

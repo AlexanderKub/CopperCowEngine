@@ -5,21 +5,25 @@ namespace CopperCowEngine.Core
 {
     public class Engine
     {
+        public event Action OnBootstrapped;
+        public event Action OnBeforeFrame;
+        public event Action OnAfterFrame;
+        public event Action OnQuit;
+
+        public FrameData RenderingFrameData => RenderBackend.CurrentFrameData;
+
         internal IRenderBackend RenderBackend;
 
         internal readonly EngineConfiguration Configuration;
 
         private bool _bootstrapped;
 
-        public event Action OnBootstrapped;
-        public event Action OnBeforeFrame;
-        public event Action OnAfterFrame;
-
-        public FrameData RenderingFrameData => RenderBackend.CurrentFrameData;
+        public Input Input { get; }
 
         public Engine(EngineConfiguration configuration)
         {
             Configuration = configuration;
+            Input = new Input();
         }
 
         public void Bootstrap()
@@ -37,8 +41,17 @@ namespace CopperCowEngine.Core
             RenderBackend.OnFrameRenderEnd += AfterFrameLoop;
             RenderBackend.OnScreenPropertiesChanged += ScreenPropertiesChanged;
 
+            RenderBackend.OnInputKey += Input.TriggerKey;
+            RenderBackend.OnMousePositionChange += Input.SetMousePosition;
+
             OnBootstrapped?.Invoke();
             RenderLoopStart();
+        }
+
+        public void Quit()
+        {
+            RenderBackend.QuitRequest();
+            OnQuit?.Invoke();
         }
 
         private void RenderLoopStart()

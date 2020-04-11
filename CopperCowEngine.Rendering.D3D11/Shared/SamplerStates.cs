@@ -8,7 +8,7 @@ using SharpDX.Direct3D11;
 
 namespace CopperCowEngine.Rendering.D3D11.Shared
 {
-    internal enum SamplerStateType
+    internal enum SamplerStateType : byte
     {
         PointClamp,
         PointWrap,

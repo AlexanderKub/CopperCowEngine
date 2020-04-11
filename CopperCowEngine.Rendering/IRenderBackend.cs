@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
+using System.Windows.Forms;
 using CopperCowEngine.Rendering.Loaders;
 
 namespace CopperCowEngine.Rendering
@@ -24,7 +26,7 @@ namespace CopperCowEngine.Rendering
 
         FrameData CurrentFrameData { get; }
 
-        bool IsExitRequest { get; }
+        bool IsQuitRequest { get; }
 
         bool IsInitialized { get; }
 
@@ -40,7 +42,7 @@ namespace CopperCowEngine.Rendering
 
         void Deinitialize();
 
-        void ExitRequest();
+        void QuitRequest();
 
         TextureCubeAssetData ImportCubeTexture(string path);
 
@@ -57,5 +59,9 @@ namespace CopperCowEngine.Rendering
         event Action OnFrameRenderEnd;
 
         event Action<ScreenProperties> OnScreenPropertiesChanged;
+
+        event Action<Keys, bool> OnInputKey;
+
+        event Action<Vector2> OnMousePositionChange;
     }
 }

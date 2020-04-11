@@ -1,10 +1,10 @@
-﻿using SharpDX;
+﻿using System.Numerics;
 
 namespace CopperCowEngine.Rendering.Data
 {
     public class MaterialInstance
     {
-        public enum SamplerType
+        public enum SamplerType : byte
         {
             PointClamp,
             PointWrap,

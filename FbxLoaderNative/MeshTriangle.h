@@ -1,8 +1,6 @@
 #pragma once
 
-using namespace SharpDX;
-using namespace SharpDX::Mathematics;
-
+using namespace System::Numerics;
 
 namespace FbxNative {
 

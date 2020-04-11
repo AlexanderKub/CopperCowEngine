@@ -1,5 +1,5 @@
-﻿using CopperCowEngine.ECS.Builtin.Components;
-using SharpDX;
+﻿using System.Numerics;
+using CopperCowEngine.ECS.Builtin.Components;
 
 namespace CopperCowEngine.ECS.Builtin.Systems
 {
@@ -11,21 +11,21 @@ namespace CopperCowEngine.ECS.Builtin.Systems
             {
                 ref var locToWorld = ref slice.Sibling<LocalToWorld>();
 
-                locToWorld.Value = Matrix.Identity;
+                locToWorld.Value = Matrix4x4.Identity;
 
                 if (slice.HasSibling<Rotation>())
                 {
-                    locToWorld.Value *= Matrix.RotationQuaternion(slice.Sibling<Rotation>().Value);
+                    locToWorld.Value *= Matrix4x4.CreateFromQuaternion(slice.Sibling<Rotation>().Value);
                 }
 
                 if (slice.HasSibling<Scale>())
                 {
-                    locToWorld.Value *= Matrix.Scaling(slice.Sibling<Scale>().Value);
+                    locToWorld.Value *= Matrix4x4.CreateScale(slice.Sibling<Scale>().Value);
                 }
 
                 if (slice.HasSibling<Translation>())
                 {
-                    locToWorld.Value *= Matrix.Translation(slice.Sibling<Translation>().Value);
+                    locToWorld.Value *= Matrix4x4.CreateTranslation(slice.Sibling<Translation>().Value);
                 }
             }
         }

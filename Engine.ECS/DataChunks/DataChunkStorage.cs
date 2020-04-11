@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using CopperCowEngine.ECS.Collections;
 
 namespace CopperCowEngine.ECS.DataChunks
 {
     internal sealed class DataChunkStorage
     {
-        internal readonly TypesStorage TypesStorage;
+        internal readonly ComponentTypesStorage TypesStorage;
 
-        internal readonly ArchetypesStorage ArchetypesStorage;
+        internal DataChunkArchetypesStorage ArchetypesStorage { get; }
 
         public readonly List<DataChunkChain> ChunksStorage;
 
@@ -18,8 +19,8 @@ namespace CopperCowEngine.ECS.DataChunks
         public DataChunkStorage(EcsContext context)
         {
             _context = context;
-            TypesStorage = new TypesStorage();
-            ArchetypesStorage = new ArchetypesStorage();
+            TypesStorage = new ComponentTypesStorage();
+            ArchetypesStorage = new DataChunkArchetypesStorage();
             ChunksStorage = new List<DataChunkChain>();
         }
 
@@ -36,8 +37,8 @@ namespace CopperCowEngine.ECS.DataChunks
 
             for (var i = 0; i < types.Length; i++)
             {
-                var index = TypesStorage.TryRegisterType(types[i], out var componentType);
-                componentsSize += componentType.Size;
+                var index = TypesStorage.TryRegisterType(types[i], out var componentSize);
+                componentsSize += componentSize;
                 array[i] = index;
             }
 
@@ -46,14 +47,14 @@ namespace CopperCowEngine.ECS.DataChunks
 
         public ref T GetData<T>(int indexInArchetype, int archetypeIndex) where T : struct, IComponentData
         {
-#if DEBUG
             var componentTypeId = TypesStorage.TryRegisterType(typeof(T));
+#if DEBUG
             if (!DataChunkArchetype.Compatibility(in ArchetypesStorage.GetAt(archetypeIndex), componentTypeId))
             {
                 throw new NullReferenceException();
             }
 #endif
-            return ref ChunksStorage[archetypeIndex].GetDataByIndex<T>(indexInArchetype);
+            return ref ChunksStorage[archetypeIndex].GetDataByIndex<T>(indexInArchetype, componentTypeId);
         }
 
         public int RemoveEntity(Entity entity, int indexInArchetype, int archetypeIndex)
@@ -63,7 +64,8 @@ namespace CopperCowEngine.ECS.DataChunks
 
         public void SetData<T>(int indexInArchetype, int archetypeIndex, T data) where T : struct, IComponentData
         {
-            ChunksStorage[archetypeIndex].SetDataByIndex(indexInArchetype, data);
+            var componentTypeId = TypesStorage.TryRegisterType(typeof(T));
+            ChunksStorage[archetypeIndex].SetDataByIndex(indexInArchetype, componentTypeId, data);
         }
         
         public int TryRegisterArchetype(in DataChunkArchetype archetype)
@@ -80,7 +82,9 @@ namespace CopperCowEngine.ECS.DataChunks
 
             var archetypeIndex = ArchetypesStorage.Add(archetype);
 
-            ChunksStorage.Add(new DataChunkChain(in archetype));
+            var componentTypes = archetype.ComponentTypes.Select(t => TypesStorage.GetComponentTypeAtIndex(t)).ToArray();
+
+            ChunksStorage.Add(new DataChunkChain(in archetype, componentTypes));
 
             return archetypeIndex;
         }
@@ -102,15 +106,15 @@ namespace CopperCowEngine.ECS.DataChunks
                 var oldArchetype = ArchetypesStorage.GetAt(oldArchetypeIndex);
                 var newArchetype = ArchetypesStorage.GetAt(newArchetypeIndex);
 
-                foreach (var type in oldArchetype.Types)
+                foreach (var componentType in oldArchetype.ComponentTypes)
                 {
-                    if (!DataChunkArchetype.Compatibility(in newArchetype, type))
+                    if (!DataChunkArchetype.Compatibility(in newArchetype, componentType))
                     {
                         continue;
                     }
                     
-                    var movedData = GetBoxedData(indexInOldArchetype, oldArchetypeIndex, type);
-                    SetBoxedData(indexInArchetype, newArchetypeIndex, type, movedData);
+                    var movedData = GetBoxedData(indexInOldArchetype, oldArchetypeIndex, componentType);
+                    SetBoxedData(indexInArchetype, newArchetypeIndex, componentType, movedData);
                 }
             }
 
@@ -130,26 +134,26 @@ namespace CopperCowEngine.ECS.DataChunks
             return indexInArchetype;
         }
 
-        private object GetBoxedData(int indexInArchetype, int archetypeIndex, Type type)
+        private object GetBoxedData(int indexInArchetype, int archetypeIndex, int componentTypeId)
         {
 #if DEBUG
-            if (!DataChunkArchetype.Compatibility(in ArchetypesStorage.GetAt(archetypeIndex), type))
+            if (!DataChunkArchetype.Compatibility(in ArchetypesStorage.GetAt(archetypeIndex), componentTypeId))
             {
                 throw new NullReferenceException();
             }
 #endif
-            return ChunksStorage[archetypeIndex].GetBoxedDataByIndex(indexInArchetype, type);
+            return ChunksStorage[archetypeIndex].GetBoxedDataByIndex(indexInArchetype, componentTypeId);
         }
 
-        private void SetBoxedData(int indexInArchetype, int archetypeIndex, Type type, object data)
+        private void SetBoxedData(int indexInArchetype, int archetypeIndex, int componentTypeId, object data)
         {
 #if DEBUG
-            if (!DataChunkArchetype.Compatibility(in ArchetypesStorage.GetAt(archetypeIndex), type))
+            if (!DataChunkArchetype.Compatibility(in ArchetypesStorage.GetAt(archetypeIndex), componentTypeId))
             {
                 throw new NullReferenceException();
             }
 #endif
-            ChunksStorage[archetypeIndex].SetBoxedDataByIndex(indexInArchetype, type, data);
+            ChunksStorage[archetypeIndex].SetBoxedDataByIndex(indexInArchetype, componentTypeId, data);
         }
     }
 }

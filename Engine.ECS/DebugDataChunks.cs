@@ -40,7 +40,7 @@ namespace CopperCowEngine.ECS
                 Rows = new DataRowSnapshot[rowCount];
 
                 Archetype = archetype;
-                TypesCount = archetype.Types.Length;
+                TypesCount = archetype.ComponentTypes.Length;
             }
 
             public void AddRow(int index, int entityId)
@@ -89,9 +89,9 @@ namespace CopperCowEngine.ECS
                     var entityId = chunkChain.Chunks[0].GetEntityIdByIndex(j);
                     dataSnapshot.AddRow(j, entityId);
 
-                    for (var k = 0; k < archetype.Types.Length; k++)
+                    for (var k = 0; k < archetype.ComponentTypes.Length; k++)
                     {
-                        var data = chunkChain.GetBoxedDataByIndex(j, archetype.Types[k]);
+                        var data = chunkChain.GetBoxedDataByIndex(j, archetype.ComponentTypes[k]);
                         dataSnapshot.AddDataToRow(j, k, data);
                     }
                 }

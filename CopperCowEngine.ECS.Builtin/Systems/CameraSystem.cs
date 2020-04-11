@@ -1,8 +1,9 @@
-﻿using CopperCowEngine.Core;
+﻿using System;
+using System.Numerics;
 using CopperCowEngine.ECS.Builtin.Components;
 using CopperCowEngine.ECS.Builtin.Singletons;
 using CopperCowEngine.Rendering.Data;
-using SharpDX;
+using CopperCowEngine.Rendering.Geometry;
 
 namespace CopperCowEngine.ECS.Builtin.Systems
 {
@@ -25,16 +26,17 @@ namespace CopperCowEngine.ECS.Builtin.Systems
                 ref var viewProjection = ref slice.Sibling<CameraViewProjection>();
 
                 // TODO: check inverse depth buffer
-                projection.Value = Matrix.PerspectiveFovLH(MathUtil.PiOverTwo, setup.AspectRatio, 
+                projection.Value = MatrixUtils.PerspectiveFovLeftHand((float)(Math.PI * 0.5), setup.AspectRatio, 
                     setup.FarClippingPlane, setup.NearClippingPlane);
 
-                var position = locToWorld.Value.TranslationVector;
+                var position = locToWorld.Value.Translation;
 
-                var forward = position + locToWorld.Value.Backward;
+                var cameraBackward = new Vector3(locToWorld.Value.M31, locToWorld.Value.M32, locToWorld.Value.M33);
+                var forward = position - cameraBackward;
+                
+                viewProjection.View = Matrix4x4.CreateLookAt(position, forward, Vector3.UnitY);
 
-                viewProjection.View = Matrix.LookAtLH(position, forward, locToWorld.Value.Up);
-
-                viewProjection.ViewProjection = viewProjection.View * projection.Value;
+                viewProjection.ViewProjection = viewProjection.View * projection.Value; 
 
                 frameData.AddCameraData(new CameraData
                 {

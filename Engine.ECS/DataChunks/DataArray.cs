@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace CopperCowEngine.ECS.DataChunks
 {
     internal struct DataArray<T> : IDataArray where T : struct, IComponentData
@@ -8,6 +10,7 @@ namespace CopperCowEngine.ECS.DataChunks
         public DataArray(int capacity)
         {
             _array = new T[capacity];
+            Array.Clear(_array, 0, capacity);
         }
 
         public ref T this[int index] => ref _array[index];

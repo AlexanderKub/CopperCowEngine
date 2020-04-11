@@ -1,6 +1,6 @@
 ﻿namespace CopperCowEngine.Rendering
 {
-    public enum RenderPathType
+    public enum RenderPathType : byte
     {
         ClusteredForward,
         Deferred,
