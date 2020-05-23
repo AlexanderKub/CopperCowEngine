@@ -10,12 +10,6 @@ namespace CopperCowEngine.ECS.Builtin.Systems
 
             ref var input = ref Context.GetSingletonComponent<InputSingleton>();
 
-            if (input.IsButtonDown(Buttons.Esc))
-            {
-                engine.Quit();
-                return;
-            }
-
             input.UpdateMousePosition(engine.Input.MousePosition);
         }
     }

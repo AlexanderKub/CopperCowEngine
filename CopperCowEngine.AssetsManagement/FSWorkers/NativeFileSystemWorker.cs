@@ -1,42 +1,47 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using CopperCowEngine.AssetsManagement.AssetsMeta;
 
 namespace CopperCowEngine.AssetsManagement.FSWorkers
 {
-    internal class NativeFileSystemWorker
+    internal static class NativeFileSystemWorker
     {
         internal static string RootPath = "";
-        internal static string Extension = ".cceaf";
-        internal static string ShaderExtension = ".ccesf";
+        private const string Extension = ".cceaf";
+        private const string ShaderExtension = ".ccesf";
 
-        private readonly NativeWriter _writer;
-        private readonly NativeReader _reader;
-
-        public NativeFileSystemWorker()
+        public static bool LoadAssetFile(BaseAsset asset)
         {
-            _writer = new NativeWriter();
-            _reader = new NativeReader();
+            return NativeReader.LoadAssetFile(asset);
         }
 
-        public bool CreateAssetFile(BaseAsset asset)
+        internal static string GetAssetPath(BaseAsset asset)
         {
-            return CreateAssetFile(asset, false);
+            return GetAssetPath(asset, string.Empty);
         }
 
-        public bool CreateAssetFile(BaseAsset asset, bool rewrite)
+        internal static string GetAssetPath(BaseAsset asset, string possibleName)
         {
-            return _writer.CreateAssetFile(asset, rewrite);
-        }
+            AssetTypes assetType;
+            // TODO: WTF
+            if (asset is MetaAsset metaAsset)
+            {
+                assetType = metaAsset.InfoType;
+            }
+            else
+            {
+                assetType = asset.Type;
+            }
 
-        public bool LoadAssetFile(BaseAsset asset)
-        {
-            return _reader.LoadAssetFile(asset);
-        }
-
-        internal string[] DetectAssetsNamesByType(AssetTypes type)
-        {
-            var path = GetAssetTypePath(type);
-            return !Directory.Exists(path) ? new string[0] : Directory.GetFiles(path);
+            var path = GetAssetTypePath(assetType);
+            var name = asset.Name;
+            if (!string.IsNullOrEmpty(possibleName))
+            {
+                name = possibleName;
+            }
+            var file = name + (assetType == AssetTypes.Shader ? ShaderExtension : Extension);
+            path = Path.Combine(path, file);
+            return path;
         }
 
         internal static string GetAssetTypePath(AssetTypes type)
@@ -69,37 +74,8 @@ namespace CopperCowEngine.AssetsManagement.FSWorkers
                 case AssetTypes.Meta:
                     break;
                 default:
-                    break;
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
-            return path;
-        }
-
-        internal static string GetAssetPath(BaseAsset asset)
-        {
-            return GetAssetPath(asset, "");
-        }
-
-        internal static string GetAssetPath(BaseAsset asset, string possibleName)
-        {
-            AssetTypes assetType;
-            // TODO: WTF
-            if (asset is MetaAsset metaAsset)
-            {
-                assetType = metaAsset.InfoType;
-            }
-            else
-            {
-                assetType = asset.Type;
-            }
-
-            var path = GetAssetTypePath(assetType);
-            var name = asset.Name;
-            if (!string.IsNullOrEmpty(possibleName))
-            {
-                name = possibleName;
-            }
-            var file = name + (assetType == AssetTypes.Shader ? ShaderExtension : Extension);
-            path = Path.Combine(path, file);
             return path;
         }
     }

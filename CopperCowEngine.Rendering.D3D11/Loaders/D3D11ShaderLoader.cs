@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CopperCowEngine.Rendering;
 using CopperCowEngine.AssetsManagement;
 using CopperCowEngine.AssetsManagement.AssetsMeta;
 using SharpDX.D3DCompiler;
@@ -8,7 +7,7 @@ using SharpDX.Direct3D11;
 
 namespace CopperCowEngine.Rendering.D3D11.Loaders
 {
-    internal class D3D11ShaderLoader
+    internal static class D3D11ShaderLoader
     {
         private struct ShaderPlusSignature
         {

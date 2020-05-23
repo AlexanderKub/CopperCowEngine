@@ -6,6 +6,7 @@ namespace CopperCowEngine.ECS.Builtin.Systems
 {
     public class RenderingSystem : ComponentSystem<Required<LocalToWorld, Mesh, Material>>
     {
+
         protected override void Update()
         {
             var engine = Context.GetSingletonComponent<EngineHolder>().Engine;
@@ -19,18 +20,26 @@ namespace CopperCowEngine.ECS.Builtin.Systems
                 var mesh = slice.Sibling<Mesh>();
 
                 var material = slice.Sibling<Material>();
-
+                
                 // TODO: Sorting or layer add
-                frameData.AddRendererDataToCamera(0, frameData.AddRendererData(new RendererData
+                var index = frameData.AddRendererData(new RendererData
                 {
                     IsDynamic = true,
-                    MaterialName = material.Name,
+                    MaterialGuid = material.AssetGuid,
                     MaterialQueue = material.Queue,
-                    MeshName = mesh.Name,
-                    PreviousTransformMatrix = locToWorld.Value,
+                    MeshGuid = mesh.AssetGuid,
+                    PreviousTransformMatrix = locToWorld.PreviousValue,
                     TransformMatrix = locToWorld.Value,
-                }));
+                });
+                
+                frameData.AddRendererDataToCamera(0, index);
+                if (frameData.LightsList.Count > 0)
+                {
+                    frameData.AddRendererDataToLight(0, index);
+                }
             }
+
+            frameData.Finish();
         }
     }
 }

@@ -12,9 +12,13 @@ namespace CopperCowEngine.Rendering.D3D11
 
         public override event Action<Keys, bool> OnInputKey;
 
+        public override event Action<char> OnInputKeyPress;
+
         private KeyEventHandler _keyDownEventHandler;
 
         private KeyEventHandler _keyUpEventHandler;
+
+        private KeyPressEventHandler _keyPressEventHandler;
 
         private void RegisterInputHandling()
         {
@@ -31,6 +35,11 @@ namespace CopperCowEngine.Rendering.D3D11
                 OnInputKey?.Invoke(args.KeyCode, false);
             };
             Surface.KeyUp += _keyUpEventHandler;
+            _keyPressEventHandler = (o, args) => 
+            {
+                OnInputKeyPress?.Invoke(args.KeyChar);
+            };
+            Surface.KeyPress += _keyPressEventHandler;
         }
 
         private void UnRegisterInputHandling()
@@ -42,6 +51,7 @@ namespace CopperCowEngine.Rendering.D3D11
             }
             Surface.KeyDown -= _keyDownEventHandler;
             Surface.KeyUp -= _keyUpEventHandler;
+            Surface.KeyPress -= _keyPressEventHandler;
         }
 
         private void RegisterInputDevice()

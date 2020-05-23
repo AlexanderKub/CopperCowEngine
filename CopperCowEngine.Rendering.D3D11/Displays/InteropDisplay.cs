@@ -16,8 +16,6 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
     {
         private DriverType _currentDriverType;
 
-        private Texture2DDescription _zBufferTextureDescription;
-
         public InteropDisplay(bool isDebugMode, int msaaLevel) : base(isDebugMode, msaaLevel) { }
 
         public override void InitDevice()
@@ -58,20 +56,6 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
 
             CheckFeatures();
 
-            _zBufferTextureDescription = new Texture2DDescription
-            {
-                Format = Format.R32_Typeless,
-                ArraySize = 1,
-                MipLevels = 1,
-                Width = Width,
-                Height = Height,
-                SampleDescription = new SampleDescription(MSamplesCount, 0),
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-            };
-
             Factory2D = new Factory(FactoryType.SingleThreaded, DebugLevel.Information);
             FactoryDWrite = new SharpDX.DirectWrite.Factory();
             RenderTarget2DProperties = new RenderTargetProperties()
@@ -83,16 +67,15 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
                 Usage = RenderTargetUsage.None,
             };
         }
+        private const Format BackBufferFormat = Format.R8G8B8A8_UNorm_SRgb; //Format.R8G8B8A8_UNorm;
 
-        public void InitRenderTargetSurface(IntPtr resource)
+        private void InitRenderTargetSurface(IntPtr resource)
         {
-            ZBuffer?.Dispose();
-            DepthStencilViewRef?.Dispose();
-            RenderTargetViewRef?.Dispose();
+            RenderTarget?.Dispose();
             RenderTarget2D?.Dispose();
 
             SharpDX.DXGI.Resource dxgiResource;
-            using (var r = new SharpDX.ComObject(resource))
+            using (var r = new ComObject(resource))
             {
                 dxgiResource = r.QueryInterface<SharpDX.DXGI.Resource>();
             }
@@ -103,13 +86,10 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
                 RenderTarget2D = new RenderTarget(Factory2D, surface, RenderTarget2DProperties);
             }
 
-            //Crash everything
-            //dxgiResource.Dispose();
-
             RenderTarget2D.AntialiasMode = AntialiasMode.PerPrimitive;
             RenderTarget2D.TextAntialiasMode = TextAntialiasMode.Cleartype;
 
-            RenderTargetViewRef = new RenderTargetView(DeviceRef, outputResource);
+            RenderTarget = new RenderTargetView(DeviceRef, outputResource);
 
             var outputDesc = outputResource.Description;
             if (outputDesc.Width != Width || outputDesc.Height != Height)
@@ -119,20 +99,8 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
                 SetUpViewport();
             }
 
-            _zBufferTextureDescription.Width = Width;
-            _zBufferTextureDescription.Height = Height;
-            ZBuffer = new Texture2D(DeviceRef, _zBufferTextureDescription);
-
-            DepthStencilViewRef = new DepthStencilView(DeviceRef, ZBuffer, new DepthStencilViewDescription
-            {
-                Format = Format.D32_Float,
-                Dimension = DepthStencilViewDimension.Texture2D,
-                Flags = DepthStencilViewFlags.None,
-            });
-
-            Context.OutputMerger.SetRenderTargets(DepthStencilViewRef, RenderTargetViewRef);
             InitRenderTarget();
-            outputResource?.Dispose();
+            outputResource.Dispose();
         }
 
         public override void Render(IntPtr resource, bool isNewSurface)
@@ -144,11 +112,9 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
                 Resize();
             }
 
-            Context.ClearRenderTargetView(RenderTargetViewRef, Color.Gray);
-
-            RenderTarget2D?.BeginDraw();
+            Context.ClearRenderTargetView(RenderTarget, Color.Gray);
+            
             base.Render(resource, isNewSurface);
-            RenderTarget2D?.EndDraw();
 
             Context?.Flush();
         }

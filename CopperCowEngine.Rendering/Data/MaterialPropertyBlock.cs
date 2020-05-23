@@ -7,6 +7,8 @@ namespace CopperCowEngine.Rendering.Data
         public Vector3 AlbedoColor;
 
         public float AlphaValue;
+        
+        public Vector3 EmissiveColor;
 
         public float MetallicValue;
 
@@ -19,6 +21,8 @@ namespace CopperCowEngine.Rendering.Data
         public MaterialPropertyBlock(MaterialPropertyBlock block)
         {
             AlbedoColor = block.AlbedoColor;
+
+            EmissiveColor = block.EmissiveColor;
 
             AlphaValue = block.AlphaValue;
 
@@ -34,6 +38,8 @@ namespace CopperCowEngine.Rendering.Data
         public static MaterialPropertyBlock Default = new MaterialPropertyBlock()
         {
             AlbedoColor = Vector3.One,
+
+            EmissiveColor = Vector3.Zero,
 
             AlphaValue = 1.0f,
 

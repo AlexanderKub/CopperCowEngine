@@ -1,0 +1,96 @@
+﻿<Window x:Class="CopperCowEngine.EditorApp.Windows.AssetEditorWindow" Style="{StaticResource SizableWindow}"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:c="clr-namespace:CalcBinding;assembly=CalcBinding"
+        xmlns:uiControls="clr-namespace:CopperCowEngine.EditorApp.UIControls"
+        xmlns:sharpDxControl="clr-namespace:CopperCowEngine.EditorApp.UIControls.SharpDXControl"
+        mc:Ignorable="d"
+        Title="Asset Editor" Width="750"  Height="600" >
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="36"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="200"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <ToolBar Grid.Row="0" VerticalAlignment="Top" Background="{DynamicResource ButtonBackground}" MinHeight="36" Margin="10,0,10,0">
+            <Slider Name="ZoomSlider" Width="70" Minimum="0.001" Maximum="5" Value="{Binding ZoomValue}" Margin="10,0,0,0"
+                    IsSnapToTickEnabled="True" TickFrequency="0.001" VerticalAlignment="Center"
+                    Visibility="{c:Binding ControlsVisibleFlags[0], FalseToVisibility=Collapsed}" />
+            <TextBlock Name="ZoomLabel" Text="{Binding ElementName=ZoomSlider,Path=Value, StringFormat='x{0}'}"
+                    VerticalAlignment="Center" Padding="4" Width="60" 
+                    Visibility="{c:Binding ControlsVisibleFlags[0], FalseToVisibility=Collapsed}">
+                <TextBlock.InputBindings>
+                    <!--<MouseBinding MouseAction="LeftClick" Command="{Binding ResetPreviewValueCommand}" CommandParameter="Zoom" />-->
+                </TextBlock.InputBindings>
+            </TextBlock>
+
+            <Slider Name="YawSlider" Width="70" Minimum="0" Maximum="360" Value="{Binding YawValue}"
+                    IsSnapToTickEnabled="True" TickFrequency="1" VerticalAlignment="Center"
+                    Visibility="{c:Binding ControlsVisibleFlags[1], FalseToVisibility=Collapsed}" />
+            <TextBlock Name="YawLabel" Text="{Binding ElementName=YawSlider,Path=Value, StringFormat='Yaw: {0}°'}"
+                    VerticalAlignment="Center" Padding="4" Width="60"
+                    Visibility="{c:Binding ControlsVisibleFlags[1], FalseToVisibility=Collapsed}">
+                <TextBlock.InputBindings>
+                    <!--<MouseBinding MouseAction="LeftClick" Command="{Binding ResetPreviewValueCommand}" CommandParameter="Yaw" />-->
+                </TextBlock.InputBindings>
+            </TextBlock>
+
+            <Slider Name="PitchSlider" Width="70" Minimum="0" Maximum="360" Value="{Binding PitchValue}"
+                    IsSnapToTickEnabled="True" TickFrequency="1" VerticalAlignment="Center"
+                    Visibility="{c:Binding ControlsVisibleFlags[2], FalseToVisibility=Collapsed}" />
+            <TextBlock Name="PitchLabel" Text="{Binding ElementName=PitchSlider,Path=Value, StringFormat='Pitch: {0}°'}"
+                    VerticalAlignment="Center" Padding="4" Width="60"
+                    Visibility="{c:Binding ControlsVisibleFlags[2], FalseToVisibility=Collapsed}">
+                <TextBlock.InputBindings>
+                    <!--<MouseBinding MouseAction="LeftClick" Command="{Binding ResetPreviewValueCommand}" CommandParameter="Pitch" />-->
+                </TextBlock.InputBindings>
+            </TextBlock>
+
+            <ComboBox Margin="5,0,0,0" Width="90" Name="ViewsList" SelectedIndex="{Binding ViewValue}"
+                      Visibility="{c:Binding ControlsVisibleFlags[3], FalseToVisibility=Collapsed}">
+                <TextBlock>Forward</TextBlock>
+                <TextBlock>Back</TextBlock>
+                <TextBlock>Top</TextBlock>
+                <TextBlock>Bottom</TextBlock>
+                <TextBlock>Right</TextBlock>
+                <TextBlock>Left</TextBlock>
+            </ComboBox>
+            <ComboBox Margin="5,0,0,0" Width="100" Name="MeshList" SelectedIndex="{Binding ViewValue}"
+                      Visibility="{c:Binding ControlsVisibleFlags[4], FalseToVisibility=Collapsed}">
+                <TextBlock>Sphere</TextBlock>
+                <TextBlock>Cube</TextBlock>
+            </ComboBox>
+        </ToolBar>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="280"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0">
+                <sharpDxControl:InteropRenderer Grid.Column="0" x:Name="RendererElement" Margin="10,10,10,10"/>
+                <Button Width="100" Height="50">Test</Button>
+            </Grid>
+            <xctk:PropertyGrid Grid.Column="1" x:Name="PropertyGridRef" Margin="0,10,10,10"
+                               NameColumnWidth="110" UpdateTextBoxSourceOnEnterKey="True"
+                               ShowDescriptionByTooltip="True" ShowSummary="False">
+            </xctk:PropertyGrid>
+        </Grid>
+        <Grid Grid.Row="2" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="280"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <uiControls:AssetsTreeControl Grid.Column="0" x:Name="AssetsTree" Margin="10,0,10,10" MaxWidth="500" />
+            <StackPanel Grid.Column="1" Margin="0,0,10,0" Orientation="Horizontal" Height="30" VerticalAlignment="Top" HorizontalAlignment="Center">
+                <Button Height="30" Width="100" Margin="0,0,10,0" Command="{Binding ResetAssetValues}">Reset</Button>
+                <Button Height="30" Width="100" Command="{Binding SaveChangingCommand}">Save</Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

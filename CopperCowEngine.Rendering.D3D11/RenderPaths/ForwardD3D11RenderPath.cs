@@ -183,7 +183,7 @@
 //         {
 //             // Clear
 //             DepthStencilView depthStencilView = RenderBackend.DisplayRef.DepthStencilViewRef;
-//             RenderTargetView renderTargetView = RenderBackend.DisplayRef.RenderTargetViewRef;
+//             RenderTargetView renderTargetView = RenderBackend.DisplayRef.RenderTarget;
 //             GetContext.ClearRenderTargetView(renderTargetView, Color.Gray);
 //             GetContext.ClearRenderTargetView(hdrRenderTargetView, Color.Gray);
 //             GetContext.ClearDepthStencilView(

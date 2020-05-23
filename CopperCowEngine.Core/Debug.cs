@@ -4,14 +4,11 @@ namespace CopperCowEngine.Core
 {
     public static class Debug
     {
+        public static event Action<string> OnDebugLog;
+
         public static void Log(string format, params object[] args)
         {
             Log("Engine", string.Format(format, args));
-        }
-
-        public static void ScriptLog(string message)
-        {
-            Log("Lua", message);
         }
 
         public static void Log(string domain, string format, params object[] args)
@@ -39,8 +36,8 @@ namespace CopperCowEngine.Core
 
         private static void InternalLog(string message)
         {
-            // TODO: Engine console
             Console.WriteLine(message);
+            OnDebugLog?.Invoke(message);
         }
     }
 }

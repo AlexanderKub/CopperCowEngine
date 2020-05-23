@@ -2,15 +2,15 @@
 #include "ImageData.h"
 
 using namespace System;
-using namespace System::Collections::Generic;
+using namespace Collections::Generic;
 
-namespace NativeUtilsNS {
+namespace NativeUtilsNamespace {
 
-	public ref class NativeUtils
+	public ref class NativeUtils sealed
 	{
 	public:
 		NativeUtils();
 
-		ImageData^ LoadHDRImage(String^ filePath);
+		ImageData^ load_hdr_image(String^ file_path);
 	};
 }

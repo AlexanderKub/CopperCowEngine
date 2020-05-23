@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CopperCowEngine.Rendering.Geometry
+﻿namespace CopperCowEngine.Rendering.Geometry
 {
     /// <summary>
     /// Defines how the bounding volumes intersects or contain one another.

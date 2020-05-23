@@ -3,7 +3,7 @@ using CopperCowEngine.ECS.Builtin.Components;
 
 namespace CopperCowEngine.ECS.Builtin.Systems
 {
-    public class TrsToLocalToParentSystem : ComponentSystem<Required<LocalToParent, Parent>, Optional<Translation, Rotation, Scale>>
+    public class TrsToLocalToParentSystem : ComponentSystem<Required<LocalToParent, Parent>, Optional<Translation, Rotation, Scale, NonUniformScale>>
     {
         protected override void Update()
         {
@@ -12,15 +12,19 @@ namespace CopperCowEngine.ECS.Builtin.Systems
                 ref var locToParent = ref slice.Sibling<LocalToParent>();
 
                 locToParent.Value = Matrix4x4.Identity;
+                
+                if (slice.HasSibling<Scale>())
+                {
+                    locToParent.Value *= Matrix4x4.CreateScale(slice.Sibling<Scale>().Value);
+                }
+                else if (slice.HasSibling<NonUniformScale>())
+                {
+                    locToParent.Value *= Matrix4x4.CreateScale(slice.Sibling<NonUniformScale>().Value);
+                }
 
                 if (slice.HasSibling<Rotation>())
                 {
                     locToParent.Value *= Matrix4x4.CreateFromQuaternion(slice.Sibling<Rotation>().Value);
-                }
-
-                if (slice.HasSibling<Scale>())
-                {
-                    locToParent.Value *= Matrix4x4.CreateScale(slice.Sibling<Scale>().Value);
                 }
 
                 if (slice.HasSibling<Translation>())

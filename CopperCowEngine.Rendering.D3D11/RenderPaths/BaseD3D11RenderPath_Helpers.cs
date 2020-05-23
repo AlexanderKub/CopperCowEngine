@@ -1,5 +1,7 @@
-﻿using CopperCowEngine.Rendering.D3D11.Loaders;
+﻿using System;
+using CopperCowEngine.Rendering.D3D11.Loaders;
 using CopperCowEngine.Rendering.D3D11.Shared;
+using CopperCowEngine.Rendering.ShaderGraph;
 using SharpDX.Direct3D11;
 
 namespace CopperCowEngine.Rendering.D3D11.RenderPaths
@@ -9,7 +11,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         private int _currentRasterizerState = -1;
 
         /// <summary>
-        /// Draw non-indexed, non-instanced primitives. Wrapper for collect drawcalls statistics.
+        /// Draw non-indexed, non-instanced primitives. Wrapper for collect draw calls statistics.
         /// </summary>
         /// <param name="vertexCount"></param>
         /// <param name="startVertexLocation"></param>
@@ -19,7 +21,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         }
 
         /// <summary>
-        /// Draw indexed, non-instanced primitives. Wrapper for collect drawcalls statistics.
+        /// Draw indexed, non-instanced primitives. Wrapper for collect draw calls statistics.
         /// </summary>
         /// <param name="indexCount">Number of indices to draw.</param>
         /// <param name="startIndexLocation">The location of the first index read by the GPU from the index buffer.</param>
@@ -77,8 +79,6 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         protected void SetNullPixelShader()
         {
             GetContext.PixelShader.Set(null);
-            GetContext.PixelShader.SetShaderResource(0, null);
-            GetContext.PixelShader.SetSamplers(0, (SamplerState)null);
             _currentPs = string.Empty;
         }
 
@@ -225,7 +225,28 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             _currentDepthStencilState = -1;
         }
 
-        private readonly int[] _currentSamplerState = new[] { -1, -1, -1, -1, -1, -1, -1 };
+        protected void SetMaterialCullMode(MaterialMeta meta)
+        {
+            switch (meta.CullMode)
+            {
+                case MaterialMeta.CullModeType.Front:
+                    SetRasterizerState(meta.Wireframe ? RasterizerStateType.WireframeFrontCull
+                        : RasterizerStateType.SolidFrontCull);
+                    break;
+                case MaterialMeta.CullModeType.Back:
+                    SetRasterizerState(meta.Wireframe ? RasterizerStateType.WireframeBackCull
+                        : RasterizerStateType.SolidBackCull);
+                    break;
+                case MaterialMeta.CullModeType.None:
+                    SetRasterizerState(meta.Wireframe ? RasterizerStateType.WireframeNoneCull
+                        : RasterizerStateType.SolidNoneCull);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private readonly int[] _currentSamplerState = { -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
         protected void SetSamplerState(int slot, SamplerStateType sampler)
         {
@@ -235,6 +256,12 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             }
             GetContext.PixelShader.SetSampler(slot, GetSharedItems.GetSamplerState(sampler));
             _currentSamplerState[slot] = (int)sampler;
+        }
+
+        protected void ClearSamplerState(int slot)
+        {
+            GetContext.PixelShader.SetSampler(slot, null);
+            _currentSamplerState[slot] = -1;
         }
 
         private SharpDX.Direct3D.PrimitiveTopology _currentPrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.Undefined;

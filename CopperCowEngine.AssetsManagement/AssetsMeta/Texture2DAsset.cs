@@ -13,27 +13,6 @@ namespace CopperCowEngine.AssetsManagement.AssetsMeta
             this.Type = AssetTypes.Texture2D;
         }
 
-        public override void CopyValues(BaseAsset source)
-        {
-        }
-
-        public override bool ImportAsset(string path, string ext)
-        {
-            Data = AssetsManager.RenderBackend.ImportTexture(path, ForceSRgb);
-            return true;
-        }
-
-        public override void SaveAsset(BinaryWriter writer)
-        {
-            base.SaveAsset(writer);
-            writer.Write(Data.Width);
-            writer.Write(Data.Height);
-            writer.Write((int)Data.ChannelsCount);
-            writer.Write((int)Data.BytesPerChannel);
-            writer.Write((int)Data.ColorSpace);
-            writer.Write(Data.Buffer);
-        }
-
         public override bool LoadAsset(BinaryReader reader)
         {
             if (!base.LoadAsset(reader))

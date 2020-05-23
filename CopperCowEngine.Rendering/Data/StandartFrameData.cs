@@ -43,16 +43,19 @@ namespace CopperCowEngine.Rendering.Data
         public void AddCameraData(CameraData data)
         {
             data.Index = CamerasList.Count;
+            // TODO: allocations
             PerCameraRenderers.Add(data.Index, new List<int>());
             PerCameraLights.Add(data.Index, new List<int>());
             CamerasList.Add(data);
         }
 
-        public void AddLightData(LightData data)
+        public int AddLightData(LightData data)
         {
             data.Index = LightsList.Count;
             LightsList.Add(data);
             PerLightRenderers.Add(data.Index, new List<int>());
+
+            return data.Index;
         }
 
         public int AddRendererData(RendererData data)
@@ -77,6 +80,13 @@ namespace CopperCowEngine.Rendering.Data
             PerLightRenderers[lightIndex].Add(rendererIndex);
         }
 
+        public override void Finish()
+        {
+            for (var cameraIndex = 0; cameraIndex < PerCameraRenderers.Count; cameraIndex++)
+            {
+                PerCameraRenderers[cameraIndex].Sort((x, y) => RenderersList[x].CompareTo(RenderersList[y]));
+            }
+        }
 
         /*public class ByRendererProps : IComparer<RendererData>
         {

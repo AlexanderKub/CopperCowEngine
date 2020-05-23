@@ -1,23 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Windows.Forms;
-using CopperCowEngine.Rendering.Loaders;
+using CopperCowEngine.Core;
 
 namespace CopperCowEngine.Rendering
 {
     public abstract class BaseRenderBackend : IRenderBackend
     {
         // TODO: Protected EventTriggers
-        public abstract event Action OnDrawCall;
-
-        public abstract event Action OnFrameRenderStart;
-
-        public abstract event Action OnFrameRenderEnd;
-
         public abstract event Action<ScreenProperties> OnScreenPropertiesChanged;
 
         public abstract event Action<Keys, bool> OnInputKey;
+
+        public abstract event Action<char> OnInputKeyPress;
 
         public abstract event Action<Vector2> OnMousePositionChange;
 
@@ -29,28 +24,43 @@ namespace CopperCowEngine.Rendering
 
         public FrameData CurrentFrameData { get; protected set; }
 
+        public Frame2DData Current2DFrameData { get; protected set; }
+
         public abstract RenderingConfiguration Configuration { get; protected set; }
 
-        public abstract void BrdfIntegrate(string outputName);
+        public IEngineLoopProvider LoopProvider { get; protected set; }
 
-        public abstract byte[] CompileAndImportShader(string path, ShaderType type, string entryPoint,
-            Dictionary<string, object> macro);
-
-        public abstract void CubeMapPrerender(string path, string outputName);
+        public IScriptEngine ScriptEngine { get; protected set; }
 
         public abstract void Deinitialize();
 
         public abstract void QuitRequest();
 
-        public virtual void Initialize(RenderingConfiguration config, params object[] parameters)
+        public virtual void Initialize(RenderingConfiguration config, IEngineLoopProvider loopProvider, 
+            IScriptEngine scriptEngine, params object[] parameters)
+        {
+            Configuration = config;
+            ScriptEngine = scriptEngine;
+            LoopProvider = loopProvider;
+            LoopProvider.OnQuit += QuitRequest;
+        }
+
+        public virtual void SwitchConfiguration(RenderingConfiguration config)
         {
             Configuration = config;
         }
 
-        public abstract TextureCubeAssetData ImportCubeTexture(string path);
+        protected void DispatchDrawCall()
+        {
+            Statistics.DrawCall();
+        }
 
-        public abstract TextureAssetData ImportTexture(string path, bool forceSRgb);
+        protected void FlushStatistics()
+        {
+            Statistics.Flush();
+        }
 
         public abstract void RenderFrame();
+        public abstract void RequestFrame(IntPtr surface, bool isNew);
     }
 }

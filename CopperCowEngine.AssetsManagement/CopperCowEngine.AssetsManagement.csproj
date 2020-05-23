@@ -1,86 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4CE2D288-B6F5-4591-BD23-C561D0DF91A5}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>CopperCowEngine.AssetsManagement</RootNamespace>
-    <AssemblyName>CopperCowEngine.AssetsManagement</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <PlatformTarget>x64</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <ProjectReference Include="..\CopperCowEngine.Rendering\CopperCowEngine.Rendering.csproj" />
+    <ProjectReference Include="..\FbxLoaderNative\FbxLoaderNative.vcxproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AssetsManager.cs" />
-    <Compile Include="AssetsManager_CreateAsset.cs" />
-    <Compile Include="AssetsManager_PreRender.cs" />
-    <Compile Include="AssetsMeta\AssetTypes.cs" />
-    <Compile Include="AssetsMeta\BaseAsset.cs" />
-    <Compile Include="AssetsMeta\MaterialAsset.cs" />
-    <Compile Include="AssetsMeta\MeshAsset.cs" />
-    <Compile Include="AssetsMeta\MetaAsset.cs" />
-    <Compile Include="AssetsMeta\ShaderAsset.cs" />
-    <Compile Include="AssetsMeta\Texture2DAsset.cs" />
-    <Compile Include="AssetsMeta\TextureCubeAsset.cs" />
-    <Compile Include="FSWorkers\NativeFileSystemWorker.cs" />
-    <Compile Include="FSWorkers\NativeReader.cs" />
-    <Compile Include="FSWorkers\NativeWriter.cs" />
-    <Compile Include="Loaders\FbxLoader.cs" />
-    <Compile Include="Loaders\MaterialLoader.cs" />
-    <Compile Include="Loaders\MeshAssetsLoader.cs" />
-    <Compile Include="Loaders\ObjLoader.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SerializeBlock.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CopperCowEngine.Rendering\CopperCowEngine.Rendering.csproj">
-      <Project>{B6BF5B3E-023F-4EF2-87EA-94873509ACB9}</Project>
-      <Name>CopperCowEngine.Rendering</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\FbxLoaderNative\FbxLoaderNative.vcxproj">
-      <Project>{2f931e91-be59-47f2-8413-1e660c485539}</Project>
-      <Name>FbxLoaderNative</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>

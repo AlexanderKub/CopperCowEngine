@@ -17,9 +17,9 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
     {
         public Control Surface;
 
-        public SwapChain SwapChainRef { get; private set; }
+        private const Format BackBufferFormat = Format.R8G8B8A8_UNorm_SRgb; //Format.R8G8B8A8_UNorm;
 
-        private Texture2DDescription _zBufferTextureDescription;
+        public SwapChain SwapChainRef { get; private set; }
 
         public FormDisplay(bool isDebugMode, int msaaLevel) : base(isDebugMode, msaaLevel) { }
 
@@ -34,11 +34,11 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
                 ModeDescription = new ModeDescription(
                     Width, Height,
                     new Rational(60, 1),
-                    Format.R8G8B8A8_UNorm//R8G8B8A8_UNorm
+                    BackBufferFormat
                 ),
                 IsWindowed = true,
                 OutputHandle = Surface.Handle,
-                SampleDescription = new SampleDescription(MSamplesCount, 0),
+                SampleDescription = new SampleDescription(SamplesCount, 0),
                 SwapEffect = SwapEffect.Discard,
                 Usage = Usage.RenderTargetOutput,
             };
@@ -70,36 +70,19 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
             var factory = swapChain.GetParent<SharpDX.DXGI.Factory>();
             factory.MakeWindowAssociation(Surface.Handle, WindowAssociationFlags.IgnoreAll);
 
-            _zBufferTextureDescription = new Texture2DDescription
-            {
-                Format = Format.R32_Typeless,
-                ArraySize = 1,
-                MipLevels = 1,
-                Width = Width,
-                Height = Height,
-                SampleDescription = new SampleDescription(MSamplesCount, 0),
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-            };
-
             Factory2D = new Factory(FactoryType.SingleThreaded, DebugLevel.Information);
             FactoryDWrite = new SharpDX.DirectWrite.Factory();
             RenderTarget2DProperties = new RenderTargetProperties(new PixelFormat(
-                Format.R8G8B8A8_UNorm, AlphaMode.Premultiplied));
+                BackBufferFormat, AlphaMode.Premultiplied));
         }
 
         public override void InitRenderTarget()
         {
             BackBuffer?.Dispose();
-            RenderTargetViewRef?.Dispose();
-            DepthStencilShaderResourceViewRef?.Dispose();
-            ZBuffer?.Dispose();
-            DepthStencilViewRef?.Dispose();
+            RenderTarget?.Dispose();
             RenderTarget2D?.Dispose();
 
-            SwapChainRef.ResizeBuffers(1, Width, Height, Format.R8G8B8A8_UNorm, SwapChainFlags.None);
+            SwapChainRef.ResizeBuffers(1, Width, Height, BackBufferFormat, SwapChainFlags.None);
 
             using (Surface surface = SwapChainRef.GetBackBuffer<Surface>(0))
             {
@@ -111,55 +94,10 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
 
             BackBuffer = SwapChainRef.GetBackBuffer<Texture2D>(0);
             BackBuffer.DebugName = "BackBuffer";
-            RenderTargetViewRef = new RenderTargetView(DeviceRef, BackBuffer)
+            RenderTarget = new RenderTargetView(DeviceRef, BackBuffer)
             {
                 DebugName = "BackBufferRenderTargetView"
             };
-
-            _zBufferTextureDescription.Width = Width;
-            _zBufferTextureDescription.Height = Height;
-            ZBuffer = new Texture2D(DeviceRef, _zBufferTextureDescription)
-            {
-                DebugName = "ZBuffer"
-            };
-
-            DepthStencilViewRef = new DepthStencilView(DeviceRef, ZBuffer, new DepthStencilViewDescription
-            {
-                Format = Format.D32_Float,
-                Dimension = MSamplesCount > 1
-                    ? DepthStencilViewDimension.Texture2DMultisampled
-                    : DepthStencilViewDimension.Texture2D,
-                Flags = DepthStencilViewFlags.None,
-            })
-            {
-                DebugName = "ZBufferDepthStencilView"
-            };
-
-            var shaderResourceViewDescription = new ShaderResourceViewDescription()
-            {
-                Format = Format.R32_Float,
-            };
-
-            if (MSamplesCount > 1)
-            {
-                shaderResourceViewDescription.Dimension = ShaderResourceViewDimension.Texture2DMultisampled;
-                shaderResourceViewDescription.Texture2DMS = new ShaderResourceViewDescription.Texture2DMultisampledResource();
-            }
-            else
-            {
-                shaderResourceViewDescription.Dimension = ShaderResourceViewDimension.Texture2D;
-                shaderResourceViewDescription.Texture2D = new ShaderResourceViewDescription.Texture2DResource()
-                {
-                    MostDetailedMip = 0,
-                    MipLevels = 1,
-                };
-            }
-
-            DepthStencilShaderResourceViewRef =
-                new ShaderResourceView(DeviceRef, ZBuffer, shaderResourceViewDescription)
-                {
-                    DebugName = "ZBufferDepthStencilSRV"
-                };
 
             SetUpViewport();
 
@@ -181,7 +119,7 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
             SwapChainRef.Present(0, PresentFlags.None);
         }
 
-        public override void Cleanup()
+        public override void Dispose()
         {
             DeviceDebug device3DDebug = null;
             if (IsDebugMode)
@@ -191,7 +129,7 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
 
             SwapChainRef?.Dispose();
             SwapChainRef = null;
-            base.Cleanup();
+            base.Dispose();
 
             if (!IsDebugMode || device3DDebug == null)
             {

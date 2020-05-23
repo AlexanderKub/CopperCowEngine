@@ -1,31 +1,20 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace CopperCowEngine.Rendering.Data
 {
     public class MaterialInstance
     {
-        public enum SamplerType : byte
-        {
-            PointClamp,
-            PointWrap,
-
-            BilinearClamp,
-            BilinearWrap,
-
-            TrilinearClamp,
-            TrilinearWrap,
-        }
-
         // TODO: shader meta info (name, quequ)
         public ShaderGraph.MaterialMeta MetaMaterial { get; private set; }
 
-        public int ShaderQueue => MetaMaterial.Queue;
+        public uint ShaderQueue => MetaMaterial.Queue + (uint)(HasSampler ? 20000 : 10000);
 
         public string Name;
 
-        public SamplerType TexturesSampler;
+        public SamplerType TexturesSampler = SamplerType.BilinearWrap;
 
-        public bool HasSampler => HasAlbedoMap || HasMetallicMap || HasNormalMap || HasOcclusionMap || HasRoughnessMap;
+        public bool HasSampler => HasAlbedoMap || HasMetallicMap || HasNormalMap || HasOcclusionMap || HasRoughnessMap || HasEmissiveMap;
 
         // TODO: change to ShaderGraphMaterials by Meta material
         public bool HasAlbedoMap => !string.IsNullOrEmpty(AlbedoMapAsset);
@@ -38,15 +27,18 @@ namespace CopperCowEngine.Rendering.Data
 
         public bool HasOcclusionMap => !string.IsNullOrEmpty(OcclusionMapAsset);
 
+        public bool HasEmissiveMap => !string.IsNullOrEmpty(EmissiveMapAsset);
+
         public string AlbedoMapAsset;
-        public string NormalMapAsset;
-        public string RoughnessMapAsset;
+        public string EmissiveMapAsset;
         public string MetallicMapAsset;
+        public string NormalMapAsset;
         public string OcclusionMapAsset;
+        public string RoughnessMapAsset;
 
         public MaterialPropertyBlock PropertyBlock;
 
-        public static MaterialInstance DefaultMaterial = new MaterialInstance()
+        public static readonly MaterialInstance DefaultMaterial = new MaterialInstance()
         {
             Name = "DefaultMaterial",
             MetaMaterial = ShaderGraph.MaterialMeta.Standard,
@@ -71,14 +63,28 @@ namespace CopperCowEngine.Rendering.Data
         }
 
         private static MaterialInstance _skySphereMaterial;
+        
+        private static readonly Guid SkySphereMaterialGuid = Guid.NewGuid();
+
+        public static bool IsSkySphereMaterial(Guid materialGuid)
+        {
+            return materialGuid == SkySphereMaterialGuid;
+        }
+
+        public static bool IsSkySphereMaterial(MaterialInstance materialInstance)
+        {
+            return materialInstance.Name == "SkySphereMaterial";
+        }
 
         public static MaterialInstance GetSkySphereMaterial()
         {
-            return _skySphereMaterial ?? (_skySphereMaterial = new MaterialInstance()
+            return _skySphereMaterial ??= new MaterialInstance()
             {
                 Name = "SkySphereMaterial",
                 // SkyboxCubeMap MiraSkyboxCubeMap NightskySkyboxCubeMap
-                AlbedoMapAsset = "HouseCubeMap",
+                //AlbedoMapAsset = "HouseCubeMap",
+                AlbedoMapAsset = "TokioPreFilteredEnvMap",
+                EmissiveMapAsset = "TokioIrradianceEnvMap",
                 TexturesSampler = SamplerType.PointWrap,
                 MetaMaterial = new ShaderGraph.MaterialMeta()
                 {
@@ -88,7 +94,19 @@ namespace CopperCowEngine.Rendering.Data
                     MaterialDomain = ShaderGraph.MaterialMeta.MaterialDomainType.Surface,
                     Wireframe = false,
                 }
-            });
+            };
+        }
+
+        public enum SamplerType : byte
+        {
+            PointClamp,
+            PointWrap,
+
+            BilinearClamp,
+            BilinearWrap,
+
+            TrilinearClamp,
+            TrilinearWrap,
         }
     }
 }

@@ -13,6 +13,12 @@ namespace CopperCowEngine.ECS.Builtin.Systems
         {
             var input = Context.GetSingletonComponent<InputSingleton>();
 
+            if (input.InputStringHolder.IsFocused)
+            {
+                return;
+            }
+
+            // TODO: Axis
             var moveForward = input.IsButtonDown(Buttons.Up);
             var moveBackward = input.IsButtonDown(Buttons.Down);
             var moveLeft = input.IsButtonDown(Buttons.Left);
@@ -34,16 +40,13 @@ namespace CopperCowEngine.ECS.Builtin.Systems
                 control.Yaw += mouseDelta.X;
                 control.Pitch += mouseDelta.Y;
                 control.Pitch = Math.Min(Math.Max(control.Pitch, -89f), 89f);
-
-                var yawPitchRoll = new Vector3(control.Yaw, control.Pitch, control.Roll).DegToRad();
-
-                rotation.Value = Quaternion.CreateFromYawPitchRoll(yawPitchRoll.X, yawPitchRoll.Y, yawPitchRoll.Z);
                 
                 var speed = speedMultiplier * control.Speed * Time.Delta;
-
                 var moveVector = (Vector3.UnitX * axisX + Vector3.UnitZ * axisZ) * speed;
-
                 translation.Value += Vector3.Transform(moveVector, rotation.Value);
+
+                var yawPitchRoll = new Vector3(control.Yaw, control.Pitch, control.Roll).DegToRad();
+                rotation.Value = Quaternion.CreateFromYawPitchRoll(yawPitchRoll.X, yawPitchRoll.Y, yawPitchRoll.Z);
             }
         }
     }

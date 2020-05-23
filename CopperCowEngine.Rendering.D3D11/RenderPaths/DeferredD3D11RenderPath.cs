@@ -9,11 +9,11 @@ using CopperCowEngine.Rendering.D3D11.Loaders;
 using CopperCowEngine.Rendering.D3D11.Shared;
 using CopperCowEngine.Rendering.D3D11.Utils;
 using CopperCowEngine.Rendering.Data;
+using CopperCowEngine.Rendering.Loaders;
 using CopperCowEngine.Rendering.ShaderGraph;
 using SharpDX;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using InputElement = SharpDX.Direct3D11.InputElement;
-using Quaternion = System.Numerics.Quaternion;
 using Vector3 = System.Numerics.Vector3;
 using Vector4 = System.Numerics.Vector4;
 
@@ -25,9 +25,8 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         // TODO: provide right params
         private const float MiddleGray = 7.5f; //0.85f;
         private const float WhiteLum = 12.95f; //1.5f;
-        private static float _adaptationPercent = 1f;
 
-        public void SetToneMappingParams(float mg, float wl, float adapt)
+        /*public void SetToneMappingParams(float mg, float wl, float adapt)
         {
             var t = new CommonStructs.ConstBufferPostProcessStruct()
             {
@@ -36,7 +35,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             };
             _adaptationPercent = adapt;
             D3DUtils.WriteToDynamicBuffer(GetContext, _postProcessConstantBuffer, t);
-        }
+        }*/
 
         public override void Init(D3D11RenderBackend renderBackend)
         {
@@ -45,6 +44,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             InitGBuffer(MsSamplesCount);
             CreateBuffers();
             // ScriptEngine.TestRef = this;
+            MeshAssetsLoader.LoadMesh("SkyDomeMesh");
         }
 
         public override void Draw(StandardFrameData frameData)
@@ -55,9 +55,9 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             {
                 ForwardPass(frameData);
             }
-            if (EnabledHdr)
+            if (HdrEnable)
             {
-                ScreenQuadPass();
+                ScreenQuadPass(frameData);
             }
             ResetShaderResourcesViews();
         }
@@ -78,7 +78,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             if (frameData.PerCameraLights[0].Count == 0)
             {
                 GetContext.OutputMerger.SetRenderTargets(_readonlyDepthStencilView,
-                    EnabledHdr ? _hdrTarget.View : GetDisplay.RenderTargetViewRef);
+                    HdrEnable ? _hdrTarget.TargetView : GetDisplay.RenderTarget);
             }
 
             SetDepthStencilState(DepthStencilStateType.GreaterAndDisableWrite);
@@ -87,19 +87,15 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             SetInputLayout(GetSharedItems.StandardInputLayout);
             SetVertexShader("CommonVS");
 
-            var materialName = "";
+            ClearMesh();
+            ClearMaterial();
 
             for (var i = _firstTranslucentRendererIndex; i < frameData.PerCameraRenderers[0].Count; i++)
             {
                 var rendererData = frameData.RenderersList[frameData.PerCameraRenderers[0][i]];
 
-                SetMesh(rendererData.MeshName);
-
-                if (materialName != rendererData.MaterialName)
-                {
-                    materialName = rendererData.MaterialName;
-                    SetMaterial(materialName, true);
-                }
+                SetMesh(rendererData.MeshGuid);
+                SetMaterial(rendererData.MaterialGuid);
                 
                 Matrix4x4.Invert(rendererData.TransformMatrix, out var worldInverse);
 
@@ -114,15 +110,17 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             }
         }
 
-        private void ScreenQuadPass()
+        private void ScreenQuadPass(StandardFrameData frameData)
         {
-            GetContext.OutputMerger.SetRenderTargets(null, GetDisplay.RenderTargetViewRef);
+            GetContext.OutputMerger.SetRenderTargets(null, GetDisplay.RenderTarget);
 
-            DownSampling();
+            DownSampling(_hdrTarget, frameData.CamerasList[0].FrameTime);
             // Tone mapping
             // Bloom
 
             SetBlendState(BlendStateType.Opaque);
+            SetRasterizerState(RasterizerStateType.SolidBackCull);
+
             SetInputLayout(_quadLayout);
             SetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
 
@@ -132,49 +130,11 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             GetContext.PixelShader.SetShaderResource(0, _hdrTarget.ResourceView);
             SetSamplerState(0, SamplerStateType.PointClamp);
 
-            GetContext.PixelShader.SetShaderResource(3, _dwnSampledPrev ? _csAvgLuminanceSrv : _csPrevAvgLuminanceSrv);
+            GetContext.PixelShader.SetShaderResource(3, CurrentAvgLuminanceSrv);
             DX_Draw(4, 0);
             GetContext.PixelShader.SetShaderResource(0, null);
 
             GetContext.OutputMerger.ResetTargets();
-        }
-
-        private bool _dwnSampledPrev = false;
-
-        private void DownSampling()
-        {
-            var constData = new DownScaleConstStruct()
-            {
-                ResX = (uint)(GetDisplay.Width / 4),
-                ResY = (uint)(GetDisplay.Height / 4),
-                Domain = (uint)((GetDisplay.Width * GetDisplay.Height) / 16),
-                GroupSize = (uint)((GetDisplay.Width * GetDisplay.Height) / (16 * 1024)),
-                Adaptation = Math.Min(0.01f / _adaptationPercent, 0.9999f),//Time.DeltaTime
-            };
-            D3DUtils.WriteToDynamicBuffer(GetContext, _downScaleConstantsBuffer, constData);
-
-            SetComputeShader(_downsamplingFirsPassCsName);
-
-            GetContext.ComputeShader.SetShaderResource(0, _hdrTarget.ResourceView);
-            GetContext.ComputeShader.SetUnorderedAccessView(0, _csLuminanceUav);
-            GetContext.ComputeShader.SetShaderResource(1,
-                _dwnSampledPrev ? _csAvgLuminanceSrv : _csPrevAvgLuminanceSrv);
-
-            GetContext.Dispatch((GetDisplay.Width * GetDisplay.Height) / (16 * 1024), 1, 1);
-
-            GetContext.ComputeShader.SetShaderResource(0, null);
-            GetContext.ComputeShader.SetUnorderedAccessView(0, null);
-
-            GetContext.ComputeShader.SetShaderResource(2, _csLuminanceSrv);
-            GetContext.ComputeShader.SetUnorderedAccessView(0,
-                _dwnSampledPrev ? _csPrevAvgLuminanceUav : _csAvgLuminanceUav);
-            SetComputeShader(_downsamplingSecondPassCsName);
-            GetContext.Dispatch(1, 1, 1);
-
-            GetContext.ComputeShader.SetShaderResource(1, null);
-            GetContext.ComputeShader.SetShaderResource(2, null);
-            GetContext.ComputeShader.SetUnorderedAccessView(0, null);
-            _dwnSampledPrev = !_dwnSampledPrev;
         }
 
         public override void Resize()
@@ -238,7 +198,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             };
             D3DUtils.WriteToDynamicBuffer(GetContext, _perFrameConstantBuffer, _perFrameConstantBufferValue);
 
-            var materialName = "";
+            var MaterialGuid = Guid.Empty;
             var isMaskedSubPass = false;
 
             DrawSkySphere(frameData.CamerasList[0].Position);
@@ -248,12 +208,12 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                 int index = frameData.PerCameraRenderers[0][it];
                 var rendererData = frameData.RenderersList[index];
 
-                SetMesh(rendererData.MeshName);
+                SetMesh(rendererData.MeshGuid);
 
-                if (materialName != rendererData.MaterialName)
+                if (MaterialGuid != rendererData.MaterialGuid)
                 {
-                    materialName = rendererData.MaterialName;
-                    SetMaterial(materialName);
+                    MaterialGuid = rendererData.MaterialGuid;
+                    SetMaterial(MaterialGuid);
                     if (!isMaskedSubPass && CachedMaterial.MetaMaterial.BlendMode == MaterialMeta.BlendModeType.Masked)
                     {
                         isMaskedSubPass = true;
@@ -287,14 +247,8 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         {
             _currentPass = Pass.Light;
 
-            if (EnabledHdr)
-            {
-                GetContext.OutputMerger.SetRenderTargets(null, _hdrTarget.View);
-            }
-            else
-            {
-                GetContext.OutputMerger.SetRenderTargets(null, GetDisplay.RenderTargetViewRef);
-            }
+            GetContext.OutputMerger.SetRenderTargets(null,
+                HdrEnable ? _hdrTarget.TargetView : GetDisplay.RenderTarget);
 
             ClearMesh();
             SetInputLayout(_quadLayout);
@@ -306,17 +260,15 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             SetSamplerState(0, SamplerStateType.IBLSampler);
             SetSamplerState(1, SamplerStateType.PreIntegratedSampler);
 
-            GetContext.PixelShader.SetShaderResources(0, 8, new ShaderResourceView[] {
-                _albedoAndMetallicTarget.ResourceView,
-                _emissiveAndRoughnessTarget.ResourceView,
-                _packedNormalsTarget.ResourceView,
-                _specularAoUnlitNonShadowsTarget.ResourceView,
-                _depthStencilTarget.ResourceView,
-                GetSharedItems.PreFilteredMap,
-                GetSharedItems.IrradianceMap,
-                GetSharedItems.BRDFxLookUpTable,
-            });
+            GetContext.PixelShader.SetShaderResources(0, 8, _albedoAndMetallicTarget.ResourceView, 
+                _emissiveAndRoughnessTarget.ResourceView, _packedNormalsTarget.ResourceView, 
+                _specularAoUnlitNonShadowsTarget.ResourceView, _depthStencilTarget.ResourceView, 
+                GetSharedItems.LoadTextureShaderResourceView(MaterialInstance.GetSkySphereMaterial().AlbedoMapAsset, true), 
+                GetSharedItems.LoadTextureShaderResourceView(MaterialInstance.GetSkySphereMaterial().EmissiveMapAsset, true), 
+                GetSharedItems.BRDFxLookUpTable);
             _isNullSrv = false;
+
+            SetRasterizerState(RasterizerStateType.SolidBackCull);
 
             DX_Draw(4, 0);
 
@@ -326,10 +278,9 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             }
 
             GetContext.OutputMerger.SetRenderTargets(_readonlyDepthStencilView,
-                EnabledHdr ? _hdrTarget.View : GetDisplay.RenderTargetViewRef);
+                HdrEnable ? _hdrTarget.TargetView : GetDisplay.RenderTarget);
 
             SetBlendState(BlendStateType.Additive);
-            SetRasterizerState(RasterizerStateType.SolidBackCull);
 
             var currentLightType = LightType.Directional;
 
@@ -483,33 +434,10 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
     internal partial class DeferredD3D11RenderPath
     {
         private int _firstTranslucentRendererIndex;
-        private string _currentMeshName;
-        protected SharedRenderItemsStorage.CachedMesh CachedMesh;
 
-        protected void SetMesh(string meshName)
+
+        protected override void OnMaterialChanged()
         {
-            if (_currentMeshName == meshName)
-            {
-                return;
-            }
-            _currentMeshName = meshName;
-            CachedMesh = GetSharedItems.GetMesh(meshName);
-            GetContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(CachedMesh.VertexBuffer, 96, 0));
-            GetContext.InputAssembler.SetIndexBuffer(CachedMesh.IndexBuffer, Format.R32_UInt, 0);
-            SetPrimitiveTopology(PrimitiveTopology.TriangleList);
-        }
-
-        protected void ClearMesh()
-        {
-            _currentMeshName = "";
-        }
-
-        protected MaterialInstance CachedMaterial;
-
-        protected void SetMaterial(string materialName, bool changeStates = false)
-        {
-            CachedMaterial = MaterialLoader.LoadMaterial(materialName);
-
             // DEBUG
             if (_currentPass == Pass.Geometry)
             {
@@ -535,15 +463,16 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                 TextureTiling = CachedMaterial.PropertyBlock.Tile,
                 TextureShift = CachedMaterial.PropertyBlock.Shift,
 
-                OptionsMask0 = CommonStructs.FloatMaskValue(
+                OptionsMask0 = CommonStructs.CommonStructsHelper.FloatMaskValue(
                     CachedMaterial.HasAlbedoMap, CachedMaterial.HasMetallicMap,
                    false, CachedMaterial.HasRoughnessMap),
-                OptionsMask1 = CommonStructs.FloatMaskValue(
+                OptionsMask1 = CommonStructs.CommonStructsHelper.FloatMaskValue(
                     CachedMaterial.HasNormalMap, false,
                     CachedMaterial.HasOcclusionMap, false),
                 AlphaClip = 0.5f,
             };
 
+            // TODO: Translucent Pixel shader
             SetPixelShader(_currentPass == Pass.Forward ? "TestShader" : "FillGBufferPS");
 
             D3DUtils.WriteToDynamicBuffer(GetContext, _perMaterialConstantBuffer, _perMaterialConstantBufferValue);
@@ -586,32 +515,11 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             GetContext.PixelShader.SetShaderResources(0, 7, _null7ShaderResourceViews);
         }
 
-        private void SetMaterialCullMode(MaterialMeta meta)
-        {
-            switch (meta.CullMode)
-            {
-                case MaterialMeta.CullModeType.Front:
-                    SetRasterizerState(meta.Wireframe ? RasterizerStateType.WireframeFrontCull
-                        : RasterizerStateType.SolidFrontCull);
-                    break;
-                case MaterialMeta.CullModeType.Back:
-                    SetRasterizerState(meta.Wireframe ? RasterizerStateType.WireframeBackCull
-                        : RasterizerStateType.SolidBackCull);
-                    break;
-                case MaterialMeta.CullModeType.None:
-                    SetRasterizerState(meta.Wireframe ? RasterizerStateType.WireframeNoneCull
-                        : RasterizerStateType.SolidNoneCull);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
         private static readonly Matrix4x4 SkySphereMatrix = Matrix4x4.CreateScale(Vector3.One * 5000f) *
                                                          Matrix4x4.CreateFromYawPitchRoll(0, MathUtil.Pi * 0.5f, 0);
         private void DrawSkySphere(Vector3 cameraPosition)
         {
-            SetMesh("SkyDomeMesh");
+            SetMesh(MeshAssetsLoader.GetGuid("SkyDomeMesh"));
             SetPixelShader("FillGBufferSkyboxPS");
 
             SetSamplerState(0, SamplerStateType.TrilinearWrap);
@@ -629,8 +537,8 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             _perMaterialConstantBufferValue = new CommonStructs.ConstBufferPerMaterialDeferredStruct()
             {
                 Unlit = 1,
-                OptionsMask0 = CommonStructs.FloatMaskValue(true, false, false, false),
-                OptionsMask1 = CommonStructs.FloatMaskValue(false, false, false, true),
+                OptionsMask0 = CommonStructs.CommonStructsHelper.FloatMaskValue(true, false, false, false),
+                OptionsMask1 = CommonStructs.CommonStructsHelper.FloatMaskValue(false, false, false, true),
             };
 
             Matrix4x4.Invert(SkySphereMatrix * Matrix4x4.CreateTranslation(cameraPosition), out var worldInvert);
@@ -671,7 +579,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             _specularAoUnlitNonShadowsTarget = GetSharedItems.CreateRenderTarget("SpecularAOUnlitNonShadows",
                 GetDisplay.Width, GetDisplay.Height, Format.R8G8B8A8_UNorm, samples);
 
-            if (EnabledHdr)
+            if (HdrEnable)
             {
                 _hdrTarget = GetSharedItems.CreateRenderTarget("HDR",
                     GetDisplay.Width, GetDisplay.Height, Format.R16G16B16A16_Float, samples);
@@ -690,10 +598,10 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 
             _gBufferTargets = new[]
             {
-                _albedoAndMetallicTarget.View,
-                _emissiveAndRoughnessTarget.View,
-                _packedNormalsTarget.View,
-                _specularAoUnlitNonShadowsTarget.View,
+                _albedoAndMetallicTarget.TargetView,
+                _emissiveAndRoughnessTarget.TargetView,
+                _packedNormalsTarget.TargetView,
+                _specularAoUnlitNonShadowsTarget.TargetView,
             };
 
             InitDownsamplingResources();
@@ -706,12 +614,22 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             _packedNormalsTarget.Resize(GetDevice, GetDisplay.Width, GetDisplay.Height);
             _specularAoUnlitNonShadowsTarget.Resize(GetDevice, GetDisplay.Width, GetDisplay.Height);
             _depthStencilTarget.Resize(GetDevice, GetDisplay.Width, GetDisplay.Height);
+
+            _readonlyDepthStencilView.Dispose();
+            ToDispose(_readonlyDepthStencilView = new DepthStencilView(GetDevice, _depthStencilTarget.Map, new DepthStencilViewDescription()
+            {
+                Format = Format.D32_Float_S8X24_UInt,
+                Dimension = MsSamplesCount > 1 ? DepthStencilViewDimension.Texture2DMultisampled : DepthStencilViewDimension.Texture2D,
+                Flags = DepthStencilViewFlags.ReadOnlyDepth | DepthStencilViewFlags.ReadOnlyStencil,
+            }));
+            _readonlyDepthStencilView.DebugName = "ReadonlyDepthStencilView";
+
             _gBufferTargets = new[]
             {
-                _albedoAndMetallicTarget.View,
-                _emissiveAndRoughnessTarget.View,
-                _packedNormalsTarget.View,
-                _specularAoUnlitNonShadowsTarget.View,
+                _albedoAndMetallicTarget.TargetView,
+                _emissiveAndRoughnessTarget.TargetView,
+                _packedNormalsTarget.TargetView,
+                _specularAoUnlitNonShadowsTarget.TargetView,
             };
             _hdrTarget.Resize(GetDevice, GetDisplay.Width, GetDisplay.Height);
             InitDownsamplingSizableResources();
@@ -798,172 +716,26 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             _quadLayout.DebugName = "QuadLayout";
         }
 
-        private Buffer _csLuminanceBuffer;
-        private UnorderedAccessView _csLuminanceUav;
-        private ShaderResourceView _csLuminanceSrv;
-
-        private Buffer _csAvgLuminanceBuffer;
-        private UnorderedAccessView _csAvgLuminanceUav;
-        private ShaderResourceView _csAvgLuminanceSrv;
-
-        private Buffer _csPrevAvgLuminanceBuffer;
-        private UnorderedAccessView _csPrevAvgLuminanceUav;
-        private ShaderResourceView _csPrevAvgLuminanceSrv;
-
-        private Buffer _downScaleConstantsBuffer;
-
-        private struct DownScaleConstStruct
-        {
-            public uint ResX;
-            public uint ResY;
-            public uint Domain;
-            public uint GroupSize;
-            public float Adaptation;
-            private Vector3 _filler;
-        }
-
-        private void InitDownsamplingSizableResources()
-        {
-            _csLuminanceBuffer?.Dispose();
-            var elementsCount = (GetDisplay.Width * GetDisplay.Height) / (16 * 1024);
-            elementsCount = elementsCount > 0 ? elementsCount : 1;
-            ToDispose(_csLuminanceBuffer = new Buffer(GetDevice, new BufferDescription()
-            {
-                BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
-                OptionFlags = ResourceOptionFlags.BufferStructured,
-                StructureByteStride = 4,
-                SizeInBytes = 4 * elementsCount,
-            }));
-            _csLuminanceBuffer.DebugName = "CSLuminanceBuffer";
-
-            _csLuminanceUav?.Dispose();
-            ToDispose(_csLuminanceUav = new UnorderedAccessView(GetDevice, _csLuminanceBuffer, new UnorderedAccessViewDescription()
-            {
-                Format = Format.Unknown,
-                Dimension = UnorderedAccessViewDimension.Buffer,
-                Buffer = new UnorderedAccessViewDescription.BufferResource()
-                {
-                    ElementCount = elementsCount,
-                }
-            }));
-            _csLuminanceUav.DebugName = "CSLuminanceUAV";
-
-            _csLuminanceSrv?.Dispose();
-            ToDispose(_csLuminanceSrv = new ShaderResourceView(GetDevice, _csLuminanceBuffer, new ShaderResourceViewDescription()
-            {
-                Format = Format.Unknown,
-                Dimension = ShaderResourceViewDimension.Buffer,
-                Buffer = new ShaderResourceViewDescription.BufferResource()
-                {
-                    ElementCount = elementsCount,
-                }
-            }));
-            _csLuminanceSrv.DebugName = "CSLuminanceSRV";
-        }
-
-        private void InitDownsamplingResources()
-        {
-            InitDownsamplingSizableResources();
-            // Current
-            ToDispose(_csAvgLuminanceBuffer = new Buffer(GetDevice, new BufferDescription()
-            {
-                BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
-                OptionFlags = ResourceOptionFlags.BufferStructured,
-                StructureByteStride = 4,
-                SizeInBytes = 4,
-            }));
-            _csAvgLuminanceBuffer.DebugName = "CSAvgLuminanceBuffer";
-
-            ToDispose(_csAvgLuminanceUav = new UnorderedAccessView(GetDevice, _csAvgLuminanceBuffer, new UnorderedAccessViewDescription()
-            {
-                Format = Format.Unknown,
-                Dimension = UnorderedAccessViewDimension.Buffer,
-                Buffer = new UnorderedAccessViewDescription.BufferResource()
-                {
-                    ElementCount = 1,
-                }
-            }));
-            _csAvgLuminanceUav.DebugName = "CSAvgLuminanceUAV";
-
-            ToDispose(_csAvgLuminanceSrv = new ShaderResourceView(GetDevice, _csAvgLuminanceBuffer, new ShaderResourceViewDescription()
-            {
-                Format = Format.Unknown,
-                Dimension = ShaderResourceViewDimension.Buffer,
-                Buffer = new ShaderResourceViewDescription.BufferResource()
-                {
-                    ElementCount = 1,
-                }
-            }));
-            _csAvgLuminanceSrv.DebugName = "CSAvgLuminanceSRV";
-
-            // Prev
-            ToDispose(_csPrevAvgLuminanceBuffer = new Buffer(GetDevice, new BufferDescription()
-            {
-                BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
-                OptionFlags = ResourceOptionFlags.BufferStructured,
-                StructureByteStride = 4,
-                SizeInBytes = 4,
-            }));
-            _csPrevAvgLuminanceBuffer.DebugName = "CSPrevAvgLuminanceBuffer";
-
-            ToDispose(_csPrevAvgLuminanceUav = new UnorderedAccessView(GetDevice, _csPrevAvgLuminanceBuffer, new UnorderedAccessViewDescription()
-            {
-                Format = Format.Unknown,
-                Dimension = UnorderedAccessViewDimension.Buffer,
-                Buffer = new UnorderedAccessViewDescription.BufferResource()
-                {
-                    ElementCount = 1,
-                }
-            }));
-            _csPrevAvgLuminanceUav.DebugName = "CSPrevAvgLuminanceUAV";
-
-            ToDispose(_csPrevAvgLuminanceSrv = new ShaderResourceView(GetDevice, _csPrevAvgLuminanceBuffer, new ShaderResourceViewDescription()
-            {
-                Format = Format.Unknown,
-                Dimension = ShaderResourceViewDimension.Buffer,
-                Buffer = new ShaderResourceViewDescription.BufferResource()
-                {
-                    ElementCount = 1,
-                }
-            }));
-            _csPrevAvgLuminanceSrv.DebugName = "CSPrevAvgLuminanceSRV";
-
-            ToDispose(_downScaleConstantsBuffer = new Buffer(GetDevice, new BufferDescription()
-            {
-                BindFlags = BindFlags.ConstantBuffer,
-                CpuAccessFlags = CpuAccessFlags.Write,
-                Usage = ResourceUsage.Dynamic,
-                SizeInBytes = Utilities.SizeOf<DownScaleConstStruct>(),
-            }));
-            _downScaleConstantsBuffer.DebugName = "DownScaleConstantsBuffer";
-
-            GetContext.ComputeShader.SetConstantBuffer(0, _downScaleConstantsBuffer);
-        }
-
         private string _lightPassPsName;
         private string _lightPassDirPsName;
         private string _lightPassPointPsName;
         private string _lightPassPointQuadPsName;
         private string _lightPassSpotPsName;
         private string _lightPassSpotQuadPsName;
-        private string _downsamplingFirsPassCsName;
-        private string _downsamplingSecondPassCsName;
         private string _screenQuadPsName;
 
         private void InitShadersNames()
         {
-            _lightPassPsName = EnabledMsaa ? "MSAA_LightPassPS" : "LightPassPS";
-            _lightPassDirPsName = EnabledMsaa ? "MSAA_LightPassDirectionalPS" : "LightPassDirectionalPS";
-            _lightPassPointPsName = EnabledMsaa ? "MSAA_LightPassPointPS" : "LightPassPointPS";
-            _lightPassPointQuadPsName = EnabledMsaa ? "MSAA_LightPassPointQuadPS" : "LightPassPointQuadPS";
+            _lightPassPsName = MsaaEnable ? "MSAA_LightPassPS" : "LightPassPS";
+            _lightPassDirPsName = MsaaEnable ? "MSAA_LightPassDirectionalPS" : "LightPassDirectionalPS";
+            _lightPassPointPsName = MsaaEnable ? "MSAA_LightPassPointPS" : "LightPassPointPS";
+            _lightPassPointQuadPsName = MsaaEnable ? "MSAA_LightPassPointQuadPS" : "LightPassPointQuadPS";
             // LightPassSpotPSName = EnabledMSAA ? "MSAA_" : "";
             // LightPassSpotQuadPSName = EnabledMSAA ? "MSAA_" : "";
             // LightPassCapsulePSName = EnabledMSAA ? "MSAA_" : "";
             // LightPassCapsuleQuadPSName = EnabledMSAA ? "MSAA_" : "";
-            _downsamplingFirsPassCsName = "DownsamplingFirstCS";
-            _downsamplingSecondPassCsName = "DownsamplingSecondCS";
 
-            _screenQuadPsName = EnabledMsaa ? "MSAA_ScreenQuadPS" : "ScreenQuadPS";
+            _screenQuadPsName = MsaaEnable ? "MSAA_ScreenQuadPS" : "ScreenQuadPS";
         }
     }
     #endregion

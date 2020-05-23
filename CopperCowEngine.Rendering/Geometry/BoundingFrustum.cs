@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Numerics;
 
 namespace CopperCowEngine.Rendering.Geometry
@@ -7,7 +6,6 @@ namespace CopperCowEngine.Rendering.Geometry
     /// <summary>
     /// Defines a viewing frustum for intersection operations.
     /// </summary>
-    [DebuggerDisplay("{DebugDisplayString,nq}")]
     public class BoundingFrustum : IEquatable<BoundingFrustum>
     {
         #region Private Fields

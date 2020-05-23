@@ -1,83 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B6BF5B3E-023F-4EF2-87EA-94873509ACB9}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CopperCowEngine.Rendering</RootNamespace>
-    <AssemblyName>CopperCowEngine.Rendering</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-    <PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <ProjectReference Include="..\CopperCowEngine.Core\CopperCowEngine.Core.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="BaseRenderBackend.cs" />
-    <Compile Include="Geometry\BoundingBox.cs" />
-    <Compile Include="Geometry\BoundingFrustum.cs" />
-    <Compile Include="Data\CameraData.cs" />
-    <Compile Include="Data\MaterialPropertyBlock.cs" />
-    <Compile Include="Geometry\BoundingSphere.cs" />
-    <Compile Include="Geometry\ContainmentType.cs" />
-    <Compile Include="Geometry\MatrixUtils.cs" />
-    <Compile Include="Geometry\OrientedBoundingBox.cs" />
-    <Compile Include="Geometry\PlaneHelper.cs" />
-    <Compile Include="Geometry\PlaneIntersectionType.cs" />
-    <Compile Include="Geometry\Ray.cs" />
-    <Compile Include="IRenderBackend.cs" />
-    <Compile Include="Data\LightData.cs" />
-    <Compile Include="Data\MaterialData.cs" />
-    <Compile Include="Loaders\BoundsBox.cs" />
-    <Compile Include="Loaders\MaterialInfo.cs" />
-    <Compile Include="Loaders\MeshInfo.cs" />
-    <Compile Include="Loaders\ModelGeometry.cs" />
-    <Compile Include="Loaders\Primitives.cs" />
-    <Compile Include="Loaders\TextureAssetData.cs" />
-    <Compile Include="MsaaEnabled.cs" />
-    <Compile Include="ShaderType.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Data\RendererData.cs" />
-    <Compile Include="RenderingConfiguration.cs" />
-    <Compile Include="RenderPathType.cs" />
-    <Compile Include="ShaderGraph\MaterialMeta.cs" />
-    <Compile Include="Data\StandartFrameData.cs" />
+    <Reference Include="System.Windows.Forms">
+      <HintPath>..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll</HintPath>
+    </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>

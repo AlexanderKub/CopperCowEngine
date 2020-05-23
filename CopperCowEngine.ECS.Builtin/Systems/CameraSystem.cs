@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using CopperCowEngine.Core;
 using CopperCowEngine.ECS.Builtin.Components;
 using CopperCowEngine.ECS.Builtin.Singletons;
 using CopperCowEngine.Rendering.Data;
@@ -33,9 +34,11 @@ namespace CopperCowEngine.ECS.Builtin.Systems
 
                 var cameraBackward = new Vector3(locToWorld.Value.M31, locToWorld.Value.M32, locToWorld.Value.M33);
                 var forward = position - cameraBackward;
-                
-                viewProjection.View = Matrix4x4.CreateLookAt(position, forward, Vector3.UnitY);
 
+                var previousView = viewProjection.View;
+                var previousViewProjection = viewProjection.ViewProjection;
+
+                viewProjection.View = Matrix4x4.CreateLookAt(position, forward, Vector3.UnitY);
                 viewProjection.ViewProjection = viewProjection.View * projection.Value; 
 
                 frameData.AddCameraData(new CameraData
@@ -43,10 +46,11 @@ namespace CopperCowEngine.ECS.Builtin.Systems
                     Forward = forward,
                     Frustum = new BoundingFrustum(viewProjection.ViewProjection),
                     Index = 0,
+                    FrameTime = Time.Delta,
                     Position = position,
 
-                    PreviousView = viewProjection.View,
-                    PreviousViewProjection = viewProjection.ViewProjection,
+                    PreviousView = previousView,
+                    PreviousViewProjection = previousViewProjection,
 
                     Projection = projection.Value,
                     View = viewProjection.View,

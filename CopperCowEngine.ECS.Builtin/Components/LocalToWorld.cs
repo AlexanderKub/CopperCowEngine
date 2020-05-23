@@ -3,5 +3,6 @@
     public struct LocalToWorld : IComponentData
     {
         public System.Numerics.Matrix4x4 Value;
+        public System.Numerics.Matrix4x4 PreviousValue;
     }
 }

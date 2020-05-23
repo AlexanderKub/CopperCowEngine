@@ -14,9 +14,10 @@
 
         public float OpacityMaskClipValue = 0.3333f;
 
-        public int Queue => (int)BlendMode + (int)ShadingMode + (int)CullMode + (Wireframe ? 100 : 200);
+        //uint max: 4,294,967,295
+        public uint Queue => (uint)BlendMode + (uint)ShadingMode + (uint)CullMode + (uint)(Wireframe ? 100000 : 200000);
 
-        public static MaterialMeta Standard = new MaterialMeta();
+        public static readonly MaterialMeta Standard = new MaterialMeta();
 
         public enum MaterialDomainType : byte
         {
@@ -25,24 +26,24 @@
 
         public enum BlendModeType : uint
         {
-            Opaque = 100000,
-            Masked = 200000,
-            Translucent = 300000,
-            Additive = 400000,
-            Modulate = 500000,
+            Opaque = 100000000,
+            Masked = 200000000,
+            Translucent = 300000000,
+            Additive = 400000000,
+            Modulate = 500000000,
         }
 
         public enum ShadingModeType : uint
         {
-            Unlit = 10000,
-            Default = 20000,
+            Unlit = 10000000,
+            Default = 20000000,
         }
 
         public enum CullModeType : uint
         {
-            Front = 1000,
-            Back = 2000,
-            None = 3000,
+            Front = 1000000,
+            Back = 2000000,
+            None = 3000000,
         }
     }
 }

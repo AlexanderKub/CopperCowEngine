@@ -1,19 +1,15 @@
-﻿namespace CopperCowEngine.Rendering.Loaders
-{
-    public enum PrimitivesMesh : byte
-    {
-        Cube,
-        Sphere,
-    }
+﻿using System;
 
+namespace CopperCowEngine.Rendering.Loaders
+{
     public struct MaterialInfo
     {
-        public string Name { get; }
-        public int Queue { get; }
+        public Guid AssetGuid { get; }
+        public uint Queue { get; }
 
-        internal MaterialInfo(string name, int queue)
+        internal MaterialInfo(Guid assetGuid, uint queue)
         {
-            Name = name;
+            AssetGuid = assetGuid;
             Queue = queue;
         }
     }

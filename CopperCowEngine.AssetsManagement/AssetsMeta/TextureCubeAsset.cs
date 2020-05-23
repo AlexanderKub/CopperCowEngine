@@ -12,34 +12,6 @@ namespace CopperCowEngine.AssetsManagement.AssetsMeta
             Type = AssetTypes.TextureCube;
         }
 
-        public override void CopyValues(BaseAsset source)
-        {
-        }
-
-        public override bool ImportAsset(string path, string ext)
-        {
-            Data = AssetsManager.RenderBackend.ImportCubeTexture(path);
-            return true;
-        }
-
-        public override void SaveAsset(BinaryWriter writer)
-        {
-            base.SaveAsset(writer);
-            writer.Write(Data.Width);
-            writer.Write(Data.Height);
-            writer.Write(Data.ChannelsCount);
-            writer.Write(Data.BytesPerChannel);
-            writer.Write((int)Data.ColorSpace);
-            writer.Write(Data.MipLevels);
-            for (var mip = 0; mip < Data.MipLevels; mip++)
-            {
-                for (var i = 0; i < 6; i++)
-                {
-                    writer.Write(Data.Buffer[i][mip]);
-                }
-            }
-        }
-
         public override bool LoadAsset(BinaryReader reader)
         {
             if (!base.LoadAsset(reader))

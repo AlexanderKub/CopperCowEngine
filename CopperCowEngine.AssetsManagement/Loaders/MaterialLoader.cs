@@ -1,20 +1,22 @@
-﻿using System.Collections.Generic;
-using CopperCowEngine.AssetsManagement;
+﻿using System;
+using System.Collections.Generic;
 using CopperCowEngine.AssetsManagement.AssetsMeta;
 using CopperCowEngine.Rendering.Data;
 using CopperCowEngine.Rendering.Loaders;
+using CopperCowEngine.Rendering.ShaderGraph;
 
 namespace CopperCowEngine.AssetsManagement.Loaders
 {
-    public class MaterialLoader
+    public static class MaterialLoader
     {
-        private static readonly Dictionary<string, MaterialInstance> CachedMaterials = new Dictionary<string, MaterialInstance>();
+        private static readonly Dictionary<Guid, MaterialInstance> CachedMaterials = new Dictionary<Guid, MaterialInstance>();
+        private static readonly Dictionary<string, Guid> CachedMaterialsGuidTable = new Dictionary<string, Guid>();
 
-        public static MaterialInstance LoadMaterial(string assetName)
+        public static Guid LoadMaterial(string assetName)
         {
-            if (CachedMaterials.ContainsKey(assetName))
+            if (CachedMaterialsGuidTable.ContainsKey(assetName))
             {
-                return CachedMaterials[assetName];
+                return CachedMaterialsGuidTable[assetName];
             }
 
             var materialAsset = AssetsManager.GetManager().LoadAsset<MaterialAsset>(assetName);
@@ -22,6 +24,7 @@ namespace CopperCowEngine.AssetsManagement.Loaders
             {
                 Name = materialAsset.Name,
                 AlbedoMapAsset = materialAsset.AlbedoMapAsset,
+                EmissiveMapAsset = materialAsset.EmissiveMapAsset,
                 RoughnessMapAsset = materialAsset.RoughnessMapAsset,
                 MetallicMapAsset = materialAsset.MetallicMapAsset,
                 NormalMapAsset = materialAsset.NormalMapAsset,
@@ -30,27 +33,47 @@ namespace CopperCowEngine.AssetsManagement.Loaders
                 {
                     AlbedoColor = materialAsset.AlbedoColor,
                     AlphaValue = materialAsset.AlphaValue,
+                    EmissiveColor = materialAsset.EmissiveColor,
                     MetallicValue = materialAsset.MetallicValue,
                     RoughnessValue = materialAsset.RoughnessValue,
                     Shift = materialAsset.Shift,
                     Tile = materialAsset.Tile,
                 },
+                TexturesSampler = MaterialInstance.SamplerType.BilinearWrap,
             };
-            CachedMaterials.Add(assetName, mat);
+            
+            var newGuid = Guid.NewGuid();
+            CachedMaterialsGuidTable.Add(assetName, newGuid);
+            CachedMaterials.Add(newGuid, mat);
             //Debug.Log("AssetManager", "Material " + assetName + " loaded.");
-            return mat;
+
+            return newGuid;
         }
 
-        public static MaterialInfo LoadMaterialInfo(string assetName)
+        public static Guid GetGuid(string assetName)
         {
-            var material = LoadMaterial(assetName);
-            return new MaterialInfo(assetName, material.ShaderQueue);
+            return CachedMaterialsGuidTable[assetName];
         }
 
-        public static MaterialInfo LoadMaterialInfo(MaterialInstance materialInstance)
+        public static MaterialInstance GetMaterialInstance(Guid assetGuid)
         {
-            CachedMaterials.Add(materialInstance.Name, materialInstance);
-            return new MaterialInfo(materialInstance.Name, materialInstance.ShaderQueue);
+            return CachedMaterials.TryGetValue(assetGuid, out var instance) ? instance : null;
+        }
+
+        public static MaterialInfo GetMaterialInfo(Guid assetGuid)
+        {
+            var materialInstance = CachedMaterials[assetGuid];
+
+            return new MaterialInfo(assetGuid, materialInstance.ShaderQueue);
+        }
+
+        public static MaterialInfo GetMaterialInfo(MaterialInstance materialInstance)
+        {
+            var newGuid = Guid.NewGuid();
+
+            CachedMaterials.Add(newGuid, materialInstance);
+
+            return new MaterialInfo(newGuid, materialInstance.ShaderQueue);
         }
     }
 }

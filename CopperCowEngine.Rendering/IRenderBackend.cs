@@ -1,30 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CopperCowEngine.Core;
+using System;
 using System.Numerics;
 using System.Windows.Forms;
-using CopperCowEngine.Rendering.Loaders;
 
 namespace CopperCowEngine.Rendering
 {
     public abstract class FrameData
     {
-        public virtual void Reset()
-        {
-        }
+        public abstract void Reset();
+        public abstract void Finish();
     }
-
-    public class ScreenProperties
+    
+    public abstract class Frame2DData
     {
-        public float AspectRatio;
-        public int Height;
-        public int Width;
+        public abstract void Reset();
+        public abstract void Finish();
     }
 
     public interface IRenderBackend
     {
         RenderingConfiguration Configuration { get; }
+        
+        IEngineLoopProvider LoopProvider { get; }
+
+        IScriptEngine ScriptEngine { get; }
 
         FrameData CurrentFrameData { get; }
+        
+        Frame2DData Current2DFrameData { get; }
 
         bool IsQuitRequest { get; }
 
@@ -32,35 +35,24 @@ namespace CopperCowEngine.Rendering
 
         ScreenProperties ScreenProps { get; }
 
-        void BrdfIntegrate(string outputName);
-
-
-        byte[] CompileAndImportShader(string path, ShaderType type, string entryPoint,
-            Dictionary<string, object> macro);
-
-        void CubeMapPrerender(string path, string outputName);
-
         void Deinitialize();
 
         void QuitRequest();
 
-        TextureCubeAssetData ImportCubeTexture(string path);
-
-        TextureAssetData ImportTexture(string path, bool forceSRgb);
-
-        void Initialize(RenderingConfiguration config, params object[] parameters);
+        void Initialize(RenderingConfiguration config, IEngineLoopProvider loopProvider, 
+            IScriptEngine scriptEngine, params object[] parameters);
 
         void RenderFrame();
 
-        event Action OnDrawCall;
+        void RequestFrame(IntPtr surface, bool isNew);
 
-        event Action OnFrameRenderStart;
-
-        event Action OnFrameRenderEnd;
+        void SwitchConfiguration(RenderingConfiguration config);
 
         event Action<ScreenProperties> OnScreenPropertiesChanged;
 
         event Action<Keys, bool> OnInputKey;
+
+        event Action<char> OnInputKeyPress;
 
         event Action<Vector2> OnMousePositionChange;
     }

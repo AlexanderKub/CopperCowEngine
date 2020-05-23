@@ -4,28 +4,29 @@
 
 using namespace Runtime::InteropServices;
 
-NativeUtilsNS::NativeUtils::NativeUtils()
+NativeUtilsNamespace::NativeUtils::NativeUtils()
 {
-	Console::WriteLine("NativeUtils {0}", 1);
+	Console::WriteLine("NativeUtils Loaded");
 }
 
-NativeUtilsNS::ImageData^ NativeUtilsNS::NativeUtils::LoadHDRImage(String^ filePath) {
-	const char* fileName = (const char*)(Marshal::StringToHGlobalAnsi(filePath)).ToPointer();
+NativeUtilsNamespace::ImageData^ NativeUtilsNamespace::NativeUtils::load_hdr_image(String^ file_path)
+{
+	const auto file_name = static_cast<const char*>(Marshal::StringToHGlobalAnsi(file_path).ToPointer());
 
 	stbi_set_flip_vertically_on_load(false);
-	int width, height, nrComponents;
-	float *data = stbi_loadf(fileName, &width, &height, &nrComponents, 0);
-	unsigned int hdrTexture;
+	int width, height, nr_components;
+	const auto data = stbi_loadf(file_name, &width, &height, &nr_components, 0);
+
 	if (data)
 	{
-		int n = width * height * nrComponents;
-		ImageData^ result = gcnew ImageData(width, height);
-		for (size_t i = 0; i < n; i++)
+		const auto n = width * height * nr_components;
+		auto result = gcnew ImageData(width, height, nr_components);
+		for (auto i = 0; i < n; i++)
 		{
 			result->Data->Add(data[i]);
 		}
-		return result;
 		stbi_image_free(data);
+		return result;
 	}
 	else
 	{

@@ -8,22 +8,22 @@ namespace CopperCowEngine.Rendering.D3D11.Utils
         private Query _queryTimeStampStart;
         private Query _queryTimeStampEnd;
 
-        private bool initialized;
+        private bool _initialized;
 
         public void Initialize(Device device)
         {
             _queryTimeStampDisjoint = new Query(device, new QueryDescription() { Type = QueryType.TimestampDisjoint });
             _queryTimeStampStart = new Query(device, new QueryDescription() { Type = QueryType.Timestamp });
             _queryTimeStampEnd = new Query(device, new QueryDescription() { Type = QueryType.Timestamp });
-            initialized = true;
+            _initialized = true;
         }
 
         public void Begin(DeviceContext context)
         {
-            if (!initialized)
+            if (!_initialized)
             {
                 Initialize(context.Device);
-                initialized = true;
+                _initialized = true;
             }
             context.Begin(_queryTimeStampDisjoint);
             context.Begin(_queryTimeStampStart);

@@ -36,7 +36,7 @@ namespace CopperCowEngine.Rendering.D3D11.Shared
 
         public ShaderResourceView ResourceView { get; private set; }
 
-        public RenderTargetView View { get; private set; }
+        public RenderTargetView TargetView { get; private set; }
 
         private readonly string _name;
 
@@ -79,7 +79,7 @@ namespace CopperCowEngine.Rendering.D3D11.Shared
                 RenderTargetViewDimension.Texture2D;
             _renderTargetDescription.Format = format;
 
-            View = new RenderTargetView(device, Map, _renderTargetDescription)
+            TargetView = new RenderTargetView(device, Map, _renderTargetDescription)
             {
                 DebugName = $"{_name}RTV"
             };
@@ -96,8 +96,8 @@ namespace CopperCowEngine.Rendering.D3D11.Shared
             Map = null;
             ResourceView?.Dispose();
             ResourceView = null;
-            View?.Dispose();
-            View = null;
+            TargetView?.Dispose();
+            TargetView = null;
         }
     }
 }

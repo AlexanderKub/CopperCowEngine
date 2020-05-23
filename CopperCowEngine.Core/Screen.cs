@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CopperCowEngine.Rendering;
-
-namespace CopperCowEngine.Core
+﻿namespace CopperCowEngine.Core
 {
+    public class ScreenProperties
+    {
+        public float AspectRatio;
+        public int Height;
+        public int Width;
+    }
+
     public static class Screen
     {
         public static float AspectRatio { get; private set; }

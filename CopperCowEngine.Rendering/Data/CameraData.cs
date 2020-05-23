@@ -11,6 +11,8 @@ namespace CopperCowEngine.Rendering.Data
 
         public int Index;
 
+        public float FrameTime;
+
         public Vector3 Position;
 
         public Matrix4x4 PreviousView;

@@ -1,9 +1,11 @@
-﻿namespace CopperCowEngine.ECS.Builtin.Components
+﻿using System;
+
+namespace CopperCowEngine.ECS.Builtin.Components
 {
     public struct Material : IComponentData
     {
-        public string Name;
+        public Guid AssetGuid;
 
-        public int Queue;
+        public uint Queue;
     }
 }

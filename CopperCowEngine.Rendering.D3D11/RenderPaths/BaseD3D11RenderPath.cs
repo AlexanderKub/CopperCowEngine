@@ -21,11 +21,17 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 
         protected SharedRenderItemsStorage GetSharedItems => RenderBackend.SharedRenderItems;
 
-        protected bool EnabledHdr => RenderBackend.Configuration.EnableHdr;
+        protected bool HdrEnable => RenderBackend.Configuration.EnableHdr;
 
         protected int MsSamplesCount => RenderBackend.SampleCount;
 
-        protected bool EnabledMsaa => MsSamplesCount > 1;
+        protected bool MsaaEnable => MsSamplesCount > 1;
+        
+        protected bool MotionBlurEnable => HdrEnable && RenderBackend.Configuration.PostProcessing.MotionBlur.Enable;
+
+        protected bool BloomEnable => HdrEnable && RenderBackend.Configuration.PostProcessing.Bloom.Enable;
+
+        protected bool DofBlurEnable => HdrEnable && RenderBackend.Configuration.PostProcessing.DofBlur.Enable;
 
         public virtual void Init(D3D11RenderBackend renderBackend)
         {
@@ -36,7 +42,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 
         public virtual void Draw(StandardFrameData frameData) { }
 
-        public virtual void Resize() { }
+        public abstract void Resize();
 
         protected void ToDispose(IDisposable item)
         {

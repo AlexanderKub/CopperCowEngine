@@ -29,7 +29,8 @@ namespace CopperCowEngine.ECS.Builtin.Systems
                 Process(parentEntity);
 
                 var parentLocToWorld = Context.GetComponent<LocalToWorld>(parentEntity);
-
+                
+                locToWorld.PreviousValue = locToWorld.Value;
                 locToWorld.Value = locToParent.Value * parentLocToWorld.Value;
 
                 _updated.Add(slice.Entity.Id);

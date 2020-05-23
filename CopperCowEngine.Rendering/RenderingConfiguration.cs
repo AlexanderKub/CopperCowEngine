@@ -10,6 +10,8 @@
 
         public MsaaEnabled EnableMsaa;
 
+        public PostProcessingConfiguration PostProcessing;
+
         public bool InteropDisplay;
 
         public RenderPathType RenderPath;
@@ -20,6 +22,7 @@
             DebugMode = false,
             EnableHdr = false,
             EnableMsaa = MsaaEnabled.X4,
+            PostProcessing = PostProcessingConfiguration.Disabled,
             RenderPath = RenderPathType.Forward
         };
     }

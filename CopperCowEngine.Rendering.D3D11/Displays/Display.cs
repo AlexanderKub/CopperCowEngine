@@ -8,11 +8,11 @@ using DeviceContext = SharpDX.Direct3D11.DeviceContext;
 
 namespace CopperCowEngine.Rendering.D3D11.Displays
 {
-    internal abstract class Display
+    internal abstract class Display : IDisposable
     {
         protected bool IsDebugMode;
 
-        protected int MSamplesCount;
+        protected int SamplesCount;
 
         protected RenderTargetProperties RenderTarget2DProperties;
 
@@ -20,15 +20,9 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
 
         public DeviceContext Context => DeviceRef?.ImmediateContext;
 
-        public RenderTargetView RenderTargetViewRef { get; protected set; }
+        public RenderTargetView RenderTarget { get; protected set; }
 
         public Texture2D BackBuffer { get; protected set; }
-
-        public Texture2D ZBuffer { get; protected set; }
-
-        public DepthStencilView DepthStencilViewRef { get; protected set; }
-
-        public ShaderResourceView DepthStencilShaderResourceViewRef { get; protected set; }
 
         public int Width { get; protected set; }
 
@@ -47,7 +41,7 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
         protected Display(bool isDebugMode, int msaaLevel)
         {
             IsDebugMode = isDebugMode;
-            MSamplesCount = msaaLevel == 0 ? 1 : msaaLevel;
+            SamplesCount = msaaLevel;
         }
 
         public abstract void InitDevice();
@@ -77,24 +71,16 @@ namespace CopperCowEngine.Rendering.D3D11.Displays
             OnResize?.Invoke();
         }
 
-        public virtual void Cleanup()
+        public virtual void Dispose()
         {
             Context?.ClearState();
             Context?.Flush();
 
             BackBuffer?.Dispose();
             BackBuffer = null;
-            ZBuffer?.Dispose();
-            ZBuffer = null;
 
-            RenderTargetViewRef?.Dispose();
-            RenderTargetViewRef = null;
-
-            DepthStencilShaderResourceViewRef?.Dispose();
-            DepthStencilShaderResourceViewRef = null;
-
-            DepthStencilViewRef?.Dispose();
-            DepthStencilViewRef = null;
+            RenderTarget?.Dispose();
+            RenderTarget = null;
 
             FactoryDWrite?.Dispose();
             FactoryDWrite = null;

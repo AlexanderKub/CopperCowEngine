@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Numerics;
 using System.Threading;
-using System.Windows.Forms;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using CopperCowEngine.Rendering.D3D11.Displays;
@@ -12,9 +10,12 @@ using CopperCowEngine.Rendering.D3D11.Utils;
 using CopperCowEngine.Rendering.Data;
 using SharpDX.Windows;
 using Device = SharpDX.Direct3D11.Device;
+using System.Windows.Forms;
+using CopperCowEngine.Core;
 
 namespace CopperCowEngine.Rendering.D3D11
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public sealed partial class D3D11RenderBackend : BaseRenderBackend
     {
         #region Surface and Display Properties
@@ -28,10 +29,17 @@ namespace CopperCowEngine.Rendering.D3D11
 
         public SwapChain SwapChain => ((FormDisplay)DisplayRef).SwapChainRef;
         #endregion
+        
+        private const int TargetFrameTime = 1000 / 90;
+
+        private readonly GpuProfiler _gpuProfiler;
 
         private RenderPathType _renderPathType;
+        private Frame2DRenderer _frame2DRenderer;
+        private bool _configSwitched;
+
+        internal int SampleCount;
         internal BaseD3D11RenderPath RenderPath;
-        //private ConsoleRenderer _consoleRenderer;
         internal SharedRenderItemsStorage SharedRenderItems;
 
         public bool IsSingleFormMode { get; private set; }
@@ -44,24 +52,20 @@ namespace CopperCowEngine.Rendering.D3D11
 
         public override ScreenProperties ScreenProps { get; protected set; }
 
-        internal int SampleCount;
-
-        private readonly GpuProfiler _gpuProfiler;
-
-        private const int TargetFrameTime = 1000 / 90;
-
         #region Initialize
         public D3D11RenderBackend()
         {
             CurrentFrameData = new StandardFrameData();
+            Current2DFrameData = new Standard2DFrameData();
             ScreenProps = new ScreenProperties();
             _gpuProfiler = new GpuProfiler();
         }
 
-        public override void Initialize(RenderingConfiguration config, params object[] parameters)
+        public override void Initialize(RenderingConfiguration config, IEngineLoopProvider loopProvider, 
+            IScriptEngine scriptEngine, params object[] parameters)
         {
-            Configuration = config;
-            AssetsManagement.AssetsManager.RenderBackend = this;
+            base.Initialize(config, loopProvider, scriptEngine, parameters);
+
             D3D11AssetsLoader.RenderBackend = this;
             D3D11ShaderLoader.RenderBackend = this;
 
@@ -73,6 +77,7 @@ namespace CopperCowEngine.Rendering.D3D11
 
             if (isInterop)
             {
+                SampleCount = (int)Configuration.EnableMsaa;
                 DisplayRef = new InteropDisplay(config.DebugMode, (int)config.EnableMsaa);
                 InitializeViews();
                 return;
@@ -97,9 +102,10 @@ namespace CopperCowEngine.Rendering.D3D11
         {
             Surface = surface;
 
-            SampleCount = Configuration.RenderPath == RenderPathType.Deferred ? 1 :
+            SampleCount = Configuration.RenderPath == RenderPathType.Deferred || Configuration.EnableHdr ? 1 :
                 (int)Configuration.EnableMsaa;
 
+            DisplayRef?.Dispose();
             DisplayRef = new FormDisplay(Configuration.DebugMode, SampleCount)
             {
                 Surface = surface,
@@ -135,7 +141,8 @@ namespace CopperCowEngine.Rendering.D3D11
             switch (_renderPathType)
             {
                 case RenderPathType.Forward:
-                    RenderPath = new ForwardBaseD3D11RenderPath();
+                    //RenderPath = new ForwardBaseD3D11RenderPath();
+                    RenderPath = new D3D11ForwardPath();
                     break;
                 case RenderPathType.Deferred:
                     // TODO: Deferred
@@ -152,8 +159,8 @@ namespace CopperCowEngine.Rendering.D3D11
             }
             RenderPath.Init(this);
 
-            //_consoleRenderer = new ConsoleRenderer();
-            //_consoleRenderer.Initialize(this);
+            _frame2DRenderer = new Frame2DRenderer();
+            _frame2DRenderer.Initialize(this);
 
             ScreenProps.Width = DisplayRef.Width;
             ScreenProps.Height = DisplayRef.Height;
@@ -184,8 +191,37 @@ namespace CopperCowEngine.Rendering.D3D11
         }
         #endregion
 
+        private static void WaitForTargetFps(int milliseconds)
+        {
+            // TODO: Implement normal WaitForTargetFrameTime
+            var waitForTargetFrameTime = TargetFrameTime - milliseconds - 1;
+            if (waitForTargetFrameTime > 0)
+            {
+                Thread.Sleep(waitForTargetFrameTime);
+            }
+        }
+
+        public override void SwitchConfiguration(RenderingConfiguration config)
+        {
+            base.SwitchConfiguration(config);
+            SampleCount = Configuration.RenderPath == RenderPathType.Deferred || Configuration.EnableHdr ? 1 :
+                (int)Configuration.EnableMsaa;
+            _configSwitched = true;
+        }
+
+        private void ApplyConfigurationSwitch()
+        {
+            if (_configSwitched)
+            {
+                //DisplayRef.
+                RenderPath.Init(this);
+                _configSwitched = false;
+            }
+        }
+
         public override void RenderFrame()
         {
+            ApplyConfigurationSwitch();
             // TODO: provide in right place
             OnScreenPropertiesChanged?.Invoke(ScreenProps);
 
@@ -207,21 +243,18 @@ namespace CopperCowEngine.Rendering.D3D11
                         }
                         break;
                     }
+                    
+                    ApplyConfigurationSwitch();
 
                     var start = DateTime.Now;
-                    _gpuProfiler.Begin(Context);
+                    //_gpuProfiler.Begin(Context);
                     DisplayRef.Render(IntPtr.Zero, false);
-                    _gpuProfiler.End(Context);
+                    //_gpuProfiler.End(Context);
                     //var ms = (int)_gpuProfiler.GetElapsedMilliseconds(Context);
 
-                    // TODO: Implement normal WaitForTargetFrameTime
-                    var waitForTargetFrameTime = TargetFrameTime - (DateTime.Now - start).Milliseconds - 2;
-                    if (waitForTargetFrameTime > 0)
-                    {
-                        Thread.Sleep(waitForTargetFrameTime);
-                    }
+                    WaitForTargetFps((DateTime.Now - start).Milliseconds);
 
-                    OnFrameRenderEnd?.Invoke();
+                    LoopProvider.Update();
                 }
             }
             Deinitialize();
@@ -230,8 +263,18 @@ namespace CopperCowEngine.Rendering.D3D11
             //_gpuProfiler.Begin(Context);
             DisplayRef.Render(IntPtr.Zero, false);
             //_gpuProfiler.End(Context);
-            OnFrameRenderEnd?.Invoke();
             */
+        }
+
+        public override void RequestFrame(IntPtr surface, bool isNew)
+        {
+            if (IsSingleFormMode)
+            {
+                return;
+            }
+
+            DisplayRef?.Render(surface, isNew);
+            LoopProvider.Update();
         }
 
         private void OnDisplayResize()
@@ -246,20 +289,18 @@ namespace CopperCowEngine.Rendering.D3D11
         // HACK
         private bool _firstFrame = true;
 
-        public void OnRenderFrame()
+        private void OnRenderFrame()
         {
             if (!IsInitialized)
             {
                 return;
             }
-
-            OnFrameRenderStart?.Invoke();
+            FlushStatistics();
 
             RenderPath.Draw((StandardFrameData)CurrentFrameData);
 
-            //TODO: D2D draw
             DisplayRef.RenderTarget2D.BeginDraw();
-            //_consoleRenderer.Draw();
+            _frame2DRenderer.Draw((Standard2DFrameData)Current2DFrameData);
             DisplayRef.RenderTarget2D.EndDraw();
 
             if (!_firstFrame)
@@ -275,25 +316,25 @@ namespace CopperCowEngine.Rendering.D3D11
         }
 
         /// <summary>
-        /// Draw non-indexed, non-instanced primitives. Wrapper for collect drawcalls statistics.
+        /// Draw non-indexed, non-instanced primitives. Wrapper for collect draw calls statistics.
         /// </summary>
         /// <param name="vertexCount">Number of vertices to draw.</param>
         /// <param name="startVertexLocation">Index of the first vertex, which is usually an offset in a vertex buffer.</param>
         internal void DrawWrapper(int vertexCount, int startVertexLocation)
         {
-            OnDrawCall?.Invoke();
+            DispatchDrawCall();
             Context.Draw(vertexCount, startVertexLocation);
         }
 
         /// <summary>
-        /// Draw indexed, non-instanced primitives. Wrapper for collect drawcalls statistics.
+        /// Draw indexed, non-instanced primitives. Wrapper for collect draw calls statistics.
         /// </summary>
         /// <param name="indexCount">Number of indices to draw.</param>
         /// <param name="startIndexLocation">The location of the first index read by the GPU from the index buffer.</param>
         /// <param name="baseVertexLocation">A value added to each index before reading a vertex from the vertex buffer.</param>
         internal void DrawIndexedWrapper(int indexCount, int startIndexLocation, int baseVertexLocation)
         {
-            OnDrawCall?.Invoke();
+            DispatchDrawCall();
             Context.DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
         }
 
@@ -306,16 +347,13 @@ namespace CopperCowEngine.Rendering.D3D11
 
             DisplayRef.OnResize -= OnDisplayResize;
 
-            //_consoleRenderer?.Dispose();
+            _frame2DRenderer?.Dispose();
             SharedRenderItems?.Dispose();
             RenderPath?.Dispose();
-            DisplayRef.Cleanup();
+            DisplayRef.Dispose();
             DisplayRef = null;
         }
 
-        public override event Action OnFrameRenderStart;
-        public override event Action OnDrawCall;
-        public override event Action OnFrameRenderEnd;
         public override event Action<ScreenProperties> OnScreenPropertiesChanged;
     }
 }

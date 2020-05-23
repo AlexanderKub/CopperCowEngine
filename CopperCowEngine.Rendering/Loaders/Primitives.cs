@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace CopperCowEngine.Rendering.Loaders
 {
-    public class Primitives
+    public static class Primitives
     {
         public static Vector4 White = new Vector4(0.92f, 0.92f, 0.92f, 1.0f);
         public static Vector4 Red = new Vector4(1f, 0f, 0f, 1f);
@@ -12,7 +12,7 @@ namespace CopperCowEngine.Rendering.Loaders
         public static Vector4 Yellow = new Vector4(1f, 1f, 0f, 1f);
         public static Vector4 Green = new Vector4(0f, 1f, 0f, 1f);
 
-        private static ModelGeometry _planeWithUV;
+        private static ModelGeometry _planeWithUv;
         private static ModelGeometry _cube;
 
         private static bool _needUpdateCeil;
@@ -22,13 +22,13 @@ namespace CopperCowEngine.Rendering.Loaders
 
         private static Dictionary<int, ModelGeometry> _sphereCache;
 
-        public static ModelGeometry PlaneWithUV
+        public static ModelGeometry PlaneWithUv
         {
             get
             {
-                if (_planeWithUV != null)
+                if (_planeWithUv != null)
                 {
-                    return _planeWithUV;
+                    return _planeWithUv;
                 }
 
                 var vertices = new[] {
@@ -57,7 +57,7 @@ namespace CopperCowEngine.Rendering.Loaders
                     new Vector3(0, 1f, 0),
                 };
 
-                _planeWithUV = new ModelGeometry(
+                _planeWithUv = new ModelGeometry(
                     vertices,
                     null,
                     uvs,
@@ -65,7 +65,7 @@ namespace CopperCowEngine.Rendering.Loaders
                     null,
                     normals
                 );
-                return _planeWithUV;
+                return _planeWithUv;
             }
         }
 

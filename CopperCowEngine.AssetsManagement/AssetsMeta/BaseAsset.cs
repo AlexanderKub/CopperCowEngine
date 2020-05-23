@@ -10,28 +10,6 @@ namespace CopperCowEngine.AssetsManagement.AssetsMeta
 
         protected BaseAsset() { }
 
-        protected BaseAsset(BaseAsset source)
-        {
-            InternalCopyValues(source);
-        }
-
-        private void InternalCopyValues(BaseAsset source)
-        {
-            Name = source.Name;
-            Type = source.Type;
-            CopyValues(source);
-        }
-
-        public abstract void CopyValues(BaseAsset source);
-
-        public virtual bool ImportAsset(string path, string ext) { return true; }
-
-        public virtual void SaveAsset(BinaryWriter writer)
-        {
-            writer.Write(Name);
-            writer.Write((int)Type);
-        }
-
         public virtual bool LoadAsset(BinaryReader reader)
         {
             Name = reader.ReadString();
@@ -44,14 +22,6 @@ namespace CopperCowEngine.AssetsManagement.AssetsMeta
             }
             Type = AssetTypes.Invalid;
             return false;
-        }
-
-        public virtual bool IsSame(BaseAsset other)
-        {
-            var same = true;
-            same &= Name == other.Name;
-            same &= Type == other.Type;
-            return same;
         }
 
         public override string ToString()

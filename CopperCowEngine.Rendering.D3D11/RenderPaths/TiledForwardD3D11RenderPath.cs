@@ -146,7 +146,7 @@
 //         {
 //             // Clear
 //             DepthStencilView depthStencilView = GetDisplay.DepthStencilViewRef;
-//             RenderTargetView renderTargetView = GetDisplay.RenderTargetViewRef;
+//             RenderTargetView renderTargetView = GetDisplay.RenderTarget;
 //             GetContext.ClearRenderTargetView(renderTargetView, Color.Gray);
 //             GetContext.ClearDepthStencilView(depthStencilView,
 //                 DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 0.0f, 0);

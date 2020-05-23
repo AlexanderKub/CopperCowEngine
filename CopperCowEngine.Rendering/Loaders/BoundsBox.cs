@@ -1,9 +1,11 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using CopperCowEngine.Rendering.Geometry;
 
+[assembly: InternalsVisibleTo("CopperCowEngine.AssetsManagement")]
 namespace CopperCowEngine.Rendering.Loaders
 {
+
     public struct BoundsBox
     {
         public Vector3 Center => (Maximum + Minimum) * 0.5f;

@@ -11,7 +11,7 @@ namespace CopperCowEngine.Rendering.Geometry
             float nearPlaneDistance,
             float farPlaneDistance)
         {
-            var num1 = (float) (1.0 / Math.Tan((double) fieldOfView * 0.5));
+            var num1 = (float) (1.0 / Math.Tan(fieldOfView * 0.5));
             var num2 = farPlaneDistance / (farPlaneDistance - nearPlaneDistance);
             Matrix4x4 matrix;
             matrix.M11 = num1 / aspectRatio;

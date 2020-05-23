@@ -1,0 +1,103 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Platforms>x64</Platforms>
+    <StartupObject></StartupObject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CalcBinding" Version="2.5.2" />
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="3.5.0" />
+    <PackageReference Include="Microsoft.Toolkit.Wpf.UI.Controls" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Wpf.Interop.DirectX-x64" Version="0.9.0-beta-22856" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.19" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CopperCowEngine.AssetsManagement.Editor\CopperCowEngine.AssetsManagement.Editor.csproj" />
+    <ProjectReference Include="..\CopperCowEngine.AssetsManagement\CopperCowEngine.AssetsManagement.csproj" />
+    <ProjectReference Include="..\CopperCowEngine.Core\CopperCowEngine.Core.csproj" />
+    <ProjectReference Include="..\CopperCowEngine.ECS.Builtin\CopperCowEngine.ECS.Builtin.csproj" />
+    <ProjectReference Include="..\CopperCowEngine.Rendering.D3D11.Editor\CopperCowEngine.Rendering.D3D11.Editor.csproj" />
+    <ProjectReference Include="..\CopperCowEngine.Rendering.D3D11\CopperCowEngine.Rendering.D3D11.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.Toolkit">
+      <HintPath>..\packages\Extended.Wpf.Toolkit.3.5.0\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="UIControls\AssetsTreeControl.xaml.cs">
+      <DependentUpon>AssetsTreeControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="UIControls\SharpDXControl\InteropRenderer.xaml.cs">
+      <DependentUpon>InteropRenderer.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="UIControls\UIVector2UserControlEditor.xaml.cs">
+      <DependentUpon>UiVector2UserControlEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Windows\AssetEditorWindow.xaml.cs">
+      <DependentUpon>AssetEditorWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Windows\EditorWindow.xaml.cs">
+      <DependentUpon>EditorWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Windows\LaunchWindow.xaml.cs">
+      <DependentUpon>LaunchWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Windows\TestDXWindow.xaml.cs">
+      <DependentUpon>TestDXWindow.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Themes\PropertyGrid.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\Styles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\WindowStyle.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="UIControls\AssetsTreeControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="UIControls\SharpDXControl\InteropRenderer.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="UIControls\UiVector2UserControlEditor.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Windows\AssetEditorWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Windows\EditorWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Windows\LaunchWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Windows\TestDXWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+
+</Project>

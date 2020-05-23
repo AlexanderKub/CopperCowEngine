@@ -8,7 +8,6 @@ using CopperCowEngine.AssetsManagement.Loaders;
 using CopperCowEngine.Rendering.D3D11.Loaders;
 using CopperCowEngine.Rendering.D3D11.Shared;
 using CopperCowEngine.Rendering.Data;
-using CopperCowEngine.Rendering.Loaders;
 using CopperCowEngine.Rendering.ShaderGraph;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using System.Numerics;
@@ -31,6 +30,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 
         private RenderTargetPack _velocityTarget;
         private RenderTargetPack _screenQuadTarget;
+        private DepthStencilTargetPack _depthStencilTarget;
         private DepthStencilTargetPack _shadowMapsAtlasDepthTarget;
         private RenderTargetPack _shadowMapsAtlasTarget;
 
@@ -38,7 +38,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
 
         protected virtual void InitTargets(int samples)
         {
-            if (EnabledHdr)
+            if (HdrEnable)
             {
                 _screenQuadTarget = GetSharedItems.CreateRenderTarget("ScreenQuadHDR",
                     GetDisplay.Width, GetDisplay.Height, Format.R16G16B16A16_Float, samples);
@@ -54,6 +54,10 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                 _velocityTarget = GetSharedItems.CreateRenderTarget("Velocity",
                     GetDisplay.Width, GetDisplay.Height, Format.R16G16_Float, samples);
             }
+            
+            _depthStencilTarget = GetSharedItems.CreateDepthRenderTarget("DepthStencil",
+                GetDisplay.Width, GetDisplay.Height, MsSamplesCount);
+
             _shadowMapsAtlasTarget = GetSharedItems.CreateRenderTarget("ShadowMapsAtlas",
                     ShadowAtlasSize, ShadowAtlasSize, Format.R32G32B32A32_Float, 1);
             _shadowMapsAtlasDepthTarget = GetSharedItems.CreateDepthRenderTarget("ShadowMapsAtlas", 
@@ -63,6 +67,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         public override void Resize()
         {
             _screenQuadTarget?.Resize(GetDevice, GetDisplay.Width, GetDisplay.Height);
+            _depthStencilTarget.Resize(GetDevice, GetDisplay.Width, GetDisplay.Height);
             _velocityTarget?.Resize(GetDevice, GetDisplay.Width, GetDisplay.Height);
         }
         #endregion
@@ -144,13 +149,13 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         {
             CurrentPass = Pass.ShadowMapsPass;
 
-            GetContext.ClearRenderTargetView(_shadowMapsAtlasTarget.View, Color.White);
+            GetContext.ClearRenderTargetView(_shadowMapsAtlasTarget.TargetView, Color.White);
             GetContext.ClearDepthStencilView(
                 _shadowMapsAtlasDepthTarget.View,
                 DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil,
                 1.0f, 0
             );
-            GetContext.OutputMerger.SetTargets(_shadowMapsAtlasDepthTarget.View, _shadowMapsAtlasTarget.View);
+            GetContext.OutputMerger.SetTargets(_shadowMapsAtlasDepthTarget.View, _shadowMapsAtlasTarget.TargetView);
 
             SetDepthStencilState(DepthStencilStateType.Less);
             // TODO: select right cull mode
@@ -164,45 +169,43 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             SetPixelShader("DepthShadowsPS");
             //SetNullPixelShader();
 
-            var meshName = "";
-            var materialName = "";
+            var meshGuid = Guid.Empty;
+            var materialGuid = Guid.Empty;
             var isMaskedSubPass = false;
 
             foreach (var light in frameData.LightsList.Where(light => light.IsCastShadows))
             {
                 foreach (var rendererData in frameData.PerLightRenderers[light.Index].Select(index => frameData.RenderersList[index]))
                 {
-                    if (meshName != rendererData.MeshName)
+                    if (meshGuid != rendererData.MeshGuid)
                     {
-                        meshName = rendererData.MeshName;
-                        SetMesh(meshName);
+                        meshGuid = rendererData.MeshGuid;
+                        SetMesh(meshGuid);
                     }
 
-                    if (materialName != rendererData.MaterialName)
+                    if (materialGuid != rendererData.MaterialGuid)
                     {
-                        materialName = rendererData.MaterialName;
-                        SetMaterial(materialName);
-                        /*
-                        if (!IsMaskedSubPass)
+                        materialGuid = rendererData.MaterialGuid;
+                        SetMaterial(materialGuid);
+                        
+                        if (!isMaskedSubPass)
                         {
-                            if (_cachedMaterial.MetaMaterial.blendMode == MetaMaterial.BlendMode.Masked)
+                            if (CachedMaterial.MetaMaterial.BlendMode == MaterialMeta.BlendModeType.Masked)
                             {
-                                GetContext.OutputMerger.SetTargets(GetDisplay.DepthStencilViewRef, GetDisplay.RenderTargetViewRef);
-                                if (postProcessSettings.UsingMSAA) {
-                                    SetBlendState(SharedRenderItemsStorage.BlendStates.DepthOnlyAlphaToCoverage);
-                                } else {
-                                    SetBlendState(SharedRenderItemsStorage.BlendStates.DepthOnlyAlphaTest);
-                                }
-                                //DepthMaskedSubPath(false);
-                                IsMaskedSubPass = true;
+                                GetContext.OutputMerger.SetTargets(_depthStencilTarget.View, GetDisplay.RenderTarget);
+                                SetBlendState(RenderBackend.Configuration.EnableMsaa == MsaaEnabled.Off
+                                    ? BlendStateType.DepthOnlyAlphaTest
+                                    : BlendStateType.DepthOnlyAlphaToCoverage);
+                                DepthMaskedSubPath(false);
+                                isMaskedSubPass = true;
                             }
                         }
                         else
                         {
                             GetContext.PixelShader.SetShaderResource(0,
-                                GetSharedItems.LoadTextureShaderResourceView(_cachedMaterial.AlbedoMapAsset));
+                                GetSharedItems.LoadTextureShaderResourceView(CachedMaterial.AlbedoMapAsset));
                         }
-                        */
+                        
                         if (CachedMaterial.MetaMaterial.BlendMode > MaterialMeta.BlendModeType.Masked)
                         {
                             break; // Break on translucent objects
@@ -233,14 +236,14 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         {
             CurrentPass = Pass.DepthPrePass;
 
-            GetContext.ClearRenderTargetView(GetDisplay.RenderTargetViewRef, Color.CornflowerBlue);
+            GetContext.ClearRenderTargetView(GetDisplay.RenderTarget, Color.CornflowerBlue);
             GetContext.ClearDepthStencilView(
-                GetDisplay.DepthStencilViewRef,
+                _depthStencilTarget.View,
                 DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil,
                 0.0f, 0
             );
 
-            GetContext.OutputMerger.SetTargets(GetDisplay.DepthStencilViewRef, (RenderTargetView)null);
+            GetContext.OutputMerger.SetTargets(_depthStencilTarget.View, (RenderTargetView)null);
             SetDepthStencilState(DepthStencilStateType.Greater);
             SetRasterizerState(RasterizerStateType.SolidBackCull);
 
@@ -274,12 +277,12 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             GetContext.PixelShader.SetConstantBuffer(3, ShadowLightsDataBuffer);
             GetContext.UpdateSubresource(ref _perFrameConstBuffer, PerFrameConstantBuffer);
 
-            var meshName = "";
-            var materialName = "";
+            var meshGuid = Guid.Empty;
+            var materialGuid = Guid.Empty;
             var isMaskedSubPass = false;
             if (PostProcessSettings.MotionBlurEnabled)
             {
-                GetContext.ClearRenderTargetView(_velocityTarget.View, Color.Yellow);
+                GetContext.ClearRenderTargetView(_velocityTarget.TargetView, Color.Yellow);
                 _dynamicMeshes.Clear();
             }
 
@@ -291,22 +294,22 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                     continue;
                 }
 
-                if (meshName != rendererData.MeshName)
+                if (meshGuid != rendererData.MeshGuid)
                 {
-                    meshName = rendererData.MeshName;
-                    SetMesh(meshName);
+                    meshGuid = rendererData.MeshGuid;
+                    SetMesh(meshGuid);
                 }
-
-                if (materialName != rendererData.MaterialName)
+  
+                if (materialGuid != rendererData.MaterialGuid)
                 {
-                    materialName = rendererData.MaterialName;
-                    SetMaterial(materialName);
+                    materialGuid = rendererData.MaterialGuid;
+                    SetMaterial(materialGuid);
                     if (!isMaskedSubPass)
                     {
                         if (CachedMaterial.MetaMaterial.BlendMode == MaterialMeta.BlendModeType.Masked)
                         {
-                            GetContext.OutputMerger.SetTargets(GetDisplay.DepthStencilViewRef, GetDisplay.RenderTargetViewRef);
-                            SetBlendState(EnabledMsaa
+                            GetContext.OutputMerger.SetTargets(_depthStencilTarget.View, GetDisplay.RenderTarget);
+                            SetBlendState(MsaaEnable
                                 ? BlendStateType.DepthOnlyAlphaToCoverage
                                 : BlendStateType.DepthOnlyAlphaTest);
                             DepthMaskedSubPath(false);
@@ -339,7 +342,7 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                 return;
             }
 
-            GetContext.OutputMerger.SetTargets(GetDisplay.DepthStencilViewRef, _velocityTarget.View);
+            GetContext.OutputMerger.SetTargets(_depthStencilTarget.View, _velocityTarget.TargetView);
             SetBlendState(BlendStateType.Opaque);
             SetRasterizerState(RasterizerStateType.SolidBackCull);
 
@@ -349,16 +352,16 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             isMaskedSubPass = false;
             foreach (var dRendererData in _dynamicMeshes)
             {
-                if (meshName != dRendererData.MeshName)
+                if (meshGuid != dRendererData.MeshGuid)
                 {
-                    meshName = dRendererData.MeshName;
-                    SetMesh(meshName);
+                    meshGuid = dRendererData.MeshGuid;
+                    SetMesh(meshGuid);
                 }
 
-                if (materialName != dRendererData.MaterialName)
+                if (materialGuid != dRendererData.MaterialGuid)
                 {
-                    materialName = dRendererData.MaterialName;
-                    SetMaterial(materialName);
+                    materialGuid = dRendererData.MaterialGuid;
+                    SetMaterial(materialGuid);
 
                     if (!isMaskedSubPass)
                     {
@@ -408,16 +411,15 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         protected void ColourPass(StandardFrameData frameData)
         {
             CurrentPass = Pass.ColourPass;
-            GetContext.OutputMerger.SetRenderTargets(GetDisplay.DepthStencilViewRef, _screenQuadTarget.View);
+            GetContext.OutputMerger.SetRenderTargets(_depthStencilTarget.View, _screenQuadTarget.TargetView);
             SetDepthStencilState(DepthStencilStateType.EqualAndDisableWrite);
 
             SetVertexShader("CommonVS");
             GetContext.InputAssembler.InputLayout = GetSharedItems.StandardInputLayout;
 
             // Draw scene
-            var meshName = "";
-            var materialName = "";
-            var materialQueue = -999999;
+            var meshGuid = Guid.Empty;
+            var materialGuid = Guid.Empty;
 
             //_shadowLightsDataBuffer[0].LightViewProjectionMatrix = frameData.LightsList[0].ViewProjection;
             //_shadowLightsDataBuffer[0].LeftTop = Vector2.Zero;
@@ -425,17 +427,16 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
             GetContext.UpdateSubresource(_shadowLightsDataBuffer, ShadowLightsDataBuffer);
             foreach (var rendererData in frameData.PerCameraRenderers[0].Select(index => frameData.RenderersList[index]))
             {
-                if (materialName != rendererData.MaterialName)
+                if (materialGuid != rendererData.MaterialGuid)
                 {
-                    materialName = rendererData.MaterialName;
-                    SetMaterial(materialName, materialQueue != rendererData.MaterialQueue);
-                    materialQueue = rendererData.MaterialQueue;
+                    materialGuid = rendererData.MaterialGuid;
+                    SetMaterial(materialGuid);
                 }
 
-                if (meshName != rendererData.MeshName)
+                if (meshGuid != rendererData.MeshGuid)
                 {
-                    meshName = rendererData.MeshName;
-                    SetMesh(meshName);
+                    meshGuid = rendererData.MeshGuid;
+                    SetMesh(meshGuid);
                 }
 
                 _perObjectConstBuffer.WorldMatrix = rendererData.TransformMatrix;
@@ -450,22 +451,22 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         protected void ScreenQuadPass(StandardFrameData frameData)
         {
             CurrentPass = Pass.ScreenQuadPass;
-            GetContext.OutputMerger.SetRenderTargets(null, GetDisplay.RenderTargetViewRef);
+            GetContext.OutputMerger.SetRenderTargets(null, GetDisplay.RenderTarget);
 
             if (PostProcessSettings.MotionBlurEnabled)
             {
                 // TODO: shader with motion blur
                 GetContext.PixelShader.SetShaderResource(0, _screenQuadTarget.ResourceView);
                 GetContext.PixelShader.SetShaderResource(1, _velocityTarget.ResourceView);
-                GetContext.PixelShader.SetShaderResource(2, GetDisplay.DepthStencilShaderResourceViewRef);
+                GetContext.PixelShader.SetShaderResource(2, _depthStencilTarget.ResourceView);
             } else
             {
                 SetVertexShader("ScreenQuadVS");
                 GetContext.InputAssembler.InputLayout = QuadLayout;
                 SetPixelShader("ScreenQuadPS");
-                GetContext.PixelShader.SetShaderResource(0, _screenQuadTarget.ResourceView);
-                //GetContext.PixelShader.SetShaderResource(0, ShadowMapsAtlasTarget.ResourceView);
-                GetContext.PixelShader.SetShaderResource(2, GetDisplay.DepthStencilShaderResourceViewRef);
+                GetContext.PixelShader.SetShaderResource(0, _screenQuadTarget.ResourceView); 
+                GetContext.PixelShader.SetShaderResource(0, _shadowMapsAtlasTarget.ResourceView);
+                GetContext.PixelShader.SetShaderResource(2, _depthStencilTarget.ResourceView);
             }
 
             GetContext.PixelShader.SetSampler(0, GetSharedItems.GetSamplerState(SamplerStateType.BilinearClamp));
@@ -474,34 +475,18 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
         }
 
         #region Render loop helpers
-        protected SharedRenderItemsStorage.CachedMesh CachedMesh;
 
-        protected void SetMesh(string meshName)
+        protected override void OnMaterialChanged()
         {
-            CachedMesh = GetSharedItems.GetMesh(meshName);
-            GetContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(CachedMesh.VertexBuffer, 96, 0));
-            GetContext.InputAssembler.SetIndexBuffer(CachedMesh.IndexBuffer, Format.R32_UInt, 0);
-            GetContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-        }
-
-        protected MaterialInstance CachedMaterial;
-
-        protected void SetMaterial(string materialName, bool changeStates = false)
-        {
-            CachedMaterial = materialName == "SkySphereMaterial" ? MaterialInstance.GetSkySphereMaterial() : MaterialLoader.LoadMaterial(materialName);
-
             if (CurrentPass == Pass.DepthPrePass || CurrentPass == Pass.ShadowMapsPass)
             {
                 return;
             }
 
-            if (changeStates)
-            {
-                SetMergerStates(CachedMaterial.MetaMaterial);
-            }
+            SetMergerStates(CachedMaterial.MetaMaterial);
 
             // TODO: setup shader from material meta. bind buffers and textures by shader.
-            if (materialName == "SkySphereMaterial")
+            if (MaterialInstance.IsSkySphereMaterial(CachedMaterial))
             {
                 SetPixelShader("FwdSkySpherePS");
             }
@@ -515,8 +500,10 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                 {
                     if (SetPixelShader("PBRForwardPS"))
                     {
-                        GetContext.PixelShader.SetShaderResource(5, GetSharedItems.PreFilteredMap);
-                        GetContext.PixelShader.SetShaderResource(6, GetSharedItems.IrradianceMap);
+                        GetContext.PixelShader.SetShaderResource(5, 
+                            GetSharedItems.LoadTextureShaderResourceView(MaterialInstance.GetSkySphereMaterial().AlbedoMapAsset, true));
+                        GetContext.PixelShader.SetShaderResource(6,
+                            GetSharedItems.LoadTextureShaderResourceView(MaterialInstance.GetSkySphereMaterial().EmissiveMapAsset, true));
                         GetContext.PixelShader.SetShaderResource(7, _shadowMapsAtlasTarget.ResourceView);
                         GetContext.PixelShader.SetSampler(1, GetSharedItems.GetSamplerState(SamplerStateType.ShadowMap));
                     }
@@ -532,17 +519,17 @@ namespace CopperCowEngine.Rendering.D3D11.RenderPaths
                 RoughnessValue = CachedMaterial.PropertyBlock.RoughnessValue,
                 MetallicValue = CachedMaterial.PropertyBlock.MetallicValue,
 
-                OptionsMask0 = CommonStructs.FloatMaskValue(
+                OptionsMask0 = CommonStructs.CommonStructsHelper.FloatMaskValue(
                     CachedMaterial.HasAlbedoMap, CachedMaterial.HasNormalMap,
                     CachedMaterial.HasRoughnessMap, CachedMaterial.HasMetallicMap),
-                OptionsMask1 = CommonStructs.FloatMaskValue(
+                OptionsMask1 = CommonStructs.CommonStructsHelper.FloatMaskValue(
                     CachedMaterial.HasOcclusionMap, false, false, false),
                 Filler = Vector2.Zero,
             };
 
-            if (materialName == "SkySphereMaterial")
+            if (MaterialInstance.IsSkySphereMaterial(CachedMaterial))
             {
-                _perObjectConstBuffer.OptionsMask1 = CommonStructs.FloatMaskValue(
+                _perObjectConstBuffer.OptionsMask1 = CommonStructs.CommonStructsHelper.FloatMaskValue(
                     CachedMaterial.HasOcclusionMap, true, true, false);
             }
 

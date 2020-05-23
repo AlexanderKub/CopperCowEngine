@@ -1,10 +1,11 @@
-﻿using CopperCowEngine.Rendering.Loaders;
+﻿using System;
+using CopperCowEngine.Rendering.Loaders;
 
 namespace CopperCowEngine.ECS.Builtin.Components
 {
     public struct Mesh : IComponentData
     {
-        public string Name;
+        public Guid AssetGuid;
 
         public BoundsBox Bounds;
     }

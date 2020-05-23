@@ -1,19 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CopperCowEngine.Rendering.Loaders
 {
+    public enum PrimitivesMesh : byte
+    {
+        Cube,
+        Sphere,
+    }
+
     public struct MeshInfo
     {
-        public string Name { get; }
+        public Guid AssetGuid { get; }
         public BoundsBox Bounds { get; }
 
-        internal MeshInfo(string name, BoundsBox bounds)
+        internal MeshInfo(Guid assetGuid, BoundsBox bounds)
         {
-            Name = name;
+            AssetGuid = assetGuid;
             Bounds = bounds;
         }
     }

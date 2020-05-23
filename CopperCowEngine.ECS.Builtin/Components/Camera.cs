@@ -15,9 +15,9 @@ namespace CopperCowEngine.ECS.Builtin.Components
 
         public static CameraSetup Default = new CameraSetup
         {
-            NearClippingPlane = 0.001f,
-            FarClippingPlane = 10000f,
-            Fov = (float)(Math.PI * 0.5),
+            NearClippingPlane = 0.1f,
+            FarClippingPlane = 1000f,
+            Fov = (float)(Math.PI * 0.5 * 0.6666),
             AspectRatio = 1,
         };
     }

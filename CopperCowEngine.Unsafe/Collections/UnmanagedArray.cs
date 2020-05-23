@@ -1,50 +1,32 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace CopperCowEngine.Unsafe.Collections
 {
-    public unsafe struct UnmanagedArray<T> : IDisposable, IEquatable<UnmanagedArray<T>> where T : struct
+    [DebuggerDisplay("Length = {" + nameof(Length) + "}")]
+    [DebuggerTypeProxy(typeof(UnmanagedArrayDebugView<>))]
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    public struct UnmanagedArray<T> : IDisposable, IEquatable<UnmanagedArray<T>> where T : unmanaged
     {
-        public int Length { get; }
-
+        private IntPtr _buffer;
+        
         public int ElementSize { get; }
 
-        internal void* Buffer;
-        
-        private UnmanagedArray(int length, int elementSize)
-        {
-            Length = length;
-            ElementSize = elementSize;
-            Buffer = UnsafeUtility.MemAlloc(length, elementSize);
-            //new Span<T>(Buffer, Length).Fill(default(T));
-            //new Span<T>(Buffer, Length).Clear();
-        }
+        public int Length { get; private set; }
 
-        public UnmanagedArray(T[] array)
-        {
-            Length = array.Length;
-            ElementSize = Marshal.SizeOf<T>();
-            Buffer = UnsafeUtility.MemAlloc(Length, ElementSize);
-
-            var source = Marshal.UnsafeAddrOfPinnedArrayElement(array, 0);
-            UnsafeUtility.MemCopy(source.ToPointer(), Buffer, Length * ElementSize);
-        }
-
-        // TODO: Range checks and thread safe
         public T this[int index]
         {
-            get => UnsafeUtility.ReadElement<T>(Buffer, index);
-            set => UnsafeUtility.WriteElement(Buffer, index, value);
+            get => UnsafeUtility.ReadElement<T>(_buffer, index);
+            set => UnsafeUtility.WriteElement(_buffer, index, value);
         }
-        
-        public void Dispose()
+
+        public UnmanagedArray(int length)
         {
-            if (Buffer == null)
-            {
-                return;
-            }
-            UnsafeUtility.MemFree(Buffer);
-            Buffer = null;
+            Length = length;
+            ElementSize = Marshal.SizeOf<T>();
+            _buffer = UnsafeUtility.MemAlloc(length, ElementSize);
         }
 
         public bool Equals(UnmanagedArray<T> other)
@@ -52,21 +34,28 @@ namespace CopperCowEngine.Unsafe.Collections
             return false;
         }
 
-        public T[] ToArray()
+        public void Dispose()
         {
-            return new Span<T>(Buffer, Length).ToArray();
-        }
-        
-        public static void Allocate(int totalSize, out UnmanagedArray<T> array)
-        {
-            var elementSize = Marshal.SizeOf<T>();
-            var length = totalSize / elementSize;
-            array = new UnmanagedArray<T>(length, elementSize);
+            UnsafeUtility.MemFree(_buffer);
+            Length = 0;
+            _buffer = IntPtr.Zero;
         }
 
-        public static void Allocate(int length, int elementSize, out UnmanagedArray<T> array)
+        public T[] ToArray()
         {
-            array = new UnmanagedArray<T>(length, elementSize);
+            return UnsafeUtility.GetArray<T>(_buffer, Length);
         }
+    }
+
+    internal sealed class UnmanagedArrayDebugView<T> where T : unmanaged
+    {
+        private UnmanagedArray<T> _array;
+
+        public UnmanagedArrayDebugView(UnmanagedArray<T> array)
+        {
+            _array = array;
+        }
+
+        public T[] Items => _array.ToArray();
     }
 }

@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
+using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace CopperCowEngine.Rendering.Loaders
 {
@@ -23,7 +25,7 @@ namespace CopperCowEngine.Rendering.Loaders
 
         public struct PositionsColorsStruct
         {
-            public Vector4 Pos;
+            public Vector3 Pos;
             public Vector4 Color;
         };
 
@@ -41,7 +43,7 @@ namespace CopperCowEngine.Rendering.Loaders
                 for (var i = 0; i < tmp.Length; i++)
                 {
                     tmp[i] = _points[i];
-                    tmp[i].Position -= new Vector4(Pivot, 0);
+                    tmp[i].Position -= Pivot;
                     tmp[i].Position *= FileScale;
                 }
                 return tmp;
@@ -85,19 +87,19 @@ namespace CopperCowEngine.Rendering.Loaders
 
             _boundingMinimum = Vector3.One * float.MaxValue;
             _boundingMaximum = Vector3.One * float.MinValue;
-
+            ComputeTangents(vertices, normals, uvs, indices, out var tangents, out _);
             for (var i = 0; i < n; i++)
             {
                 var normal = normals?[i] ?? Vector3.Zero;
-                CalculateTangentBinormal(normal, out var tangent, out _);
+                //CalculateTangentBinormal(normal, out var tangent, out _);
                 _points[i] = new VertexStruct()
                 {
-                    Position = new Vector4(vertices[i], 1),
+                    Position = vertices[i],
                     Color = colors?[i] ?? Vector4.One,
-                    Uv0 = new Vector4(uvs?[i] ?? Vector2.Zero, 0, 0),
+                    Uv0 = uvs?[i] ?? Vector2.Zero,
                     Uv1 = Vector4.Zero,
-                    Normal = new Vector4(normal, 0),
-                    Tangent = new Vector4(tangent, 0),
+                    Normal = normal,
+                    Tangent = tangents[i],
                 };
 
                 _boundingMinimum = Vector3.Min(_boundingMinimum, vertices[i]);
@@ -111,7 +113,7 @@ namespace CopperCowEngine.Rendering.Loaders
             }
         }
 
-        private static void CalculateTangentBinormal(Vector3 normal, out Vector3 tangent, out Vector3 binormal)
+        /*private static void CalculateTangentBinormal(Vector3 normal, out Vector3 tangent, out Vector3 binormal)
         {
             var crossOne = Vector3.Cross(normal, Vector3.UnitZ);
             var crossTwo = Vector3.Cross(normal, Vector3.UnitY);
@@ -121,21 +123,65 @@ namespace CopperCowEngine.Rendering.Loaders
 
             binormal = Vector3.Cross(normal, tangent);
             binormal = Vector3.Normalize(binormal);
-        }
+        }*/
 
-        private static Vector3 ToVector3(Vector4 inVector)
+        private static void ComputeTangents(IReadOnlyList<Vector3> positions, IReadOnlyList<Vector3> normals, 
+            IReadOnlyList<Vector2> textureCoordinates, IReadOnlyList<int> triangleIndices,
+            out Vector3[] tangents, out Vector3[] biTangents)
         {
-            return new Vector3(inVector.X, inVector.Y, inVector.Z);
+            var length = positions.Count;
+            var tan1 = new Vector3[length];
+            for (var t = 0; t < triangleIndices.Count; t += 3)
+            {
+                var i1 = triangleIndices[t];
+                var i2 = triangleIndices[t + 1];
+                var i3 = triangleIndices[t + 2];
+                var v1 = positions[i1];
+                var v2 = positions[i2];
+                var v3 = positions[i3];
+                var w1 = textureCoordinates[i1];
+                var w2 = textureCoordinates[i2];
+                var w3 = textureCoordinates[i3];
+                var x1 = v2.X - v1.X;
+                var x2 = v3.X - v1.X;
+                var y1 = v2.Y - v1.Y;
+                var y2 = v3.Y - v1.Y;
+                var z1 = v2.Z - v1.Z;
+                var z2 = v3.Z - v1.Z;
+                var s1 = w2.X - w1.X;
+                var s2 = w3.X - w1.X;
+                var t1 = w2.Y - w1.Y;
+                var t2 = w3.Y - w1.Y;
+                var r = 1.0f / (s1 * t2 - s2 * t1);
+                var uDir = new Vector3((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+                tan1[i1] += uDir;
+                tan1[i2] += uDir;
+                tan1[i3] += uDir;
+            }
+
+            tangents = new Vector3[length];
+            biTangents = new Vector3[length];
+            for (var i = 0; i < length; i++)
+            {
+                var n = normals[i];
+                var t = tan1[i];
+                t = (t - n * Vector3.Dot(n, t));
+                t = Vector3.Normalize(t);
+                var b = Vector3.Cross(n, t);
+                tangents[i] = t;
+                biTangents[i] = b;
+            }
         }
     }
-
+    
+    [StructLayout(LayoutKind.Sequential)]
     public struct VertexStruct
     {
-        public Vector4 Position;
+        public Vector3 Position;
         public Vector4 Color;
-        public Vector4 Uv0;
+        public Vector2 Uv0;
         public Vector4 Uv1;
-        public Vector4 Normal;
-        public Vector4 Tangent;
+        public Vector3 Normal;
+        public Vector3 Tangent;
     };
 }
