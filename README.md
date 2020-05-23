@@ -2,11 +2,11 @@
 C# 3D Engine that uses DirectX 11 and SharpDX.
 Best engine for copper cows visualization 2019. (In my opinion).
 
-23.05.2020 UPDATE: Hi there, I already rewrite the engine code and it is still in the rewriting process. Some of the features would be broken, some of the features now work better. Readable documentation and feature list will be published later.
+<b>23.05.2020 UPDATE:</b> Hi there, I already rewrite the engine code and it is still in the rewriting process. Some of the features would be broken, some of the features now work better. Readable documentation and feature list will be published later.
 
 ![screenshot1](https://github.com/AlexanderKub/CopperCowEngine/raw/master/Branding/Screenshots/ScreenshotPBR.png)
 
-This WIP version ([last stable version](855c8236615f03e8fb036c2fc57a4b127f5073ab)):
+This WIP version ([last stable version](https://github.com/AlexanderKub/CopperCowEngine/tree/855c8236615f03e8fb036c2fc57a4b127f5073ab)):
 
 Features:
 1) PBR with metallic workflow, prefiltered IBL and precalculated BRDF. [UE4 paper](https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf)
